@@ -60,8 +60,8 @@ const activeCampaigns = [
 function ActiveCampaignCards() {
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Active Campaigns</h2>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold">Active Campaigns</h2>
         <div className="flex items-center gap-2">
           <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-medium">
             {activeCampaigns.filter(c => c.status === 'active').length} Running
@@ -72,7 +72,7 @@ function ActiveCampaignCards() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
         {activeCampaigns.map((campaign, idx) => (
           <div 
             key={idx} 

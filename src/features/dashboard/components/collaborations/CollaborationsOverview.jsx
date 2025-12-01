@@ -68,17 +68,17 @@ function CollaborationsOverview() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Collaborations</h1>
-          <p className="text-gray-400">Manage influencer partnerships and track deliverables</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Collaborations</h1>
+          <p className="text-sm sm:text-base text-gray-400">Manage influencer partnerships and track deliverables</p>
         </div>
-        <Link to="/dashboard/collaborations/messages">
-          <button className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300 relative">
-            <MessageSquare className="w-5 h-5" />
+        <Link to="/dashboard/collaborations/messages" className="w-full sm:w-auto">
+          <button className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl text-sm sm:text-base font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300 relative w-full sm:w-auto">
+            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
             Messages
             {totalMessages > 0 && (
-              <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold">
+              <span className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-red-500 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold">
                 {totalMessages}
               </span>
             )}
@@ -87,7 +87,7 @@ function CollaborationsOverview() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 hover:border-green-400/30 transition-all">
           <div className="flex items-center justify-between mb-3">
             <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
@@ -95,45 +95,45 @@ function CollaborationsOverview() {
             </div>
             <span className="text-xs text-green-400 font-semibold">Active</span>
           </div>
-          <p className="text-3xl font-bold text-white mb-1">{activeCollabs}</p>
-          <p className="text-sm text-gray-400">Active Collaborations</p>
+          <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{activeCollabs}</p>
+          <p className="text-xs sm:text-sm text-gray-400">Active Collaborations</p>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 hover:border-yellow-400/30 transition-all">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 sm:p-5 hover:border-yellow-400/30 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center">
-              <Clock className="w-6 h-6 text-yellow-400" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
             </div>
             <span className="text-xs text-yellow-400 font-semibold">Review</span>
           </div>
-          <p className="text-3xl font-bold text-white mb-1">{pendingReview}</p>
-          <p className="text-sm text-gray-400">Pending Review</p>
+          <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{pendingReview}</p>
+          <p className="text-xs sm:text-sm text-gray-400">Pending Review</p>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 hover:border-blue-400/30 transition-all">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 sm:p-5 hover:border-blue-400/30 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
-              <MessageSquare className="w-6 h-6 text-blue-400" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
             </div>
             {totalMessages > 0 && (
-              <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded-full text-xs font-semibold">
+              <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded-full text-[10px] sm:text-xs font-semibold">
                 {totalMessages} New
               </span>
             )}
           </div>
-          <p className="text-3xl font-bold text-white mb-1">{totalMessages}</p>
-          <p className="text-sm text-gray-400">Unread Messages</p>
+          <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{totalMessages}</p>
+          <p className="text-xs sm:text-sm text-gray-400">Unread Messages</p>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 hover:border-purple-400/30 transition-all">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 sm:p-5 hover:border-purple-400/30 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
-              <Star className="w-6 h-6 text-[#C1B6FD]" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
+              <Star className="w-5 h-5 sm:w-6 sm:h-6 text-[#C1B6FD]" />
             </div>
             <span className="text-xs text-[#C1B6FD] font-semibold">Avg</span>
           </div>
-          <p className="text-3xl font-bold text-white mb-1">4.6</p>
-          <p className="text-sm text-gray-400">Average Rating</p>
+          <p className="text-2xl sm:text-3xl font-bold text-white mb-1">4.6</p>
+          <p className="text-xs sm:text-sm text-gray-400">Average Rating</p>
         </div>
       </div>
 
@@ -145,19 +145,19 @@ function CollaborationsOverview() {
             className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-purple-400/30 transition-all duration-300 group"
           >
             {/* Header */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-xl bg-linear-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center text-3xl shadow-lg">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-linear-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center text-2xl sm:text-3xl shadow-lg shrink-0">
                   {collab.avatar}
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white group-hover:text-[#C1B6FD] transition-colors">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-[#C1B6FD] transition-colors truncate">
                     {collab.influencer}
                   </h3>
-                  <p className="text-sm text-gray-400">{collab.campaign}</p>
-                  <div className="flex items-center gap-2 mt-2">
+                  <p className="text-xs sm:text-sm text-gray-400 truncate">{collab.campaign}</p>
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
                     {collab.platforms.map((platform) => (
-                      <span key={platform} className="px-2 py-1 bg-white/5 rounded text-xs text-gray-300">
+                      <span key={platform} className="px-2 py-1 bg-white/5 rounded text-[10px] sm:text-xs text-gray-300">
                         {platform}
                       </span>
                     ))}
@@ -165,7 +165,7 @@ function CollaborationsOverview() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                 <span className={`px-4 py-2 rounded-lg text-sm font-semibold ${
                   collab.status === 'active' 
                     ? 'bg-green-500/20 text-green-400' 
@@ -190,7 +190,7 @@ function CollaborationsOverview() {
             </div>
 
             {/* Progress and Stats */}
-            <div className="grid grid-cols-4 gap-6 mb-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs text-gray-400">Progress</span>
@@ -250,16 +250,16 @@ function CollaborationsOverview() {
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-3 mt-4 pt-4 border-t border-white/10">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 pt-4 border-t border-white/10">
               <Link to={`/dashboard/collaborations/${collab.id}/workspace`} className="flex-1">
-                <button className="w-full px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-semibold text-gray-300 transition-all">
+                <button className="w-full px-3 sm:px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs sm:text-sm font-semibold text-gray-300 transition-all">
                   View Workspace
                 </button>
               </Link>
               
               {collab.status === 'pending_review' && (
                 <Link to={`/dashboard/collaborations/${collab.id}/review`} className="flex-1">
-                  <button className="w-full px-4 py-2 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] rounded-lg text-sm font-semibold text-white hover:shadow-lg hover:shadow-purple-500/30 transition-all">
+                  <button className="w-full px-3 sm:px-4 py-2 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] rounded-lg text-xs sm:text-sm font-semibold text-white hover:shadow-lg hover:shadow-purple-500/30 transition-all">
                     Review & Rate
                   </button>
                 </Link>
@@ -267,7 +267,7 @@ function CollaborationsOverview() {
               
               {collab.status === 'active' && (
                 <Link to={`/dashboard/collaborations/${collab.id}/messages`} className="flex-1">
-                  <button className="w-full px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg text-sm font-semibold text-blue-400 transition-all">
+                  <button className="w-full px-3 sm:px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg text-xs sm:text-sm font-semibold text-blue-400 transition-all">
                     Send Message
                   </button>
                 </Link>

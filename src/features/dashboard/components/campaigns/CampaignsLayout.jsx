@@ -6,6 +6,7 @@ import CreateCampaign from './CreateCampaign';
 import CampaignsPerformance from './CampaignsPerformance';
 import CreateCampaignAI from './CreateCompagin-AI/CreateCampaign';
 import GeneratedCampaign from './GeneratedCampaign';
+import SingleCampaign from '../../../campaigns/pages/SingleCampaign';
 
 function CampaignsLayout() {
   return (
@@ -19,6 +20,7 @@ function CampaignsLayout() {
         <Route path="create-ai" element={<CreateCampaignAI />} />
         <Route path="generated" element={<GeneratedCampaign />} />
         <Route path="performance" element={<CampaignsPerformance />} />
+        <Route path=":campaignId" element={<SingleCampaign />} />
       </Routes>
     </div>
   );

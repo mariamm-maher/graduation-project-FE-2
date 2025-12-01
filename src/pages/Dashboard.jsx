@@ -7,10 +7,10 @@ import SocialMediaLayout from '../features/dashboard/components/social-media/Soc
 //2d1654
 function Dashboard() {
   return (
-    <div className="bg-gradient-to-br from-[#000000] via-[#1a0933] to-[#372557] min-h-screen text-white p-6">
+    <div className="bg-gradient-to-br from-[#000000] via-[#1a0933] to-[#372557] min-h-screen text-white p-3 sm:p-4 md:p-6 overflow-x-hidden">
       <Header />
       <Sidebar />
-      <div className="ml-32 transition-all duration-300">
+      <div className="ml-0 md:ml-20 lg:ml-32 transition-all duration-300 max-w-full">
         <Routes>
           <Route path="/" element={<MainContent />} />
           <Route path="/campaigns/*" element={<CampaignsLayout />} />

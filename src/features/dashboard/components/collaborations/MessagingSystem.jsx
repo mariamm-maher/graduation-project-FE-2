@@ -187,9 +187,9 @@ function MessagingSystem() {
   );
 
   return (
-    <div className="h-[calc(100vh-8rem)]  flex gap-20 overflow-hidden rounded-3xl">
+    <div className="h-[calc(100vh-8rem)] flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden rounded-3xl">
       {/* Conversations List */}
-      <div className={`${showChatList ? 'w-80' : 'w-0'}  border-r border-[#1e1e2e] flex flex-col transition-all duration-300 overflow-hidden shrink-0 rounded-3xl`}>
+      <div className={`${showChatList ? 'w-full lg:w-80' : 'w-0 lg:w-0'} border-r border-[#1e1e2e] flex flex-col transition-all duration-300 overflow-hidden shrink-0 rounded-3xl`}>
         {showChatList && (
           <>
         {/* Header */}
@@ -343,7 +343,7 @@ function MessagingSystem() {
                       ) : msg.type === 'image' ? (
                         <div>
                           <div className="bg-[#16162a] rounded-3xl rounded-tl-xl overflow-hidden border border-[#252538]">
-                            <div className="w-72 h-44 bg-linear-to-br from-[#1a1a2e] to-[#13131f] flex items-center justify-center">
+                            <div className="w-full sm:w-72 h-44 bg-linear-to-br from-[#1a1a2e] to-[#13131f] flex items-center justify-center">
                               <Image className="w-10 h-10 text-gray-600" />
                             </div>
                             <div className="px-3 py-2 border-t border-[#252538]">
@@ -356,7 +356,7 @@ function MessagingSystem() {
                         </div>
                       ) : msg.type === 'audio' ? (
                         <div>
-                          <div className="bg-[#16162a] rounded-3xl rounded-tl-xl px-3 py-2.5 border border-[#252538] min-w-60">
+                          <div className="bg-[#16162a] rounded-3xl rounded-tl-xl px-3 py-2.5 border border-[#252538] min-w-[200px] sm:min-w-60">
                             <div className="flex items-center gap-2.5">
                               <button className="w-8 h-8 rounded-full bg-[#745CB4] hover:bg-[#8a6dc9] flex items-center justify-center transition-colors shrink-0">
                                 <Play className="w-3.5 h-3.5 text-white ml-0.5" />

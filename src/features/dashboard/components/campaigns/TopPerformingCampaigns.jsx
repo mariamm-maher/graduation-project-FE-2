@@ -1,5 +1,6 @@
 import { TrendingUp, TrendingDown, ArrowUpRight } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 
 const topCampaigns = [
   {
@@ -65,39 +66,42 @@ const topCampaigns = [
 ];
 
 function TopPerformingCampaigns() {
+  const navigate = useNavigate();
+  
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm text-gray-400">Recommended campaigns for 24 hours</span>
+            <span className="text-xs sm:text-sm text-gray-400">Recommended campaigns for 24 hours</span>
             <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center">
               <span className="text-xs text-gray-400">i</span>
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-1">Top Performing Campaigns</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1">Top Performing Campaigns</h1>
         </div>
         
-        <div className="flex items-center gap-2">
-          <button className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white hover:bg-white/10 transition-all flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto">
+          <button className="px-3 sm:px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-xs sm:text-sm text-white hover:bg-white/10 transition-all flex items-center gap-2 flex-1 sm:flex-initial">
             <span>24H</span>
           </button>
-          <button className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white hover:bg-white/10 transition-all">
+          <button className="px-3 sm:px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-xs sm:text-sm text-white hover:bg-white/10 transition-all flex-1 sm:flex-initial">
             Performance Based
           </button>
-          <button className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white hover:bg-white/10 transition-all">
+          <button className="px-3 sm:px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-xs sm:text-sm text-white hover:bg-white/10 transition-all flex-1 sm:flex-initial">
             Desc
           </button>
         </div>
       </div>
 
       {/* Campaigns Grid */}
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {topCampaigns.map((campaign) => (
           <div
             key={campaign.id}
-            className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all group relative overflow-hidden"
+            onClick={() => navigate(`/dashboard/campaigns/${campaign.id}`)}
+            className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all group relative overflow-hidden cursor-pointer"
           >
             {/* Background Gradient */}
             <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -121,15 +125,15 @@ function TopPerformingCampaigns() {
             {/* Reward Rate */}
             <div className="mb-4 relative z-10">
               <p className="text-xs text-gray-400 mb-2">Reward Rate</p>
-              <div className="flex items-end gap-3 mb-2">
-                <h2 className="text-4xl font-bold text-white">{campaign.rewardRate}</h2>
+              <div className="flex items-end gap-2 sm:gap-3 mb-2">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">{campaign.rewardRate}</h2>
                 <div className={`flex items-center gap-1 mb-2 ${campaign.isPositive ? 'text-green-400' : 'text-red-400'}`}>
                   {campaign.isPositive ? (
-                    <TrendingUp className="w-4 h-4" />
+                    <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
                   ) : (
-                    <TrendingDown className="w-4 h-4" />
+                    <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4" />
                   )}
-                  <span className="text-sm font-semibold">{campaign.change}</span>
+                  <span className="text-xs sm:text-sm font-semibold">{campaign.change}</span>
                 </div>
               </div>
             </div>

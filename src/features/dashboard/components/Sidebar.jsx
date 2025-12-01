@@ -1,10 +1,11 @@
-import { LayoutDashboard, Megaphone, Share2, BarChart3, MessageCircle, Settings, LogOut, User, Users } from 'lucide-react';
+import { LayoutDashboard, Megaphone, Share2, BarChart3, MessageCircle, Settings, LogOut, User, Users, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 function Sidebar() {
   const location = useLocation();
   const [isHovered, setIsHovered] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
@@ -16,13 +17,32 @@ function Sidebar() {
   ];
 
   return (
-    <div 
-      className={`fixed left-6 top-32 flex flex-col gap-2 backdrop-blur-md rounded-2xl p-4 border border-white/10 transition-all duration-300 ease-in-out z-50 ${
-        isHovered ? 'w-64 bg-[#1a1a1a]/95' : 'w-20 bg-white/5'
-      }`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsMobileOpen(!isMobileOpen)}
+        className="fixed top-6 left-4 z-50 md:hidden p-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/10 text-white hover:bg-white/20 transition-all"
+      >
+        {isMobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
+
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      <div 
+        className={`fixed left-3 md:left-6 top-20 md:top-32 flex flex-col gap-2 backdrop-blur-md rounded-2xl p-4 border border-white/10 transition-all duration-300 ease-in-out z-50 ${
+          isHovered ? 'w-64 bg-[#1a1a1a]/95' : 'w-20 bg-white/5'
+        } ${
+          isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
       {/* Profile Section */}
       <div className="flex items-center gap-3 pb-4 border-b border-white/10">
         <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center shrink-0">
@@ -83,6 +103,7 @@ function Sidebar() {
         </button>
       </div>
     </div>
+    </>
   );
 }
 

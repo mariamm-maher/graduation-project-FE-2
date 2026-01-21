@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Dashboard from './pages/Dashboard.jsx';
+import OwnerDashboard from './pages/OwnerDashboard.jsx';
+import InfluencerDashboard from './pages/InfluencerDashboard.jsx';
 import Landing from './pages/Landing.jsx';
 import AuthForm from './features/auth/AuthForm.jsx';
 
@@ -10,7 +11,8 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<AuthForm />} />
         <Route path="/signup" element={<AuthForm />} /> 
-        <Route path="/dashboard/*" element={<Dashboard />} />
+        <Route path="/dashboard/owner/*" element={<OwnerDashboard />} />
+        <Route path="/dashboard/influencer/*" element={<InfluencerDashboard />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

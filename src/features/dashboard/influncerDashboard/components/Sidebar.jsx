@@ -1,4 +1,4 @@
-import { LayoutDashboard, Megaphone, Share2, BarChart3, MessageCircle, Settings, LogOut, User, Users, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Search, Users, Share2, BarChart3, MessageCircle, Settings, LogOut, User, Briefcase, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -8,12 +8,13 @@ function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const menuItems = [
-    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-    { id: 'campaigns', icon: Megaphone, label: 'Campaigns', path: '/dashboard/campaigns' },
-    { id: 'collaborations', icon: Users, label: 'Collaborations', path: '/dashboard/collaborations' },
-    { id: 'social', icon: Share2, label: 'Social Media', path: '/dashboard/social-media' },
-    { id: 'analytics', icon: BarChart3, label: 'Analytics', path: '/dashboard/analytics' },
-    { id: 'influencers', icon: MessageCircle, label: 'Influencers', path: '/dashboard/influencers' },
+    { id: 'dashboard', icon: LayoutDashboard, label: 'Overview', path: '/dashboard/influencer' },
+    { id: 'explore', icon: Search, label: 'Explore Campaigns', path: '/dashboard/influencer/campaigns' },
+    { id: 'collaborations', icon: Users, label: 'My Collaborations', path: '/dashboard/influencer/collaborations' },
+    { id: 'content', icon: Share2, label: 'My Content', path: '/dashboard/influencer/social-media' },
+    { id: 'analytics', icon: BarChart3, label: 'Performance', path: '/dashboard/influencer/analytics' },
+    { id: 'messages', icon: MessageCircle, label: 'Messages', path: '/dashboard/influencer/messages' },
+    { id: 'profile', icon: Briefcase, label: 'My Profile', path: '/dashboard/influencer/profile' },
   ];
 
   return (

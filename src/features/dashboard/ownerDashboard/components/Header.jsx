@@ -11,6 +11,9 @@ function Header() {
   const switchRole = (role) => {
     setActiveRole(role);
     setShowRoleDropdown(false);
+    if (role === 'Influencer') {
+      navigate('/dashboard/influencer');
+    }
   };
 
   const handleCreateCampaignAI = () => {
@@ -152,7 +155,7 @@ function Header() {
                       }`}
                     >
                       <div className="font-medium">Switch to Owner</div>
-                      <div className="text-xs text-gray-400 mt-1">Manage campaigns & team</div>
+                      <div className="text-xs text-gray-600 mt-1">Manage campaigns & team</div>
                     </motion.button>
                     <motion.button
                       whileHover={{ x: 4 }}
@@ -164,7 +167,7 @@ function Header() {
                       }`}
                     >
                       <div className="font-medium">Switch to Influencer</div>
-                      <div className="text-xs text-gray-400 mt-1">View offers & collaborations</div>
+                      <div className="text-xs text-gray-600 mt-1">View offers & collaborations</div>
                     </motion.button>
                   </div>
                 </motion.div>

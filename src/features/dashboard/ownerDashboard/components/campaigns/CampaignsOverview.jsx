@@ -29,21 +29,21 @@ function CampaignsOverview() {
               <span className="text-xs sm:text-sm font-semibold text-green-400">{activeCampaigns} Active</span>
             </div>
 
-            <Link to="/dashboard/analytics">
+            <Link to="/dashboard/owner/analytics">
               <button className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg hover:border-purple-400/30 hover:bg-white/10 transition-all">
                 <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
                 <span className="text-xs sm:text-sm text-gray-300">Analytics</span>
               </button>
             </Link>
 
-            <Link to="/dashboard/influencers">
+            <Link to="/dashboard/owner/influencers">
               <button className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg hover:border-purple-400/30 hover:bg-white/10 transition-all">
                 <Users className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
                 <span className="text-xs sm:text-sm text-gray-300">Influencers</span>
               </button>
             </Link>
 
-            <Link to="/dashboard/campaigns/create-ai">
+            <Link to="/dashboard/owner/campaigns/create-ai">
               <button className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg hover:border-purple-400/30 hover:bg-white/10 transition-all">
                 <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
                 <span className="text-xs sm:text-sm text-gray-300">AI Generate</span>
@@ -105,7 +105,7 @@ function CampaignsOverview() {
             </div>
           </div>
 
-          <Link to="/dashboard/campaigns/create">
+          <Link to="/dashboard/owner/campaigns/create">
             <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300">
               <Megaphone className="w-4 h-4" />
               Create Campaign
@@ -122,7 +122,7 @@ function CampaignsOverview() {
       {/* Quick Navigation */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <Link
-          to="/dashboard/campaigns/active"
+          to="/dashboard/owner/campaigns/active"
           className="group relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 overflow-hidden hover:border-blue-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20"
         >
           {/* Gradient Background on Hover */}
@@ -146,7 +146,7 @@ function CampaignsOverview() {
         </Link>
 
         <Link
-          to="/dashboard/campaigns/create"
+          to="/dashboard/owner/campaigns/create"
           className="group relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 overflow-hidden hover:border-purple-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20"
         >
           {/* Gradient Background on Hover */}
@@ -170,7 +170,7 @@ function CampaignsOverview() {
         </Link>
 
         <Link
-          to="/dashboard/campaigns/performance"
+          to="/dashboard/owner/campaigns/performance"
           className="group relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 overflow-hidden hover:border-green-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/20"
         >
           {/* Gradient Background on Hover */}

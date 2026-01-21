@@ -40,7 +40,7 @@ function StatisticsChart() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold bg-linear-to-r from-[#C1B6FD] to-[#745CB4] bg-clip-text text-transparent">
-          Campaign Performance
+          My Performance
         </h2>
         <div className="flex gap-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-1">
           <button className="px-4 py-2 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] rounded-lg text-white text-sm font-medium transition-all">

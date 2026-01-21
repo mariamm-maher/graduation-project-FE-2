@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Header, Sidebar, MainContent } from '../features/dashboard/influncerDashboard/components';
 import CampaignsLayout from '../features/dashboard/influncerDashboard/components/campaigns/CampaignsLayout';
 import CollaborationsLayout from '../features/dashboard/influncerDashboard/components/collaborations/CollaborationsLayout';
+import Profile from '../features/dashboard/influncerDashboard/components/profile/Profile';
 
 function InfluencerDashboard() {
   return (
@@ -11,12 +12,12 @@ function InfluencerDashboard() {
       <div className="ml-0 md:ml-20 lg:ml-32 transition-all duration-300 max-w-full">
         <Routes>
           <Route path="/" element={<MainContent />} />
-          <Route path="campaigns" element={<CampaignsLayout />} />
-          <Route path="collaborations" element={<CollaborationsLayout />} />
-          <Route path="social-media" element={<div>Social Media Content</div>} />
-          <Route path="analytics" element={<div>Performance Analytics</div>} />
-          <Route path="messages" element={<div>Messages</div>} />
-          <Route path="profile" element={<div>My Profile</div>} />
+          <Route path="campaigns/*" element={<CampaignsLayout />} />
+          <Route path="collaborations/*" element={<CollaborationsLayout />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="social-media/*" element={<div>Social Media Content</div>} />
+          <Route path="analytics/*" element={<div>Performance Analytics</div>} />
+          <Route path="messages/*" element={<div>Messages</div>} />
         </Routes>
       </div>
     </div>

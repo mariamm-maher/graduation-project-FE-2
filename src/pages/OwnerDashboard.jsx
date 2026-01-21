@@ -13,11 +13,11 @@ function OwnerDashboard() {
       <div className="ml-0 md:ml-20 lg:ml-32 transition-all duration-300 max-w-full">
         <Routes>
           <Route path="/" element={<MainContent />} />
-          <Route path="campaigns" element={<CampaignsLayout />} />
-          <Route path="analytics" element={<AnalyticsLayout />} />
-          <Route path="influencers" element={<InfluencersLayout />} />
-          <Route path="collaborations" element={<CollaborationsLayout />} />
-          <Route path="social-media" element={<SocialMediaLayout />} />
+          <Route path="campaigns/*" element={<CampaignsLayout />} />
+          <Route path="analytics/*" element={<AnalyticsLayout />} />
+          <Route path="influencers/*" element={<InfluencersLayout />} />
+          <Route path="collaborations/*" element={<CollaborationsLayout />} />
+          <Route path="social-media/*" element={<SocialMediaLayout />} />
         </Routes>
       </div>
     </div>

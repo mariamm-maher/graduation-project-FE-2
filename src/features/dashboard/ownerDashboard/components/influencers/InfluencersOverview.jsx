@@ -60,7 +60,7 @@ function InfluencersOverview() {
       {/* Quick Navigation */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <Link
-          to="/dashboard/influencers/active"
+          to="/dashboard/owner/influencers/active"
           className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all group"
         >
           <div className="flex items-start justify-between mb-4">
@@ -74,7 +74,7 @@ function InfluencersOverview() {
         </Link>
 
         <Link
-          to="/dashboard/influencers/discover"
+          to="/dashboard/owner/influencers/discover"
           className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 sm:p-6 hover:bg-white/10 transition-all group"
         >
           <div className="flex items-start justify-between mb-4">
@@ -88,7 +88,7 @@ function InfluencersOverview() {
         </Link>
 
         <Link
-          to="/dashboard/influencers/history"
+          to="/dashboard/owner/influencers/history"
           className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 sm:p-6 hover:bg-white/10 transition-all group"
         >
           <div className="flex items-start justify-between mb-4">

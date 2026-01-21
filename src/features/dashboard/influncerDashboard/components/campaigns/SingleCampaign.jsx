@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
@@ -15,16 +15,23 @@ import {
   Share2,
   Instagram,
   Youtube,
-  Facebook
+  Facebook,
+  Send,
+  Bookmark,
+  BookmarkCheck,
+  Mail
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getCampaignById } from './campaignsData';
+import { getExploreCampaignById } from './exploreCampaignsData';
+import { useState } from 'react';
 
 function SingleCampaign() {
   const { campaignId } = useParams();
+  const navigate = useNavigate();
+  const [isSaved, setIsSaved] = useState(false);
   
-  // Fetch campaign data from shared data source
-  const campaign = getCampaignById(campaignId);
+  // Fetch campaign data from explore campaigns
+  const campaign = getExploreCampaignById(campaignId);
 
   // Campaign not found fallback
   if (!campaign) {
@@ -36,12 +43,12 @@ function SingleCampaign() {
           transition={{ duration: 0.3 }}
           className="flex items-center gap-4"
         >
-          <Link
-            to="/dashboard/campaigns"
+          <button
+            onClick={() => navigate('/dashboard/influencer/campaigns/overview')}
             className="p-2 hover:bg-white/5 rounded-lg transition-all"
           >
             <ArrowLeft className="w-5 h-5 text-gray-400 hover:text-white" />
-          </Link>
+          </button>
         </motion.div>
         
         <motion.div
@@ -59,12 +66,12 @@ function SingleCampaign() {
               <p className="text-sm text-gray-400 mb-4">
                 The campaign with ID "{campaignId}" does not exist.
               </p>
-              <Link
-                to="/dashboard/campaigns"
+              <button
+                onClick={() => navigate('/dashboard/influencer/campaigns/overview')}
                 className="inline-block px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
               >
                 Back to Campaigns
-              </Link>
+              </button>
             </div>
           </div>
         </motion.div>
@@ -122,23 +129,39 @@ function SingleCampaign() {
         transition={{ duration: 0.3 }}
         className="flex items-center gap-4"
       >
-        <Link
-          to="/dashboard/campaigns"
+        <button
+          onClick={() => navigate('/dashboard/influencer/campaigns/overview')}
           className="p-2 hover:bg-white/5 rounded-lg transition-all"
         >
           <ArrowLeft className="w-5 h-5 text-gray-400 hover:text-white" />
-        </Link>
+        </button>
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-bold text-white">{campaign.name}</h1>
           <p className="text-gray-400 text-sm sm:text-base mt-1">{campaign.description}</p>
         </div>
         <div className="flex items-center gap-2">
-          {campaign.status === 'active' && (
-            <span className="px-3 py-1.5 bg-green-500/20 border border-green-500/30 rounded-full text-xs font-semibold text-green-400 flex items-center gap-1">
-              <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
-              Active
-            </span>
-          )}
+          <button
+            onClick={() => setIsSaved(!isSaved)}
+            className={`p-2 rounded-lg transition-all ${
+              isSaved
+                ? 'bg-[#745CB4]/20 text-[#C1B6FD]'
+                : 'bg-white/5 text-gray-400 hover:bg-white/10'
+            }`}
+            title={isSaved ? 'Remove from saved' : 'Save for later'}
+          >
+            {isSaved ? (
+              <BookmarkCheck className="w-5 h-5" />
+            ) : (
+              <Bookmark className="w-5 h-5" />
+            )}
+          </button>
+          <span className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 ${
+            campaign.status === 'saved' || isSaved
+              ? 'bg-[#745CB4]/20 text-[#C1B6FD]'
+              : 'bg-green-500/20 text-green-400'
+          }`}>
+            {campaign.status === 'saved' || isSaved ? 'Saved' : 'Open'}
+          </span>
         </div>
       </motion.div>
 
@@ -157,6 +180,7 @@ function SingleCampaign() {
             <div>
               <p className="text-xs text-gray-400 mb-1">Duration</p>
               <p className="text-sm font-semibold text-white">{campaign.startDate} - {campaign.endDate}</p>
+              <p className="text-xs text-gray-500">Deadline: {campaign.deadline}</p>
             </div>
           </div>
 
@@ -165,20 +189,9 @@ function SingleCampaign() {
               <DollarSign className="w-6 h-6 text-[#C1B6FD]" />
             </div>
             <div>
-              <p className="text-xs text-gray-400 mb-1">Budget</p>
-              <p className="text-sm font-semibold text-white">{campaign.budget}</p>
-              <p className="text-xs text-gray-500">Spent: {campaign.spent}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-[#745CB4]/20 border border-[#C1B6FD]/30 flex items-center justify-center">
-              <Users className="w-6 h-6 text-[#C1B6FD]" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 mb-1">Influencers</p>
-              <p className="text-sm font-semibold text-white">{campaign.influencers.length} Active</p>
-              <p className="text-xs text-gray-500">{campaign.collaborationStatus.total} Total</p>
+              <p className="text-xs text-gray-400 mb-1">Payment</p>
+              <p className="text-sm font-semibold text-[#C1B6FD]">{campaign.paymentPerPost}</p>
+              <p className="text-xs text-gray-500">Total Budget: {campaign.budget}</p>
             </div>
           </div>
 
@@ -186,185 +199,172 @@ function SingleCampaign() {
             <div className="w-12 h-12 rounded-xl bg-[#745CB4]/20 border border-[#C1B6FD]/30 flex items-center justify-center">
               <Target className="w-6 h-6 text-[#C1B6FD]" />
             </div>
-            <div className="flex-1">
-              <p className="text-xs text-gray-400 mb-1">Progress</p>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${campaign.progress}%` }}
-                    transition={{ duration: 0.8, delay: 0.3 }}
-                    className="h-full bg-gradient-to-r from-[#745CB4] to-[#C1B6FD]"
-                  />
-                </div>
-                <span className="text-xs font-semibold text-white">{campaign.progress}%</span>
+            <div>
+              <p className="text-xs text-gray-400 mb-1">Deliverables</p>
+              <p className="text-sm font-semibold text-white">{campaign.deliverables} posts</p>
+              <p className="text-xs text-gray-500">Expected Reach: {campaign.expectedReach}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-[#745CB4]/20 border border-[#C1B6FD]/30 flex items-center justify-center">
+              <Share2 className="w-6 h-6 text-[#C1B6FD]" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 mb-1">Platforms</p>
+              <div className="flex flex-wrap gap-1">
+                {campaign.platforms.map((platform, idx) => (
+                  <span key={idx} className="px-2 py-0.5 bg-white/5 rounded text-xs text-gray-300">
+                    {platform}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Metrics Section */}
+      {/* Action Buttons */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-        className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6"
+        transition={{ duration: 0.3, delay: 0.15 }}
+        className="flex flex-col sm:flex-row gap-3"
       >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-[#C1B6FD]" />
-            Campaign Metrics
-          </h2>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-            <p className="text-xs text-gray-400 mb-1">Reach</p>
-            <p className="text-lg font-bold text-white">{campaign.metrics.reach}</p>
-          </div>
-          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-            <p className="text-xs text-gray-400 mb-1">Impressions</p>
-            <p className="text-lg font-bold text-white">{campaign.metrics.impressions}</p>
-          </div>
-          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-            <p className="text-xs text-gray-400 mb-1">Engagement</p>
-            <p className="text-lg font-bold text-[#C1B6FD]">{campaign.metrics.engagement}</p>
-          </div>
-          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-            <p className="text-xs text-gray-400 mb-1">Clicks</p>
-            <p className="text-lg font-bold text-white">{campaign.metrics.clicks}</p>
-          </div>
-          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-            <p className="text-xs text-gray-400 mb-1">Conversions</p>
-            <p className="text-lg font-bold text-white">{campaign.metrics.conversions}</p>
-          </div>
-          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-            <p className="text-xs text-gray-400 mb-1">Revenue</p>
-            <p className="text-lg font-bold text-green-400">{campaign.metrics.revenue}</p>
-          </div>
-        </div>
+        <button
+          onClick={() => {
+            alert('Request sent! The campaign owner will review your application.');
+          }}
+          className="flex-1 px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all flex items-center justify-center gap-2"
+        >
+          <Send className="w-5 h-5" />
+          Send Request
+        </button>
+        <button
+          onClick={() => {
+            // Navigate to messages or open chat
+            navigate(`/dashboard/influencer/collaborations/messages?owner=${campaign.ownerEmail}`);
+          }}
+          className="flex-1 px-6 py-3 bg-white/5 border border-white/10 text-white rounded-lg font-medium hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+        >
+          <MessageSquare className="w-5 h-5" />
+          Contact Owner
+        </button>
+        <button
+          onClick={() => setIsSaved(!isSaved)}
+          className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+            isSaved
+              ? 'bg-[#745CB4]/20 border border-[#745CB4]/30 text-[#C1B6FD]'
+              : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
+          }`}
+        >
+          {isSaved ? (
+            <>
+              <BookmarkCheck className="w-5 h-5" />
+              Saved
+            </>
+          ) : (
+            <>
+              <Bookmark className="w-5 h-5" />
+              Save for Later
+            </>
+          )}
+        </button>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Timeline Section */}
+      {/* Campaign Details */}
+      {campaign.campaignDetails && (
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6"
+        >
+          <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
+            <Target className="w-5 h-5 text-[#C1B6FD]" />
+            Campaign Details
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-sm font-semibold text-white mb-2">Objectives</h3>
+              <p className="text-sm text-gray-300 mb-4">{campaign.campaignDetails.objectives}</p>
+              
+              <h3 className="text-sm font-semibold text-white mb-2">Target Audience</h3>
+              <p className="text-sm text-gray-300 mb-4">{campaign.campaignDetails.targetAudience}</p>
+              
+              <h3 className="text-sm font-semibold text-white mb-2">Content Guidelines</h3>
+              <p className="text-sm text-gray-300">{campaign.campaignDetails.contentGuidelines}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-white mb-2">Hashtags</h3>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {campaign.campaignDetails.hashtags.map((tag, idx) => (
+                  <span key={idx} className="px-3 py-1 bg-[#745CB4]/20 text-[#C1B6FD] rounded-lg text-sm">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              
+              <h3 className="text-sm font-semibold text-white mb-2">Payment Terms</h3>
+              <p className="text-sm text-gray-300 mb-4">{campaign.campaignDetails.paymentTerms}</p>
+              
+              <h3 className="text-sm font-semibold text-white mb-2">Exclusivity</h3>
+              <p className="text-sm text-gray-300">{campaign.campaignDetails.exclusivity}</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Deliverables */}
+      {campaign.campaignDetails && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}
           className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6"
         >
           <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
-            <Clock className="w-5 h-5 text-[#C1B6FD]" />
-            Campaign Timeline
+            <CheckCircle className="w-5 h-5 text-[#C1B6FD]" />
+            Deliverables
           </h2>
-          <div className="space-y-4">
-            {campaign.timeline.map((item, index) => (
-              <div key={item.id} className="flex gap-4">
-                <div className="flex flex-col items-center">
-                  <div className={`w-3 h-3 rounded-full ${
-                    item.status === 'completed' ? 'bg-green-400' :
-                    item.status === 'in_progress' ? 'bg-yellow-400' :
-                    'bg-gray-500'
-                  }`} />
-                  {index < campaign.timeline.length - 1 && (
-                    <div className={`w-0.5 flex-1 ${
-                      item.status === 'completed' ? 'bg-green-400/30' : 'bg-gray-500/30'
-                    }`} />
-                  )}
-                </div>
-                <div className="flex-1 pb-4">
-                  <div className="flex items-start justify-between mb-1">
-                    <h3 className="text-sm font-semibold text-white">{item.title}</h3>
-                    {getStatusBadge(item.status)}
+          <div className="space-y-3">
+            {campaign.campaignDetails.deliverables.map((deliverable, idx) => (
+              <div key={idx} className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-white">{deliverable.type}</p>
+                    <p className="text-xs text-gray-400">Count: {deliverable.count}</p>
                   </div>
-                  <p className="text-xs text-gray-400 mb-2">{item.date}</p>
-                  <p className="text-xs text-gray-500">{item.description}</p>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-400">Deadline</p>
+                    <p className="text-sm font-semibold text-white">{deliverable.deadline}</p>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </motion.div>
+      )}
 
-        {/* Influencers Section */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
-          className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <Users className="w-5 h-5 text-[#C1B6FD]" />
-              Influencers
-            </h2>
-            <Link
-              to="/dashboard/influencers"
-              className="text-sm text-[#C1B6FD] hover:text-white transition-all"
-            >
-              View All
-            </Link>
-          </div>
-          <div className="space-y-4">
-            {campaign.influencerList?.map((influencer) => (
-              <div
-                key={influencer.id}
-                className="bg-white/5 rounded-lg p-4 border border-white/10 hover:bg-white/10 transition-all"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center font-bold text-white">
-                    {influencer.avatar}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-sm font-semibold text-white">{influencer.name}</h3>
-                      {getPlatformIcon(influencer.platform)}
-                    </div>
-                    <div className="flex items-center gap-4 text-xs text-gray-400">
-                      <span>{influencer.followers} followers</span>
-                      <span>•</span>
-                      <span>{influencer.posts} posts</span>
-                      <span>•</span>
-                      <span>{influencer.engagement} engagement</span>
-                    </div>
-                  </div>
-                  {getStatusBadge(influencer.status)}
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Collaboration Status Section */}
+      {/* Brand Owner Info */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.5 }}
+        transition={{ duration: 0.3, delay: 0.4 }}
         className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6"
       >
         <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-6">
-          <MessageSquare className="w-5 h-5 text-[#C1B6FD]" />
-          Collaboration Status
+          <Mail className="w-5 h-5 text-[#C1B6FD]" />
+          Campaign Owner
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white/5 rounded-lg p-4 border border-white/10 text-center">
-            <p className="text-2xl font-bold text-white mb-1">{campaign.collaborationStatus.total}</p>
-            <p className="text-xs text-gray-400">Total Collaborations</p>
-          </div>
-          <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/20 text-center">
-            <p className="text-2xl font-bold text-green-400 mb-1">{campaign.collaborationStatus.active}</p>
-            <p className="text-xs text-gray-400">Active</p>
-          </div>
-          <div className="bg-yellow-500/10 rounded-lg p-4 border border-yellow-500/20 text-center">
-            <p className="text-2xl font-bold text-yellow-400 mb-1">{campaign.collaborationStatus.pending}</p>
-            <p className="text-xs text-gray-400">Pending</p>
-          </div>
-          <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/20 text-center">
-            <p className="text-2xl font-bold text-blue-400 mb-1">{campaign.collaborationStatus.completed}</p>
-            <p className="text-xs text-gray-400">Completed</p>
-          </div>
+        <div className="bg-white/5 rounded-lg p-4">
+          <p className="text-lg font-semibold text-white mb-1">{campaign.owner}</p>
+          <p className="text-sm text-gray-400 mb-3">{campaign.ownerEmail}</p>
+          <p className="text-sm text-gray-300 mb-2">Brand: {campaign.brand}</p>
+          <p className="text-sm text-gray-300">Category: {campaign.category}</p>
         </div>
       </motion.div>
+
     </div>
   );
 }

@@ -2,10 +2,12 @@ import { Users, MessageSquare, CheckCircle, Clock, Star, TrendingUp, Calendar, D
 import { Link } from 'react-router-dom';
 
 function CollaborationsOverview() {
+  // Collaborations from influencer perspective (with brands)
   const collaborations = [
     {
       id: 1,
-      influencer: 'Sarah Johnson',
+      brand: 'Fashion Brand Co.',
+      brandContact: 'John Smith',
       campaign: 'Summer Fashion Launch',
       status: 'active',
       progress: 75,
@@ -13,13 +15,15 @@ function CollaborationsOverview() {
       deliverables: { completed: 3, total: 4 },
       payment: 'pending',
       rating: null,
-      avatar: '👩',
+      avatar: '🏢',
       deadline: '2025-12-15',
-      platforms: ['Instagram', 'TikTok']
+      platforms: ['Instagram', 'TikTok'],
+      earnings: '$2,500'
     },
     {
       id: 2,
-      influencer: 'Alex Martinez',
+      brand: 'Tech Innovations',
+      brandContact: 'Sarah Williams',
       campaign: 'Tech Product Review',
       status: 'active',
       progress: 45,
@@ -27,13 +31,15 @@ function CollaborationsOverview() {
       deliverables: { completed: 2, total: 5 },
       payment: 'approved',
       rating: null,
-      avatar: '👨',
+      avatar: '💻',
       deadline: '2025-11-30',
-      platforms: ['YouTube']
+      platforms: ['YouTube'],
+      earnings: '$3,000'
     },
     {
       id: 3,
-      influencer: 'Emma Rodriguez',
+      brand: 'Luxury Fashion',
+      brandContact: 'Emma Davis',
       campaign: 'Holiday Collection',
       status: 'completed',
       progress: 100,
@@ -41,13 +47,15 @@ function CollaborationsOverview() {
       deliverables: { completed: 6, total: 6 },
       payment: 'paid',
       rating: 4.8,
-      avatar: '👩',
+      avatar: '✨',
       deadline: '2025-11-20',
-      platforms: ['Instagram', 'Pinterest']
+      platforms: ['Instagram', 'Pinterest'],
+      earnings: '$4,200'
     },
     {
       id: 4,
-      influencer: 'Mike Chen',
+      brand: 'Fitness Pro',
+      brandContact: 'Mike Johnson',
       campaign: 'Fitness Challenge',
       status: 'pending_review',
       progress: 90,
@@ -55,9 +63,10 @@ function CollaborationsOverview() {
       deliverables: { completed: 5, total: 5 },
       payment: 'processing',
       rating: null,
-      avatar: '👨',
+      avatar: '💪',
       deadline: '2025-11-25',
-      platforms: ['TikTok', 'YouTube']
+      platforms: ['TikTok', 'YouTube'],
+      earnings: '$2,800'
     }
   ];
 
@@ -70,10 +79,10 @@ function CollaborationsOverview() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Collaborations</h1>
-          <p className="text-sm sm:text-base text-gray-400">Manage influencer partnerships and track deliverables</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">My Collaborations</h1>
+          <p className="text-sm sm:text-base text-gray-400">Active campaigns you're working on - accepted and in progress</p>
         </div>
-        <Link to="/dashboard/collaborations/messages" className="w-full sm:w-auto">
+        <Link to="/dashboard/influencer/collaborations/messages" className="w-full sm:w-auto">
           <button className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl text-sm sm:text-base font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300 relative w-full sm:w-auto">
             <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
             Messages
@@ -152,9 +161,10 @@ function CollaborationsOverview() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-[#C1B6FD] transition-colors truncate">
-                    {collab.influencer}
+                    {collab.brand}
                   </h3>
                   <p className="text-xs sm:text-sm text-gray-400 truncate">{collab.campaign}</p>
+                  <p className="text-xs text-gray-500 mt-1">Contact: {collab.brandContact}</p>
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
                     {collab.platforms.map((platform) => (
                       <span key={platform} className="px-2 py-1 bg-white/5 rounded text-[10px] sm:text-xs text-gray-300">
@@ -177,7 +187,7 @@ function CollaborationsOverview() {
                 </span>
                 
                 {collab.unreadMessages > 0 && (
-                  <Link to={`/dashboard/collaborations/${collab.id}/messages`}>
+                  <Link to={`/dashboard/influencer/collaborations/${collab.id}/messages`}>
                     <button className="relative px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all">
                       <MessageSquare className="w-5 h-5" />
                       <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white">
@@ -217,18 +227,21 @@ function CollaborationsOverview() {
 
               <div>
                 <p className="text-xs text-gray-400 mb-2">Payment Status</p>
-                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold ${
-                  collab.payment === 'paid' 
-                    ? 'bg-green-500/20 text-green-400'
-                    : collab.payment === 'approved'
-                    ? 'bg-blue-500/20 text-blue-400'
-                    : collab.payment === 'processing'
-                    ? 'bg-yellow-500/20 text-yellow-400'
-                    : 'bg-gray-500/20 text-gray-400'
-                }`}>
-                  <DollarSign className="w-3 h-3" />
-                  {collab.payment}
-                </span>
+                <div className="space-y-1">
+                  <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold ${
+                    collab.payment === 'paid' 
+                      ? 'bg-green-500/20 text-green-400'
+                      : collab.payment === 'approved'
+                      ? 'bg-blue-500/20 text-blue-400'
+                      : collab.payment === 'processing'
+                      ? 'bg-yellow-500/20 text-yellow-400'
+                      : 'bg-gray-500/20 text-gray-400'
+                  }`}>
+                    <DollarSign className="w-3 h-3" />
+                    {collab.payment}
+                  </span>
+                  <p className="text-xs text-[#C1B6FD] font-semibold">{collab.earnings}</p>
+                </div>
               </div>
 
               <div>
@@ -251,22 +264,22 @@ function CollaborationsOverview() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 pt-4 border-t border-white/10">
-              <Link to={`/dashboard/collaborations/${collab.id}/workspace`} className="flex-1">
+              <Link to={`/dashboard/influencer/collaborations/${collab.id}/workspace`} className="flex-1">
                 <button className="w-full px-3 sm:px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs sm:text-sm font-semibold text-gray-300 transition-all">
                   View Workspace
                 </button>
               </Link>
               
               {collab.status === 'pending_review' && (
-                <Link to={`/dashboard/collaborations/${collab.id}/review`} className="flex-1">
+                <Link to={`/dashboard/influencer/collaborations/${collab.id}/review`} className="flex-1">
                   <button className="w-full px-3 sm:px-4 py-2 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] rounded-lg text-xs sm:text-sm font-semibold text-white hover:shadow-lg hover:shadow-purple-500/30 transition-all">
-                    Review & Rate
+                    View Review
                   </button>
                 </Link>
               )}
               
               {collab.status === 'active' && (
-                <Link to={`/dashboard/collaborations/${collab.id}/messages`} className="flex-1">
+                <Link to={`/dashboard/influencer/collaborations/${collab.id}/messages`} className="flex-1">
                   <button className="w-full px-3 sm:px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg text-xs sm:text-sm font-semibold text-blue-400 transition-all">
                     Send Message
                   </button>

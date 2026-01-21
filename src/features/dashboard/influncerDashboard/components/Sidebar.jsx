@@ -11,9 +11,9 @@ function Sidebar() {
     { id: 'dashboard', icon: LayoutDashboard, label: 'Overview', path: '/dashboard/influencer' },
     { id: 'explore', icon: Search, label: 'Explore Campaigns', path: '/dashboard/influencer/campaigns' },
     { id: 'collaborations', icon: Users, label: 'My Collaborations', path: '/dashboard/influencer/collaborations' },
-    { id: 'content', icon: Share2, label: 'My Content', path: '/dashboard/influencer/social-media' },
-    { id: 'analytics', icon: BarChart3, label: 'Performance', path: '/dashboard/influencer/analytics' },
-    { id: 'messages', icon: MessageCircle, label: 'Messages', path: '/dashboard/influencer/messages' },
+    // { id: 'content', icon: Share2, label: 'My Content', path: '/dashboard/influencer/social-media' },
+    // { id: 'analytics', icon: BarChart3, label: 'Performance', path: '/dashboard/influencer/analytics' },
+    // { id: 'messages', icon: MessageCircle, label: 'Messages', path: '/dashboard/influencer/messages' },
     { id: 'profile', icon: Briefcase, label: 'My Profile', path: '/dashboard/influencer/profile' },
   ];
 
@@ -61,7 +61,10 @@ function Sidebar() {
       <nav className="flex-1 space-y-1 py-4">
         {menuItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path;
+          // For dashboard, use exact match. For others, check if pathname starts with the path
+          const isActive = item.id === 'dashboard' 
+            ? location.pathname === item.path || location.pathname === `${item.path}/`
+            : location.pathname.startsWith(item.path);
           return (
             <Link
               key={item.id}

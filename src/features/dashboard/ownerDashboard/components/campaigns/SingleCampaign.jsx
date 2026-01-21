@@ -37,7 +37,7 @@ function SingleCampaign() {
           className="flex items-center gap-4"
         >
           <Link
-            to="/dashboard/campaigns"
+            to="/dashboard/owner/campaigns"
             className="p-2 hover:bg-white/5 rounded-lg transition-all"
           >
             <ArrowLeft className="w-5 h-5 text-gray-400 hover:text-white" />
@@ -60,7 +60,7 @@ function SingleCampaign() {
                 The campaign with ID "{campaignId}" does not exist.
               </p>
               <Link
-                to="/dashboard/campaigns"
+                to="/dashboard/owner/campaigns"
                 className="inline-block px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
               >
                 Back to Campaigns
@@ -123,7 +123,7 @@ function SingleCampaign() {
         className="flex items-center gap-4"
       >
         <Link
-          to="/dashboard/campaigns"
+          to="/dashboard/owner/campaigns"
           className="p-2 hover:bg-white/5 rounded-lg transition-all"
         >
           <ArrowLeft className="w-5 h-5 text-gray-400 hover:text-white" />
@@ -298,7 +298,7 @@ function SingleCampaign() {
               Influencers
             </h2>
             <Link
-              to="/dashboard/influencers"
+              to="/dashboard/owner/influencers"
               className="text-sm text-[#C1B6FD] hover:text-white transition-all"
             >
               View All

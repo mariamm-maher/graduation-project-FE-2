@@ -60,7 +60,10 @@ function Sidebar() {
       <nav className="flex-1 space-y-1 py-4">
         {menuItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path;
+          // For dashboard, use exact match. For others, check if pathname starts with the path
+          const isActive = item.id === 'dashboard' 
+            ? location.pathname === item.path || location.pathname === `${item.path}/`
+            : location.pathname.startsWith(item.path);
           return (
             <Link
               key={item.id}

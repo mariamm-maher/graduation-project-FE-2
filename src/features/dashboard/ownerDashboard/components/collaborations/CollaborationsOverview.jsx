@@ -73,7 +73,7 @@ function CollaborationsOverview() {
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Collaborations</h1>
           <p className="text-sm sm:text-base text-gray-400">Manage influencer partnerships and track deliverables</p>
         </div>
-        <Link to="/dashboard/collaborations/messages" className="w-full sm:w-auto">
+        <Link to="/dashboard/owner/collaborations/messages" className="w-full sm:w-auto">
           <button className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl text-sm sm:text-base font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300 relative w-full sm:w-auto">
             <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
             Messages
@@ -177,7 +177,7 @@ function CollaborationsOverview() {
                 </span>
                 
                 {collab.unreadMessages > 0 && (
-                  <Link to={`/dashboard/collaborations/${collab.id}/messages`}>
+                  <Link to={`/dashboard/owner/collaborations/${collab.id}/messages`}>
                     <button className="relative px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all">
                       <MessageSquare className="w-5 h-5" />
                       <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white">
@@ -251,14 +251,14 @@ function CollaborationsOverview() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 pt-4 border-t border-white/10">
-              <Link to={`/dashboard/collaborations/${collab.id}/workspace`} className="flex-1">
+              <Link to={`/dashboard/owner/collaborations/${collab.id}/workspace`} className="flex-1">
                 <button className="w-full px-3 sm:px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs sm:text-sm font-semibold text-gray-300 transition-all">
                   View Workspace
                 </button>
               </Link>
               
               {collab.status === 'pending_review' && (
-                <Link to={`/dashboard/collaborations/${collab.id}/review`} className="flex-1">
+                <Link to={`/dashboard/owner/collaborations/${collab.id}/review`} className="flex-1">
                   <button className="w-full px-3 sm:px-4 py-2 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] rounded-lg text-xs sm:text-sm font-semibold text-white hover:shadow-lg hover:shadow-purple-500/30 transition-all">
                     Review & Rate
                   </button>
@@ -266,7 +266,7 @@ function CollaborationsOverview() {
               )}
               
               {collab.status === 'active' && (
-                <Link to={`/dashboard/collaborations/${collab.id}/messages`} className="flex-1">
+                <Link to={`/dashboard/owner/collaborations/${collab.id}/messages`} className="flex-1">
                   <button className="w-full px-3 sm:px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg text-xs sm:text-sm font-semibold text-blue-400 transition-all">
                     Send Message
                   </button>

@@ -1,6 +1,10 @@
 import { useState } from 'react';
+import RoleSelection from './RoleSelection';
+import InfluencerOnboarding from './InfluencerOnboarding';
+import CampaignOwnerOnboarding from './CampaignOwnerOnboarding';
 
 export default function Register({ onSwitchToLogin }) {
+  const [step, setStep] = useState('register'); // 'register', 'role-selection', 'influencer-onboarding', 'campaign-owner-onboarding'
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -16,8 +20,100 @@ export default function Register({ onSwitchToLogin }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Register data:', formData);
+    // Move to role selection step
+    setStep('role-selection');
   };
 
+  const handleRoleSelect = (role) => {
+    console.log('Selected role:', role);
+    console.log('Complete registration data:', { ...formData, role });
+    // Complete registration for campaign owner
+    // Here you would typically make an API call
+  };
+
+  const handleInfluencerNext = () => {
+    // Navigate to influencer onboarding
+    setStep('influencer-onboarding');
+  };
+
+  const handleInfluencerOnboardingComplete = (onboardingData) => {
+    console.log('Influencer onboarding completed:', onboardingData);
+    console.log('Complete registration data:', { 
+      ...formData, 
+      role: 'influencer',
+      profile: onboardingData 
+    });
+    // Here you would typically make an API call to complete registration
+  };
+
+  const handleInfluencerOnboardingSkip = () => {
+    console.log('Influencer onboarding skipped');
+    console.log('Complete registration data:', { 
+      ...formData, 
+      role: 'influencer'
+    });
+    // Here you would typically make an API call to complete registration
+  };
+
+  const handleCampaignOwnerNext = () => {
+    // Navigate to campaign owner onboarding
+    setStep('campaign-owner-onboarding');
+  };
+
+  const handleCampaignOwnerOnboardingComplete = (onboardingData) => {
+    console.log('Campaign owner onboarding completed:', onboardingData);
+    console.log('Complete registration data:', { 
+      ...formData, 
+      role: 'campaign_owner',
+      profile: onboardingData 
+    });
+    // Here you would typically make an API call to complete registration
+  };
+
+  const handleCampaignOwnerOnboardingSkip = () => {
+    console.log('Campaign owner onboarding skipped');
+    console.log('Complete registration data:', { 
+      ...formData, 
+      role: 'campaign_owner'
+    });
+    // Here you would typically make an API call to complete registration
+  };
+
+  // Show campaign owner onboarding if step is 'campaign-owner-onboarding'
+  if (step === 'campaign-owner-onboarding') {
+    return (
+      <CampaignOwnerOnboarding 
+        onComplete={handleCampaignOwnerOnboardingComplete}
+        onSkip={handleCampaignOwnerOnboardingSkip}
+        userEmail={formData.email}
+      />
+    );
+  }
+
+  // Show influencer onboarding if step is 'influencer-onboarding'
+  if (step === 'influencer-onboarding') {
+    return (
+      <InfluencerOnboarding 
+        onComplete={handleInfluencerOnboardingComplete}
+        onSkip={handleInfluencerOnboardingSkip}
+        userEmail={formData.email}
+      />
+    );
+  }
+
+  // Show role selection if step is 'role-selection'
+  if (step === 'role-selection') {
+    return (
+      <RoleSelection 
+        onRoleSelect={handleRoleSelect}
+        onInfluencerNext={handleInfluencerNext}
+        onCampaignOwnerNext={handleCampaignOwnerNext}
+        userEmail={formData.email}
+      />
+    );
+  }
+
+  // Show registration form
   return (
     <div className="w-full max-w-md">
       <h2 className="text-2xl font-semibold text-center mb-6 text-white">Create an account</h2>

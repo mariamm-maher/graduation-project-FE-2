@@ -18,7 +18,7 @@ import {
   Facebook
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getCampaignById } from '../../dashboard/components/campaigns/campaignsData';
+import { getCampaignById } from './campaignsData';
 
 function SingleCampaign() {
   const { campaignId } = useParams();

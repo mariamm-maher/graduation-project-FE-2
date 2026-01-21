@@ -6,7 +6,7 @@ import CreateCampaign from './CreateCampaign';
 import CampaignsPerformance from './CampaignsPerformance';
 import CreateCampaignAI from './CreateCompagin-AI/CreateCampaign';
 import GeneratedCampaign from './GeneratedCampaign';
-import SingleCampaign from '../../../campaigns/pages/SingleCampaign';
+import SingleCampaign from './SingleCampaign';
 
 function CampaignsLayout() {
   return (

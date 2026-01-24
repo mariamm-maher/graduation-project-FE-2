@@ -8,6 +8,25 @@ function CreateCampaign() {
   const [selectedGoal, setSelectedGoal] = useState('');
   const [budget, setBudget] = useState('');
   const [currency, setCurrency] = useState('USD');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  // Get today's date in YYYY-MM-DD format for min date
+  const today = new Date().toISOString().split('T')[0];
+
+  // Calculate duration in days
+  const calculateDuration = () => {
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end days
+      return diffDays;
+    }
+    return null;
+  };
+
+  const duration = calculateDuration();
 
   const campaignGoals = [
     { id: 'awareness', label: 'Awareness', icon: Users, color: 'from-purple-400 to-pink-400' },
@@ -23,13 +42,24 @@ function CreateCampaign() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4 }}
-      className="w-full max-w-6xl mx-auto"
-    >
+    <>
+      <style>{`
+        select option {
+          background-color: #1e1632 !important;
+          color: #ffffff !important;
+        }
+        select:focus option:checked {
+          background-color: #745CB4 !important;
+          color: #ffffff !important;
+        }
+      `}</style>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-6xl mx-auto"
+      >
       <div className=" border border-[#745CB4]/30 rounded-3xl shadow-2xl shadow-[#745CB4]/20 overflow-visible">
   
 
@@ -117,18 +147,76 @@ function CreateCampaign() {
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
                     className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-5 py-4 text-white text-lg focus:outline-none focus:border-[#745CB4] focus:bg-white/10 transition-all duration-300 hover:border-[#745CB4]/50 appearance-none cursor-pointer"
+                    style={{
+                      colorScheme: 'dark'
+                    }}
                   >
-                    <option value="USD">USD $</option>
-                    <option value="EUR">EUR €</option>
-                    <option value="GBP">GBP £</option>
-                    <option value="JPY">JPY ¥</option>
-                    <option value="AUD">AUD $</option>
-                    <option value="CAD">CAD $</option>
+                    <option value="USD" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>USD $</option>
+                    <option value="EUR" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>EUR €</option>
+                    <option value="GBP" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>GBP £</option>
+                    <option value="JPY" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>JPY ¥</option>
+                    <option value="AUD" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>AUD $</option>
+                    <option value="CAD" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>CAD $</option>
                   </select>
                 </motion.div>
               </div>
               <p className="text-xs text-gray-500 mt-2 ml-1">Set your total campaign budget including all costs</p>
             </div>
+
+            {/* Campaign Duration */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.65 }}
+            >
+              <label className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-[#C1B6FD]" />
+                Campaign Duration
+                <span className="text-red-400">*</span>
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Start Date</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      // If end date is before new start date, clear it
+                      if (endDate && e.target.value > endDate) {
+                        setEndDate('');
+                      }
+                    }}
+                    min={today}
+                    className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-5 py-4 text-white text-lg focus:outline-none focus:border-[#745CB4] focus:bg-white/10 transition-all duration-300 hover:border-[#745CB4]/50"
+                    style={{ colorScheme: 'dark' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">End Date</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    min={startDate || today}
+                    className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-5 py-4 text-white text-lg focus:outline-none focus:border-[#745CB4] focus:bg-white/10 transition-all duration-300 hover:border-[#745CB4]/50"
+                    style={{ colorScheme: 'dark' }}
+                  />
+                </div>
+              </div>
+              {duration !== null && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-3 p-3 bg-[#745CB4]/20 border border-[#745CB4]/30 rounded-xl"
+                >
+                  <p className="text-sm text-[#C1B6FD] font-medium">
+                    Duration: <span className="text-white">{duration} {duration === 1 ? 'day' : 'days'}</span>
+                  </p>
+                </motion.div>
+              )}
+              <p className="text-xs text-gray-500 mt-2 ml-1">Select the start and end dates for your campaign</p>
+            </motion.div>
 
             {/* Target Audience */}
             <motion.div
@@ -164,7 +252,10 @@ function CreateCampaign() {
                     campaignData: {
                       selectedGoal,
                       budget,
-                      currency
+                      currency,
+                      startDate,
+                      endDate,
+                      duration
                     }
                   }
                 })}
@@ -178,6 +269,7 @@ function CreateCampaign() {
         </div>
       </div>
     </motion.div>
+    </>
   );
 }
 

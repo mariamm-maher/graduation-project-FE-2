@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Building2, Users, CheckCircle2, ArrowRight } from 'lucide-react';
 
-export default function RoleSelection({ onRoleSelect, onInfluencerNext, onCampaignOwnerNext, userEmail }) {
+export default function RoleSelection({ onRoleSelect, onInfluencerNext, onCampaignOwnerNext, onSwitchToLogin, userEmail }) {
   const [selectedRole, setSelectedRole] = useState(null);
 
   const roles = [
@@ -54,16 +54,18 @@ export default function RoleSelection({ onRoleSelect, onInfluencerNext, onCampai
   };
 
   return (
-    <div className="w-full max-w-4xl">
+    <div className="w-full">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="text-center mb-8"
       >
-        <h2 className="text-3xl font-bold text-white mb-2">
-          Choose Your Role
-        </h2>
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white">
+            Choose Your Role
+          </h2>
+        </div>
         <p className="text-gray-400">
           Select how you want to use the platform
         </p>
@@ -74,7 +76,7 @@ export default function RoleSelection({ onRoleSelect, onInfluencerNext, onCampai
         )}
       </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8">
         {roles.map((role, index) => {
           const Icon = role.icon;
           const isSelected = selectedRole === role.id;
@@ -96,27 +98,27 @@ export default function RoleSelection({ onRoleSelect, onInfluencerNext, onCampai
               <div className={`absolute inset-0 bg-gradient-to-br ${role.bgGradient} opacity-50`} />
               
               {/* Content */}
-              <div className="relative p-6 bg-white/5 backdrop-blur-sm">
-                {/* Icon and Title */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${role.gradient} flex items-center justify-center shadow-lg`}>
-                    <Icon className="w-7 h-7 text-white" />
+              <div className="relative p-5 sm:p-6 bg-white/5 backdrop-blur-sm">
+                {/* Icon and Title - Side by side */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${role.gradient} flex items-center justify-center shadow-lg flex-shrink-0`}>
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
-                  
-                  {isSelected && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: 'spring', stiffness: 300 }}
-                    >
-                      <CheckCircle2 className="w-8 h-8 text-[#C1B6FD]" />
-                    </motion.div>
-                  )}
+                  <div className="flex-1 flex items-center justify-between">
+                    <h3 className="text-xl sm:text-2xl font-bold text-white">
+                      {role.title}
+                    </h3>
+                    {isSelected && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 300 }}
+                      >
+                        <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-[#C1B6FD]" />
+                      </motion.div>
+                    )}
+                  </div>
                 </div>
-
-                <h3 className="text-2xl font-bold text-white mb-2">
-                  {role.title}
-                </h3>
                 <p className="text-gray-300 text-sm mb-6">
                   {role.description}
                 </p>
@@ -162,9 +164,22 @@ export default function RoleSelection({ onRoleSelect, onInfluencerNext, onCampai
         <ArrowRight className="w-5 h-5" />
       </motion.button>
 
-      <p className="text-center text-xs text-gray-500 mt-6">
-        You can always change your role later in account settings
-      </p>
+      <div className="text-center mt-6">
+        <p className="text-xs text-gray-500 mb-2">
+          You can always change your role later in account settings
+        </p>
+        {onSwitchToLogin && (
+          <p className="text-sm text-gray-400">
+            Already have an account?{' '}
+            <button
+              onClick={onSwitchToLogin}
+              className="text-[#C1B6FD] underline hover:text-[#745CB4] transition-colors"
+            >
+              Sign in
+            </button>
+          </p>
+        )}
+      </div>
     </div>
   );
 }

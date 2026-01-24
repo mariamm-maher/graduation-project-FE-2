@@ -16,10 +16,10 @@ export default function Login({ onSwitchToRegister }) {
   };
 
   return (
-    <div className="w-full max-w-md">
-      <h2 className="text-2xl font-semibold text-center mb-6 text-white">Sign in</h2>
+    <div className="w-full">
+      <h2 className="text-2xl sm:text-3xl font-semibold text-center mb-6 sm:mb-8 text-white">Sign in</h2>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
         <input
           type="email"
           name="email"

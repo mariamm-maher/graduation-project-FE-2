@@ -18,6 +18,23 @@ function CreateCampaign() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState({ type: '', text: '' });
 
+  // Get today's date in YYYY-MM-DD format for min date
+  const today = new Date().toISOString().split('T')[0];
+
+  // Calculate duration in days
+  const calculateDuration = () => {
+    if (campaignData.startDate && campaignData.endDate) {
+      const start = new Date(campaignData.startDate);
+      const end = new Date(campaignData.endDate);
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end days
+      return diffDays;
+    }
+    return null;
+  };
+
+  const duration = calculateDuration();
+
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
@@ -78,6 +95,17 @@ function CreateCampaign() {
   };
 
   return (
+        <>
+      <style>{`
+        select option {
+          background-color: #1e1632 !important;
+          color: #ffffff !important;
+        }
+        select:focus option:checked {
+          background-color: #745CB4 !important;
+          color: #ffffff !important;
+        }
+      `}</style>
     <div className="space-y-6 lg:space-y-8">
       {/* Header */}
       <div>
@@ -124,13 +152,16 @@ function CreateCampaign() {
                   value={campaignData.goalType}
                   onChange={(e) => setCampaignData({ ...campaignData, goalType: e.target.value })}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all appearance-none cursor-pointer"
-                >
-                  <option value="">Select goal type</option>
-                  <option value="awareness">Awareness</option>
-                  <option value="consideration">Consideration</option>
-                  <option value="conversion">Conversion</option>
-                  <option value="lead_generation">Lead Generation</option>
-                  <option value="retention">Retention</option>
+                  style={{
+                      colorScheme: 'dark'
+                  }}
+                  >
+                  <option value="" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>Select goal type</option>
+                  <option value="awareness" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>Awareness</option>
+                  <option value="consideration" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>Consideration</option>
+                  <option value="conversion" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>Conversion</option>
+                  <option value="lead_generation" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>Lead Generation</option>
+                  <option value="retention" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>Retention</option>
                 </select>
               </div>
             </div>
@@ -189,8 +220,18 @@ function CreateCampaign() {
                 <input
                   type="date"
                   value={campaignData.startDate}
-                  onChange={(e) => setCampaignData({ ...campaignData, startDate: e.target.value })}
+                  onChange={(e) => {
+                    const newStartDate = e.target.value;
+                    setCampaignData({ 
+                      ...campaignData, 
+                      startDate: newStartDate,
+                      // If end date is before new start date, clear it
+                      endDate: campaignData.endDate && newStartDate > campaignData.endDate ? '' : campaignData.endDate
+                    });
+                  }}
+                  min={today}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
+                  style={{ colorScheme: 'dark' }}
                 />
               </div>
               <div className="sm:col-span-2">
@@ -202,9 +243,18 @@ function CreateCampaign() {
                   type="date"
                   value={campaignData.endDate}
                   onChange={(e) => setCampaignData({ ...campaignData, endDate: e.target.value })}
+                  min={campaignData.startDate || today}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
+                  style={{ colorScheme: 'dark' }}
                 />
               </div>
+              {duration !== null && (
+                <div className="sm:col-span-2 p-3 bg-[#745CB4]/20 border border-[#745CB4]/30 rounded-xl">
+                  <p className="text-sm text-[#C1B6FD] font-medium">
+                    Duration: <span className="text-white">{duration} {duration === 1 ? 'day' : 'days'}</span>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -293,6 +343,7 @@ function CreateCampaign() {
         </div>
       </div>
     </div>
+        </>
   );
 }
 

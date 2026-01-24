@@ -1,10 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import RoleSelection from './RoleSelection';
 import InfluencerOnboarding from './InfluencerOnboarding';
 import CampaignOwnerOnboarding from './CampaignOwnerOnboarding';
 
-export default function Register({ onSwitchToLogin }) {
+export default function Register({ onSwitchToLogin, onStepChange }) {
   const [step, setStep] = useState('register'); // 'register', 'role-selection', 'influencer-onboarding', 'campaign-owner-onboarding'
+  
+  // Notify parent about step changes
+  useEffect(() => {
+    if (onStepChange) {
+      onStepChange(step);
+    }
+  }, [step, onStepChange]);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -85,6 +92,8 @@ export default function Register({ onSwitchToLogin }) {
       <CampaignOwnerOnboarding 
         onComplete={handleCampaignOwnerOnboardingComplete}
         onSkip={handleCampaignOwnerOnboardingSkip}
+        onBack={() => setStep('role-selection')}
+        onSwitchToLogin={onSwitchToLogin}
         userEmail={formData.email}
       />
     );
@@ -96,6 +105,8 @@ export default function Register({ onSwitchToLogin }) {
       <InfluencerOnboarding 
         onComplete={handleInfluencerOnboardingComplete}
         onSkip={handleInfluencerOnboardingSkip}
+        onBack={() => setStep('role-selection')}
+        onSwitchToLogin={onSwitchToLogin}
         userEmail={formData.email}
       />
     );
@@ -108,6 +119,7 @@ export default function Register({ onSwitchToLogin }) {
         onRoleSelect={handleRoleSelect}
         onInfluencerNext={handleInfluencerNext}
         onCampaignOwnerNext={handleCampaignOwnerNext}
+        onSwitchToLogin={onSwitchToLogin}
         userEmail={formData.email}
       />
     );
@@ -115,10 +127,10 @@ export default function Register({ onSwitchToLogin }) {
 
   // Show registration form
   return (
-    <div className="w-full max-w-md">
-      <h2 className="text-2xl font-semibold text-center mb-6 text-white">Create an account</h2>
+    <div className="w-full">
+      <h2 className="text-2xl sm:text-3xl font-semibold text-center mb-6 sm:mb-8 text-white">Create an account</h2>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
         <div className="grid grid-cols-2 gap-3">
           <input
             type="text"
@@ -140,17 +152,18 @@ export default function Register({ onSwitchToLogin }) {
           />
         </div>
 
-        <input
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          placeholder="Enter your email"
-          className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all"
-          required
-        />
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="Enter your email"
+            className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all"
+            required
+          />
 
-        <div>
+
           <input
             type="password"
             name="password"

@@ -1,8 +1,14 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Check, X, Sparkles } from 'lucide-react';
+import { 
+  ChevronRight, ChevronLeft, Check, X, Sparkles,
+  ShoppingBag, Building2, ShoppingCart, Code, Target, Heart, Rocket, Building,
+  Shirt, Sparkles as SparklesIcon, Activity, ChefHat, Plane, Laptop, DollarSign, BookOpen, Film, Car, Home, Store,
+  Megaphone, TrendingUp, MessageCircle, Globe, Star,
+  Camera, Youtube, Music, Twitter, Users, Briefcase, MapPin, Ghost
+} from 'lucide-react';
 
-export default function CampaignOwnerOnboarding({ onComplete, onSkip, userEmail }) {
+export default function CampaignOwnerOnboarding({ onComplete, onSkip, onBack, onSwitchToLogin, userEmail }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     brandName: '',
@@ -30,14 +36,14 @@ export default function CampaignOwnerOnboarding({ onComplete, onSkip, userEmail 
       type: 'single-select',
       field: 'businessType',
       options: [
-        { value: 'b2c', label: 'B2C (Business to Consumer)', icon: '🛍️' },
-        { value: 'b2b', label: 'B2B (Business to Business)', icon: '🏢' },
-        { value: 'ecommerce', label: 'E-commerce', icon: '🛒' },
-        { value: 'saas', label: 'SaaS/Software', icon: '💻' },
-        { value: 'agency', label: 'Agency/Services', icon: '🎯' },
-        { value: 'nonprofit', label: 'Non-profit', icon: '❤️' },
-        { value: 'startup', label: 'Startup', icon: '🚀' },
-        { value: 'enterprise', label: 'Enterprise', icon: '🏛️' }
+        { value: 'b2c', label: 'B2C (Business to Consumer)', icon: ShoppingBag },
+        { value: 'b2b', label: 'B2B (Business to Business)', icon: Building2 },
+        { value: 'ecommerce', label: 'E-commerce', icon: ShoppingCart },
+        { value: 'saas', label: 'SaaS/Software', icon: Code },
+        { value: 'agency', label: 'Agency/Services', icon: Target },
+        { value: 'nonprofit', label: 'Non-profit', icon: Heart },
+        { value: 'startup', label: 'Startup', icon: Rocket },
+        { value: 'enterprise', label: 'Enterprise', icon: Building }
       ]
     },
     {
@@ -47,18 +53,18 @@ export default function CampaignOwnerOnboarding({ onComplete, onSkip, userEmail 
       type: 'single-select',
       field: 'industry',
       options: [
-        { value: 'fashion', label: 'Fashion & Apparel', icon: '👗' },
-        { value: 'beauty', label: 'Beauty & Cosmetics', icon: '💄' },
-        { value: 'health', label: 'Health & Wellness', icon: '💪' },
-        { value: 'food', label: 'Food & Beverage', icon: '🍳' },
-        { value: 'travel', label: 'Travel & Hospitality', icon: '✈️' },
-        { value: 'technology', label: 'Technology', icon: '💻' },
-        { value: 'finance', label: 'Finance & Banking', icon: '💰' },
-        { value: 'education', label: 'Education', icon: '📚' },
-        { value: 'entertainment', label: 'Entertainment & Media', icon: '🎬' },
-        { value: 'automotive', label: 'Automotive', icon: '🚗' },
-        { value: 'real-estate', label: 'Real Estate', icon: '🏠' },
-        { value: 'retail', label: 'Retail', icon: '🏪' }
+        { value: 'fashion', label: 'Fashion & Apparel', icon: Shirt },
+        { value: 'beauty', label: 'Beauty & Cosmetics', icon: SparklesIcon },
+        { value: 'health', label: 'Health & Wellness', icon: Activity },
+        { value: 'food', label: 'Food & Beverage', icon: ChefHat },
+        { value: 'travel', label: 'Travel & Hospitality', icon: Plane },
+        { value: 'technology', label: 'Technology', icon: Laptop },
+        { value: 'finance', label: 'Finance & Banking', icon: DollarSign },
+        { value: 'education', label: 'Education', icon: BookOpen },
+        { value: 'entertainment', label: 'Entertainment & Media', icon: Film },
+        { value: 'automotive', label: 'Automotive', icon: Car },
+        { value: 'real-estate', label: 'Real Estate', icon: Home },
+        { value: 'retail', label: 'Retail', icon: Store }
       ]
     },
     {
@@ -68,14 +74,14 @@ export default function CampaignOwnerOnboarding({ onComplete, onSkip, userEmail 
       type: 'multi-select',
       field: 'marketingGoals',
       options: [
-        { value: 'brand-awareness', label: 'Brand Awareness', icon: '📢' },
-        { value: 'lead-generation', label: 'Lead Generation', icon: '🎯' },
-        { value: 'sales', label: 'Increase Sales', icon: '💰' },
-        { value: 'engagement', label: 'Audience Engagement', icon: '💬' },
-        { value: 'traffic', label: 'Website Traffic', icon: '🌐' },
-        { value: 'social-growth', label: 'Social Media Growth', icon: '📈' },
-        { value: 'product-launch', label: 'Product Launch', icon: '🚀' },
-        { value: 'reputation', label: 'Brand Reputation', icon: '⭐' }
+        { value: 'brand-awareness', label: 'Brand Awareness', icon: Megaphone },
+        { value: 'lead-generation', label: 'Lead Generation', icon: Target },
+        { value: 'sales', label: 'Increase Sales', icon: TrendingUp },
+        { value: 'engagement', label: 'Audience Engagement', icon: MessageCircle },
+        { value: 'traffic', label: 'Website Traffic', icon: Globe },
+        { value: 'social-growth', label: 'Social Media Growth', icon: TrendingUp },
+        { value: 'product-launch', label: 'Product Launch', icon: Rocket },
+        { value: 'reputation', label: 'Brand Reputation', icon: Star }
       ]
     },
     {
@@ -94,14 +100,14 @@ export default function CampaignOwnerOnboarding({ onComplete, onSkip, userEmail 
       type: 'multi-select',
       field: 'platforms',
       options: [
-        { value: 'instagram', label: 'Instagram', icon: '📸' },
-        { value: 'facebook', label: 'Facebook', icon: '👥' },
-        { value: 'youtube', label: 'YouTube', icon: '📺' },
-        { value: 'tiktok', label: 'TikTok', icon: '🎵' },
-        { value: 'twitter', label: 'Twitter/X', icon: '🐦' },
-        { value: 'linkedin', label: 'LinkedIn', icon: '💼' },
-        { value: 'pinterest', label: 'Pinterest', icon: '📌' },
-        { value: 'snapchat', label: 'Snapchat', icon: '👻' }
+        { value: 'instagram', label: 'Instagram', icon: Camera },
+        { value: 'facebook', label: 'Facebook', icon: Users },
+        { value: 'youtube', label: 'YouTube', icon: Youtube },
+        { value: 'tiktok', label: 'TikTok', icon: Music },
+        { value: 'twitter', label: 'Twitter/X', icon: Twitter },
+        { value: 'linkedin', label: 'LinkedIn', icon: Briefcase },
+        { value: 'pinterest', label: 'Pinterest', icon: MapPin },
+        { value: 'snapchat', label: 'Snapchat', icon: Ghost }
       ]
     },
     {
@@ -126,6 +132,9 @@ export default function CampaignOwnerOnboarding({ onComplete, onSkip, userEmail 
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+    } else if (onBack) {
+      // If on first step, go back to role selection
+      onBack();
     }
   };
 
@@ -169,7 +178,7 @@ export default function CampaignOwnerOnboarding({ onComplete, onSkip, userEmail 
   const progress = ((currentStep + 1) / steps.length) * 100;
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -227,7 +236,7 @@ export default function CampaignOwnerOnboarding({ onComplete, onSkip, userEmail 
 
           {/* Multi-select options */}
           {currentStepData.type === 'multi-select' && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {currentStepData.options.map((option) => {
                 const isSelected = formData[currentStepData.field]?.includes(option.value);
                 return (
@@ -236,17 +245,24 @@ export default function CampaignOwnerOnboarding({ onComplete, onSkip, userEmail 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleMultiSelect(currentStepData.field, option.value)}
-                    className={`relative p-4 rounded-xl border-2 transition-all ${
+                    className={`relative p-3 sm:p-4 rounded-xl border-2 transition-all flex flex-col items-center justify-center min-h-[100px] ${
                       isSelected
                         ? 'border-[#C1B6FD] bg-[#C1B6FD]/10 shadow-lg shadow-[#C1B6FD]/20'
                         : 'border-white/10 bg-white/5 hover:border-white/20'
                     }`}
                   >
-                    <div className="text-2xl mb-2">{option.icon}</div>
-                    <div className="text-sm font-medium text-white">{option.label}</div>
+                    {(() => {
+                      const IconComponent = option.icon;
+                      return (
+                        <div className="mb-2">
+                          <IconComponent className="w-6 h-6 sm:w-8 sm:h-8 text-[#C1B6FD]" />
+                        </div>
+                      );
+                    })()}
+                    <div className="text-xs sm:text-sm font-medium text-white text-center">{option.label}</div>
                     {isSelected && (
                       <div className="absolute top-2 right-2">
-                        <Check className="w-5 h-5 text-[#C1B6FD]" />
+                        <Check className="w-4 h-4 sm:w-5 sm:h-5 text-[#C1B6FD]" />
                       </div>
                     )}
                   </motion.button>
@@ -256,32 +272,43 @@ export default function CampaignOwnerOnboarding({ onComplete, onSkip, userEmail 
           )}
 
           {/* Single-select options */}
-          {currentStepData.type === 'single-select' && (
-            <div className="space-y-3">
-              {currentStepData.options.map((option) => {
-                const isSelected = formData[currentStepData.field] === option.value;
-                return (
-                  <motion.button
-                    key={option.value}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={() => handleSingleSelect(currentStepData.field, option.value)}
-                    className={`w-full p-4 rounded-xl border-2 transition-all flex items-center gap-4 ${
-                      isSelected
-                        ? 'border-[#C1B6FD] bg-[#C1B6FD]/10 shadow-lg shadow-[#C1B6FD]/20'
-                        : 'border-white/10 bg-white/5 hover:border-white/20'
-                    }`}
-                  >
-                    <div className="text-2xl">{option.icon}</div>
-                    <div className="flex-1 text-left text-white font-medium">{option.label}</div>
-                    {isSelected && (
-                      <Check className="w-5 h-5 text-[#C1B6FD]" />
-                    )}
-                  </motion.button>
-                );
-              })}
-            </div>
-          )}
+          {currentStepData.type === 'single-select' && (() => {
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                {currentStepData.options.map((option) => {
+                  const isSelected = formData[currentStepData.field] === option.value;
+                  return (
+                    <motion.button
+                      key={option.value}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleSingleSelect(currentStepData.field, option.value)}
+                      className={`relative p-3 sm:p-4 rounded-xl border-2 transition-all flex flex-col items-center justify-center min-h-[100px] ${
+                        isSelected
+                          ? 'border-[#C1B6FD] bg-[#C1B6FD]/10 shadow-lg shadow-[#C1B6FD]/20'
+                          : 'border-white/10 bg-white/5 hover:border-white/20'
+                      }`}
+                    >
+                      {(() => {
+                        const IconComponent = option.icon;
+                        return (
+                          <div className="mb-2">
+                            <IconComponent className="w-6 h-6 sm:w-8 sm:h-8 text-[#C1B6FD]" />
+                          </div>
+                        );
+                      })()}
+                      <div className="text-xs sm:text-sm font-medium text-white text-center">{option.label}</div>
+                      {isSelected && (
+                        <div className="absolute top-2 right-2">
+                          <Check className="w-4 h-4 sm:w-5 sm:h-5 text-[#C1B6FD]" />
+                        </div>
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {/* Text input */}
           {currentStepData.type === 'input' && (
@@ -311,12 +338,7 @@ export default function CampaignOwnerOnboarding({ onComplete, onSkip, userEmail 
       <div className="flex items-center justify-between gap-4">
         <button
           onClick={handleBack}
-          disabled={currentStep === 0}
-          className={`px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 ${
-            currentStep === 0
-              ? 'opacity-0 pointer-events-none'
-              : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
-          }`}
+          className="px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 bg-white/5 border border-white/10 text-white hover:bg-white/10"
         >
           <ChevronLeft className="w-5 h-5" />
           Back
@@ -344,9 +366,22 @@ export default function CampaignOwnerOnboarding({ onComplete, onSkip, userEmail 
         </button>
       </div>
 
-      <p className="text-center text-xs text-gray-500 mt-6">
-        Don't worry, you can always update this information later in your profile
-      </p>
+      <div className="text-center mt-6">
+        <p className="text-xs text-gray-500 mb-2">
+          Don't worry, you can always update this information later in your profile
+        </p>
+        {onSwitchToLogin && (
+          <p className="text-sm text-gray-400">
+            Already have an account?{' '}
+            <button
+              onClick={onSwitchToLogin}
+              className="text-[#C1B6FD] underline hover:text-[#745CB4] transition-colors"
+            >
+              Sign in
+            </button>
+          </p>
+        )}
+      </div>
     </div>
   );
 }

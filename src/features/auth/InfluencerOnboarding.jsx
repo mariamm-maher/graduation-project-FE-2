@@ -1,8 +1,15 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Check, X, Sparkles } from 'lucide-react';
+import { 
+  ChevronRight, ChevronLeft, Check, X, Sparkles,
+  Camera, Youtube, Music, Twitter, Users, Briefcase, Gamepad2, Ghost,
+  Sprout, Leaf, TreePine, TreeDeciduous, Star, Flame, Gem,
+  BarChart, TrendingUp, Rocket, HelpCircle,
+  Shirt, Sparkles as SparklesIcon, Dumbbell, ChefHat, Plane, Laptop, BookOpen, Film, Baby,
+  Handshake, DollarSign, Gift, Mic, Palette, Lightbulb, User, GraduationCap, UserCircle
+} from 'lucide-react';
 
-export default function InfluencerOnboarding({ onComplete, onSkip, userEmail }) {
+export default function InfluencerOnboarding({ onComplete, onSkip, onBack, onSwitchToLogin, userEmail }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     platforms: [],
@@ -24,14 +31,14 @@ export default function InfluencerOnboarding({ onComplete, onSkip, userEmail }) 
       type: 'multi-select',
       field: 'platforms',
       options: [
-        { value: 'instagram', label: 'Instagram', icon: '📸' },
-        { value: 'youtube', label: 'YouTube', icon: '📺' },
-        { value: 'tiktok', label: 'TikTok', icon: '🎵' },
-        { value: 'twitter', label: 'Twitter/X', icon: '🐦' },
-        { value: 'facebook', label: 'Facebook', icon: '👥' },
-        { value: 'linkedin', label: 'LinkedIn', icon: '💼' },
-        { value: 'twitch', label: 'Twitch', icon: '🎮' },
-        { value: 'snapchat', label: 'Snapchat', icon: '👻' }
+        { value: 'instagram', label: 'Instagram', icon: Camera },
+        { value: 'youtube', label: 'YouTube', icon: Youtube },
+        { value: 'tiktok', label: 'TikTok', icon: Music },
+        { value: 'twitter', label: 'Twitter/X', icon: Twitter },
+        { value: 'facebook', label: 'Facebook', icon: Users },
+        { value: 'linkedin', label: 'LinkedIn', icon: Briefcase },
+        { value: 'twitch', label: 'Twitch', icon: Gamepad2 },
+        { value: 'snapchat', label: 'Snapchat', icon: Ghost }
       ]
     },
     {
@@ -49,13 +56,13 @@ export default function InfluencerOnboarding({ onComplete, onSkip, userEmail }) 
       type: 'single-select',
       field: 'followerCount',
       options: [
-        { value: '0-1k', label: '0 - 1K', icon: '🌱' },
-        { value: '1k-10k', label: '1K - 10K', icon: '🌿' },
-        { value: '10k-50k', label: '10K - 50K', icon: '🌳' },
-        { value: '50k-100k', label: '50K - 100K', icon: '🌲' },
-        { value: '100k-500k', label: '100K - 500K', icon: '⭐' },
-        { value: '500k-1m', label: '500K - 1M', icon: '🔥' },
-        { value: '1m+', label: '1M+', icon: '💎' }
+        { value: '0-1k', label: '0 - 1K', icon: Sprout },
+        { value: '1k-10k', label: '1K - 10K', icon: Leaf },
+        { value: '10k-50k', label: '10K - 50K', icon: TreePine },
+        { value: '50k-100k', label: '50K - 100K', icon: TreeDeciduous },
+        { value: '100k-500k', label: '100K - 500K', icon: Star },
+        { value: '500k-1m', label: '500K - 1M', icon: Flame },
+        { value: '1m+', label: '1M+', icon: Gem }
       ]
     },
     {
@@ -65,12 +72,12 @@ export default function InfluencerOnboarding({ onComplete, onSkip, userEmail }) 
       type: 'single-select',
       field: 'engagementRate',
       options: [
-        { value: '0-1', label: '0% - 1%', icon: '📊' },
-        { value: '1-3', label: '1% - 3%', icon: '📈' },
-        { value: '3-5', label: '3% - 5%', icon: '📊' },
-        { value: '5-10', label: '5% - 10%', icon: '📈' },
-        { value: '10+', label: '10%+', icon: '🚀' },
-        { value: 'not-sure', label: 'Not sure', icon: '🤔' }
+        { value: '0-1', label: '0% - 1%', icon: BarChart },
+        { value: '1-3', label: '1% - 3%', icon: TrendingUp },
+        { value: '3-5', label: '3% - 5%', icon: BarChart },
+        { value: '5-10', label: '5% - 10%', icon: TrendingUp },
+        { value: '10+', label: '10%+', icon: Rocket },
+        { value: 'not-sure', label: 'Not sure', icon: HelpCircle }
       ]
     },
     {
@@ -80,18 +87,18 @@ export default function InfluencerOnboarding({ onComplete, onSkip, userEmail }) 
       type: 'multi-select',
       field: 'contentNiches',
       options: [
-        { value: 'fashion', label: 'Fashion & Style', icon: '👗' },
-        { value: 'beauty', label: 'Beauty & Makeup', icon: '💄' },
-        { value: 'fitness', label: 'Fitness & Health', icon: '💪' },
-        { value: 'food', label: 'Food & Cooking', icon: '🍳' },
-        { value: 'travel', label: 'Travel', icon: '✈️' },
-        { value: 'tech', label: 'Technology', icon: '💻' },
-        { value: 'gaming', label: 'Gaming', icon: '🎮' },
-        { value: 'lifestyle', label: 'Lifestyle', icon: '🌟' },
-        { value: 'business', label: 'Business', icon: '💼' },
-        { value: 'education', label: 'Education', icon: '📚' },
-        { value: 'entertainment', label: 'Entertainment', icon: '🎬' },
-        { value: 'parenting', label: 'Parenting', icon: '👶' }
+        { value: 'fashion', label: 'Fashion & Style', icon: Shirt },
+        { value: 'beauty', label: 'Beauty & Makeup', icon: SparklesIcon },
+        { value: 'fitness', label: 'Fitness & Health', icon: Dumbbell },
+        { value: 'food', label: 'Food & Cooking', icon: ChefHat },
+        { value: 'travel', label: 'Travel', icon: Plane },
+        { value: 'tech', label: 'Technology', icon: Laptop },
+        { value: 'gaming', label: 'Gaming', icon: Gamepad2 },
+        { value: 'lifestyle', label: 'Lifestyle', icon: SparklesIcon },
+        { value: 'business', label: 'Business', icon: Briefcase },
+        { value: 'education', label: 'Education', icon: BookOpen },
+        { value: 'entertainment', label: 'Entertainment', icon: Film },
+        { value: 'parenting', label: 'Parenting', icon: Baby }
       ]
     },
     {
@@ -101,14 +108,14 @@ export default function InfluencerOnboarding({ onComplete, onSkip, userEmail }) 
       type: 'multi-select',
       field: 'collaborationTypes',
       options: [
-        { value: 'sponsored-posts', label: 'Sponsored Posts', icon: '📸' },
-        { value: 'product-reviews', label: 'Product Reviews', icon: '⭐' },
-        { value: 'brand-ambassadorship', label: 'Brand Ambassadorship', icon: '🤝' },
-        { value: 'affiliate-marketing', label: 'Affiliate Marketing', icon: '💰' },
-        { value: 'giveaways', label: 'Giveaways', icon: '🎁' },
-        { value: 'event-appearances', label: 'Event Appearances', icon: '🎤' },
-        { value: 'content-creation', label: 'Content Creation', icon: '🎨' },
-        { value: 'consulting', label: 'Consulting', icon: '💡' }
+        { value: 'sponsored-posts', label: 'Sponsored Posts', icon: Camera },
+        { value: 'product-reviews', label: 'Product Reviews', icon: Star },
+        { value: 'brand-ambassadorship', label: 'Brand Ambassadorship', icon: Handshake },
+        { value: 'affiliate-marketing', label: 'Affiliate Marketing', icon: DollarSign },
+        { value: 'giveaways', label: 'Giveaways', icon: Gift },
+        { value: 'event-appearances', label: 'Event Appearances', icon: Mic },
+        { value: 'content-creation', label: 'Content Creation', icon: Palette },
+        { value: 'consulting', label: 'Consulting', icon: Lightbulb }
       ]
     },
     {
@@ -118,13 +125,13 @@ export default function InfluencerOnboarding({ onComplete, onSkip, userEmail }) 
       type: 'single-select',
       field: 'audienceAge',
       options: [
-        { value: '13-17', label: '13-17', icon: '👦' },
-        { value: '18-24', label: '18-24', icon: '🎓' },
-        { value: '25-34', label: '25-34', icon: '💼' },
-        { value: '35-44', label: '35-44', icon: '👨‍💼' },
-        { value: '45-54', label: '45-54', icon: '👔' },
-        { value: '55+', label: '55+', icon: '👴' },
-        { value: 'mixed', label: 'Mixed/Diverse', icon: '🌈' }
+        { value: '13-17', label: '13-17', icon: User },
+        { value: '18-24', label: '18-24', icon: GraduationCap },
+        { value: '25-34', label: '25-34', icon: Briefcase },
+        { value: '35-44', label: '35-44', icon: Briefcase },
+        { value: '45-54', label: '45-54', icon: Shirt },
+        { value: '55+', label: '55+', icon: UserCircle },
+        { value: 'mixed', label: 'Mixed/Diverse', icon: Palette }
       ]
     },
     {
@@ -157,6 +164,9 @@ export default function InfluencerOnboarding({ onComplete, onSkip, userEmail }) 
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+    } else if (onBack) {
+      // If on first step, go back to role selection
+      onBack();
     }
   };
 
@@ -209,7 +219,7 @@ export default function InfluencerOnboarding({ onComplete, onSkip, userEmail }) 
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -267,7 +277,7 @@ export default function InfluencerOnboarding({ onComplete, onSkip, userEmail }) 
 
           {/* Multi-select options */}
           {currentStepData.type === 'multi-select' && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {currentStepData.options.map((option) => {
                 const isSelected = formData[currentStepData.field]?.includes(option.value);
                 return (
@@ -276,17 +286,24 @@ export default function InfluencerOnboarding({ onComplete, onSkip, userEmail }) 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleMultiSelect(currentStepData.field, option.value)}
-                    className={`relative p-4 rounded-xl border-2 transition-all ${
+                    className={`relative p-3 sm:p-4 rounded-xl border-2 transition-all flex flex-col items-center justify-center min-h-[100px] ${
                       isSelected
                         ? 'border-[#C1B6FD] bg-[#C1B6FD]/10 shadow-lg shadow-[#C1B6FD]/20'
                         : 'border-white/10 bg-white/5 hover:border-white/20'
                     }`}
                   >
-                    <div className="text-2xl mb-2">{option.icon}</div>
-                    <div className="text-sm font-medium text-white">{option.label}</div>
+                    {(() => {
+                      const IconComponent = option.icon;
+                      return (
+                        <div className="mb-2">
+                          <IconComponent className="w-6 h-6 sm:w-8 sm:h-8 text-[#C1B6FD]" />
+                        </div>
+                      );
+                    })()}
+                    <div className="text-xs sm:text-sm font-medium text-white text-center">{option.label}</div>
                     {isSelected && (
                       <div className="absolute top-2 right-2">
-                        <Check className="w-5 h-5 text-[#C1B6FD]" />
+                        <Check className="w-4 h-4 sm:w-5 sm:h-5 text-[#C1B6FD]" />
                       </div>
                     )}
                   </motion.button>
@@ -296,32 +313,45 @@ export default function InfluencerOnboarding({ onComplete, onSkip, userEmail }) 
           )}
 
           {/* Single-select options */}
-          {currentStepData.type === 'single-select' && (
-            <div className="space-y-3">
-              {getPrimaryPlatformOptions().map((option) => {
-                const isSelected = formData[currentStepData.field] === option.value;
-                return (
-                  <motion.button
-                    key={option.value}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={() => handleSingleSelect(currentStepData.field, option.value)}
-                    className={`w-full p-4 rounded-xl border-2 transition-all flex items-center gap-4 ${
-                      isSelected
-                        ? 'border-[#C1B6FD] bg-[#C1B6FD]/10 shadow-lg shadow-[#C1B6FD]/20'
-                        : 'border-white/10 bg-white/5 hover:border-white/20'
-                    }`}
-                  >
-                    <div className="text-2xl">{option.icon}</div>
-                    <div className="flex-1 text-left text-white font-medium">{option.label}</div>
-                    {isSelected && (
-                      <Check className="w-5 h-5 text-[#C1B6FD]" />
-                    )}
-                  </motion.button>
-                );
-              })}
-            </div>
-          )}
+          {currentStepData.type === 'single-select' && (() => {
+            const options = getPrimaryPlatformOptions();
+            
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                {options.map((option) => {
+                  const isSelected = formData[currentStepData.field] === option.value;
+                  return (
+                    <motion.button
+                      key={option.value}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleSingleSelect(currentStepData.field, option.value)}
+                      className={`relative p-3 sm:p-4 rounded-xl border-2 transition-all flex flex-col items-center justify-center min-h-[100px] ${
+                        isSelected
+                          ? 'border-[#C1B6FD] bg-[#C1B6FD]/10 shadow-lg shadow-[#C1B6FD]/20'
+                          : 'border-white/10 bg-white/5 hover:border-white/20'
+                      }`}
+                    >
+                      {(() => {
+                        const IconComponent = option.icon;
+                        return (
+                          <div className="mb-2">
+                            <IconComponent className="w-6 h-6 sm:w-8 sm:h-8 text-[#C1B6FD]" />
+                          </div>
+                        );
+                      })()}
+                      <div className="text-xs sm:text-sm font-medium text-white text-center">{option.label}</div>
+                      {isSelected && (
+                        <div className="absolute top-2 right-2">
+                          <Check className="w-4 h-4 sm:w-5 sm:h-5 text-[#C1B6FD]" />
+                        </div>
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {/* Text input */}
           {currentStepData.type === 'input' && (
@@ -351,12 +381,7 @@ export default function InfluencerOnboarding({ onComplete, onSkip, userEmail }) 
       <div className="flex items-center justify-between gap-4">
         <button
           onClick={handleBack}
-          disabled={currentStep === 0}
-          className={`px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 ${
-            currentStep === 0
-              ? 'opacity-0 pointer-events-none'
-              : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
-          }`}
+          className="px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 bg-white/5 border border-white/10 text-white hover:bg-white/10"
         >
           <ChevronLeft className="w-5 h-5" />
           Back
@@ -384,9 +409,22 @@ export default function InfluencerOnboarding({ onComplete, onSkip, userEmail }) 
         </button>
       </div>
 
-      <p className="text-center text-xs text-gray-500 mt-6">
-        Don't worry, you can always update this information later in your profile
-      </p>
+      <div className="text-center mt-6">
+        <p className="text-xs text-gray-500 mb-2">
+          Don't worry, you can always update this information later in your profile
+        </p>
+        {onSwitchToLogin && (
+          <p className="text-sm text-gray-400">
+            Already have an account?{' '}
+            <button
+              onClick={onSwitchToLogin}
+              className="text-[#C1B6FD] underline hover:text-[#745CB4] transition-colors"
+            >
+              Sign in
+            </button>
+          </p>
+        )}
+      </div>
     </div>
   );
 }

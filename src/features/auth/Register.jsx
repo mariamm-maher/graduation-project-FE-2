@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { User, Mail, Lock, ArrowRight, Chrome } from 'lucide-react';
 import RoleSelection from './RoleSelection';
 import InfluencerOnboarding from './InfluencerOnboarding';
 import CampaignOwnerOnboarding from './CampaignOwnerOnboarding';
@@ -127,81 +128,113 @@ export default function Register({ onSwitchToLogin, onStepChange }) {
 
   // Show registration form
   return (
-    <div className="w-full">
-      <h2 className="text-2xl sm:text-3xl font-semibold text-center mb-6 sm:mb-8 text-white">Create an account</h2>
+    <div className="w-full animate-fadeIn">
+      <div className="text-center mb-6 sm:mb-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 animate-slideDown">Create Account</h2>
+        <p className="text-gray-400 text-sm animate-slideDown" style={{ animationDelay: '0.1s' }}>Join us and start your journey</p>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-        <div className="grid grid-cols-2 gap-3">
-          <input
-            type="text"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            placeholder="First name"
-            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all"
-            required
-          />
-          <input
-            type="text"
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            placeholder="Last name"
-            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all"
-            required
-          />
+        <div className="grid grid-cols-2 gap-3 animate-slideUp" style={{ animationDelay: '0.2s' }}>
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <User className="h-5 w-5 text-gray-400 group-focus-within:text-[#C1B6FD] transition-colors duration-300" />
+            </div>
+            <input
+              type="text"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              placeholder="First name"
+              className="w-full pl-11 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300 hover:bg-white/10"
+              required
+            />
+          </div>
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <User className="h-5 w-5 text-gray-400 group-focus-within:text-[#C1B6FD] transition-colors duration-300" />
+            </div>
+            <input
+              type="text"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              placeholder="Last name"
+              className="w-full pl-11 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300 hover:bg-white/10"
+              required
+            />
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Enter your email"
-            className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all"
-            required
-          />
+        <div className="grid grid-cols-2 gap-3 animate-slideUp" style={{ animationDelay: '0.3s' }}>
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-[#C1B6FD] transition-colors duration-300" />
+            </div>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Enter your email"
+              className="w-full pl-11 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300 hover:bg-white/10"
+              required
+            />
+          </div>
 
-
-          <input
-            type="password"
-            name="password"
-            value={formData.password || ''}
-            onChange={handleChange}
-            placeholder="Create a password"
-            className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all"
-            required
-            minLength={8}
-            autoComplete="new-password"
-          />
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-[#C1B6FD] transition-colors duration-300" />
+            </div>
+            <input
+              type="password"
+              name="password"
+              value={formData.password || ''}
+              onChange={handleChange}
+              placeholder="Create a password"
+              className="w-full pl-11 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300 hover:bg-white/10"
+              required
+              minLength={8}
+              autoComplete="new-password"
+            />
+          </div>
         </div>
 
         <button
           type="submit"
-          className="w-full bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white font-medium py-3 rounded-lg hover:shadow-lg hover:shadow-[#C1B6FD]/50 hover:scale-[1.02] transition-all duration-300 mt-2"
+          className="w-full bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white font-semibold py-3.5 rounded-lg hover:shadow-lg hover:shadow-[#C1B6FD]/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 mt-2 flex items-center justify-center gap-2 group animate-slideUp"
+          style={{ animationDelay: '0.4s' }}
         >
-          Create account
+          <span>Create account</span>
+          <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
         </button>
       </form>
 
-      <div className="my-6 text-center text-gray-500 text-sm">OR SIGN UP WITH</div>
+      <div className="flex items-center gap-4 my-6 animate-slideUp" style={{ animationDelay: '0.5s' }}>
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+        <span className="text-gray-400 text-sm font-medium">OR</span>
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+      </div>
 
-      <button className="w-full flex items-center justify-center gap-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg py-3 text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300">
-        <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
-        Google
+      <button 
+        type="button"
+        className="w-full flex items-center justify-center gap-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg py-3 text-white hover:bg-white/10 hover:border-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group animate-slideUp"
+        style={{ animationDelay: '0.6s' }}
+      >
+        <Chrome className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
+        <span>Continue with Google</span>
       </button>
 
-      <p className="text-center text-xs text-gray-500 mt-6">
+      <p className="text-center text-xs text-gray-500 mt-6 animate-slideUp" style={{ animationDelay: '0.7s' }}>
         By creating an account, you agree to our{' '}
-        <a href="#" className="text-[#C1B6FD] underline hover:text-[#745CB4] transition-colors">Terms & Service</a>
+        <a href="#" className="text-[#C1B6FD] font-semibold hover:text-[#745CB4] transition-colors duration-300 hover:underline">Terms & Service</a>
       </p>
 
-      <p className="text-center mt-4 text-gray-400">
+      <p className="text-center mt-4 text-gray-400 animate-slideUp" style={{ animationDelay: '0.8s' }}>
         Already have an account?{' '}
         <button
           onClick={onSwitchToLogin}
-          className="text-[#C1B6FD] underline hover:text-[#745CB4] transition-colors"
+          className="text-[#C1B6FD] font-semibold hover:text-[#745CB4] transition-colors duration-300 hover:underline"
         >
           Sign in
         </button>

@@ -96,11 +96,19 @@ export default function AuthForm() {
           </div>
         )}
 
-        {isLogin ? (
-          <Login onSwitchToRegister={() => setIsLogin(false)} />
-        ) : (
-          <Register onSwitchToLogin={() => setIsLogin(true)} onStepChange={setRegisterStep} />
-        )}
+        <motion.div
+          key={isLogin ? 'login' : 'register'}
+          initial={{ opacity: 0, x: isLogin ? -20 : 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: isLogin ? 20 : -20 }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
+        >
+          {isLogin ? (
+            <Login onSwitchToRegister={() => setIsLogin(false)} />
+          ) : (
+            <Register onSwitchToLogin={() => setIsLogin(true)} onStepChange={setRegisterStep} />
+          )}
+        </motion.div>
       </motion.div>
     </div>
   );

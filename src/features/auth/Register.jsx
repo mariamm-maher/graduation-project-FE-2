@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { User, Mail, Lock, ArrowRight, Chrome } from 'lucide-react';
+import { toast } from 'react-toastify';
+import useAuthStore from '../../stores/authStore';
 import RoleSelection from './RoleSelection';
 import InfluencerOnboarding from './InfluencerOnboarding';
 import CampaignOwnerOnboarding from './CampaignOwnerOnboarding';
 
 export default function Register({ onSwitchToLogin, onStepChange }) {
   const [step, setStep] = useState('register'); // 'register', 'role-selection', 'influencer-onboarding', 'campaign-owner-onboarding'
+  const { signup, isLoading, error: authError } = useAuthStore();
   
   // Notify parent about step changes
   useEffect(() => {
@@ -13,11 +16,11 @@ export default function Register({ onSwitchToLogin, onStepChange }) {
       onStepChange(step);
     }
   }, [step, onStepChange]);
+  
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
     password: '',
   });
 
@@ -25,11 +28,52 @@ export default function Register({ onSwitchToLogin, onStepChange }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Register data:', formData);
-    // Move to role selection step
-    setStep('role-selection');
+    
+    // Prepare data in the format expected by the API
+    const signupData = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      password: formData.password,
+    };
+
+    // Call signup from authStore
+    const result = await signup(signupData);
+    
+    if (result.success) {
+      console.log('Registration successful:', result);
+      
+      // Show success toast
+      toast.success('Your account is made successfully, choose your role', {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
+      
+      // Move to role selection step
+      setStep('role-selection');
+    } else {
+      console.error('Registration failed:', result.error);
+      
+      // Show error toast
+      toast.error(result.error || 'Registration failed. Please try again.', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
+      
+      // Don't proceed to next step on error
+    }
   };
 
   const handleRoleSelect = (role) => {
@@ -132,6 +176,13 @@ export default function Register({ onSwitchToLogin, onStepChange }) {
       <div className="text-center mb-6 sm:mb-8">
         <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 animate-slideDown">Create Account</h2>
         <p className="text-gray-400 text-sm animate-slideDown" style={{ animationDelay: '0.1s' }}>Join us and start your journey</p>
+        
+        {/* Error Message */}
+        {authError && (
+          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
+            <p className="text-red-400 text-sm">{authError}</p>
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
@@ -202,11 +253,12 @@ export default function Register({ onSwitchToLogin, onStepChange }) {
 
         <button
           type="submit"
-          className="w-full bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white font-semibold py-3.5 rounded-lg hover:shadow-lg hover:shadow-[#C1B6FD]/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 mt-2 flex items-center justify-center gap-2 group animate-slideUp"
+          disabled={isLoading}
+          className="w-full bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white font-semibold py-3.5 rounded-lg hover:shadow-lg hover:shadow-[#C1B6FD]/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 mt-2 flex items-center justify-center gap-2 group animate-slideUp disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           style={{ animationDelay: '0.4s' }}
         >
-          <span>Create account</span>
-          <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
+          <span>{isLoading ? 'Creating account...' : 'Create account'}</span>
+          {!isLoading && <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />}
         </button>
       </form>
 

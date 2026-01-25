@@ -140,11 +140,23 @@ export default function CampaignOwnerOnboarding({ onComplete, onSkip, onBack, on
 
   const handleComplete = () => {
     console.log('Campaign Owner onboarding completed:', formData);
-    onComplete(formData);
+    if (onComplete) {
+      onComplete(formData);
+    }
+    // Navigate to login after completion
+    if (onSwitchToLogin) {
+      onSwitchToLogin();
+    }
   };
 
   const handleSkip = () => {
-    onSkip();
+    if (onSkip) {
+      onSkip();
+    }
+    // Navigate to login after skipping
+    if (onSwitchToLogin) {
+      onSwitchToLogin();
+    }
   };
 
   const handleMultiSelect = (field, value) => {

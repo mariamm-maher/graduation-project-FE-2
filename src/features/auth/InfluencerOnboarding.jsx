@@ -172,11 +172,23 @@ export default function InfluencerOnboarding({ onComplete, onSkip, onBack, onSwi
 
   const handleComplete = () => {
     console.log('Onboarding completed:', formData);
-    onComplete(formData);
+    if (onComplete) {
+      onComplete(formData);
+    }
+    // Navigate to login after completion
+    if (onSwitchToLogin) {
+      onSwitchToLogin();
+    }
   };
 
   const handleSkip = () => {
-    onSkip();
+    if (onSkip) {
+      onSkip();
+    }
+    // Navigate to login after skipping
+    if (onSwitchToLogin) {
+      onSwitchToLogin();
+    }
   };
 
   const handleMultiSelect = (field, value) => {

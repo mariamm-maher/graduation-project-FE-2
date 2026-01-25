@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Crown, Users, CheckCircle2, ArrowRight, Sparkles, TrendingUp, BarChart3, Zap, Star, Building2, Rocket } from 'lucide-react';
+import { toast } from 'react-toastify';
+import useAuthStore from '../../stores/authStore';
 
 export default function RoleSelection({ onRoleSelect, onInfluencerNext, onCampaignOwnerNext, onSwitchToLogin, userEmail }) {
   const [selectedRole, setSelectedRole] = useState(null);
+  const { selectRole, user, isLoading } = useAuthStore();
 
   const roles = [
     {
@@ -41,17 +44,43 @@ export default function RoleSelection({ onRoleSelect, onInfluencerNext, onCampai
     }
   ];
 
-  const handleContinue = () => {
-    if (selectedRole) {
-      if (selectedRole === 'influencer') {
-        // Navigate to influencer onboarding
-        onInfluencerNext();
-      } else if (selectedRole === 'campaign_owner') {
-        // Navigate to campaign owner onboarding
-        onCampaignOwnerNext();
+  const handleContinue = async () => {
+    if (selectedRole && user?.userId) {
+      // Map role to roleId: 1 for campaign_owner, 2 for influencer
+      const roleId = selectedRole === 'campaign_owner' ? 1 : 2;
+      
+      // Call selectRole from authStore
+      const result = await selectRole(user.userId, roleId);
+      
+      if (result.success) {
+        // Show success toast
+        toast.success(result.message || 'Role assigned successfully', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "dark",
+        });
+        
+        // Navigate to appropriate onboarding based on selected role
+        if (selectedRole === 'influencer') {
+          onInfluencerNext();
+        } else if (selectedRole === 'campaign_owner') {
+          onCampaignOwnerNext();
+        }
       } else {
-        // Complete registration
-        onRoleSelect(selectedRole);
+        // Show error toast
+        toast.error(result.error || 'Failed to assign role. Please try again.', {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "dark",
+        });
       }
     }
   };
@@ -129,7 +158,7 @@ export default function RoleSelection({ onRoleSelect, onInfluencerNext, onCampai
               />
               
               {/* Card */}
-              <div className="relative h-full rounded-3xl overflow-hidden transition-all duration-500 border-2 border-[#C1B6FD] shadow-2xl">
+              <div className="relative h-full rounded-3xl overflow-hidden transition-all duration-500 ">
                 {/* Background with gradient */}
                 <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/60 to-black/80 backdrop-blur-xl" />
                 
@@ -252,21 +281,23 @@ export default function RoleSelection({ onRoleSelect, onInfluencerNext, onCampai
             whileHover={selectedRole ? { scale: 1.02 } : {}}
             whileTap={selectedRole ? { scale: 0.98 } : {}}
             onClick={handleContinue}
-            disabled={!selectedRole}
+            disabled={!selectedRole || isLoading}
             className={`relative w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 ${
-              selectedRole
+              selectedRole && !isLoading
                 ? 'bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg'
                 : 'bg-white/5 text-gray-500 cursor-not-allowed'
             }`}
           >
             <span className="flex items-center justify-center gap-3">
-              <span>Continue to Next Step</span>
-              <motion.div
-                animate={selectedRole ? { x: [0, 4, 0] } : {}}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                <ArrowRight className="w-6 h-6" />
-              </motion.div>
+              <span>{isLoading ? 'Assigning role...' : 'Continue to Next Step'}</span>
+              {!isLoading && (
+                <motion.div
+                  animate={selectedRole ? { x: [0, 4, 0] } : {}}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  <ArrowRight className="w-6 h-6" />
+                </motion.div>
+              )}
             </span>
           </motion.button>
         </div>

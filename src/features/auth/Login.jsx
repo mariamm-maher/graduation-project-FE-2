@@ -1,7 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, Chrome } from 'lucide-react';
+import { toast } from 'react-toastify';
+import useAuthStore from '../../stores/authStore';
 
-export default function Login({ onSwitchToRegister }) {
+export default function Login({ onSwitchToRegister, onNeedsRoleSelection }) {
+  const navigate = useNavigate();
+  const { login, isLoading } = useAuthStore();
+  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -11,9 +17,62 @@ export default function Login({ onSwitchToRegister }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login data:', formData);
+    
+    const result = await login(formData);
+    
+    console.log('Login result:', result);
+    
+    if (result?.success) {
+      // Check if user needs role selection
+      if (result.user?.needsRoleSelection) {
+        toast.warning('You must select a role first!', {
+          position: 'top-right',
+          autoClose: 4000,
+        });
+        // Navigate to role selection
+        if (onNeedsRoleSelection) {
+          onNeedsRoleSelection();
+        }
+        return;
+      }
+      
+      // Check if user has a role - redirect to appropriate dashboard
+      const role = result.role || result.user?.role;
+      const roleId = result.roleId || result.user?.roleId;
+      
+      if (role || roleId) {
+        toast.success(result.message || 'Login successful!', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
+        
+        // Navigate to appropriate dashboard based on role
+        if (role === 'campaign_owner' || roleId === 1) {
+          navigate('/owner-dashboard');
+        } else if (role === 'influencer' || roleId === 2) {
+          navigate('/influencer-dashboard');
+        } else {
+          // Fallback if role format is unexpected
+          navigate('/dashboard');
+        }
+      } else {
+        // Login successful but no role info - shouldn't happen normally
+        toast.success(result.message || 'Login successful!', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
+      }
+    } else {
+      // Handle login failure
+      const errorMessage = result?.error || 'Login failed. Please try again.';
+      console.log('Showing error toast:', errorMessage);
+      toast.error(errorMessage, {
+        position: 'top-right',
+        autoClose: 4000,
+      });
+    }
   };
 
   return (
@@ -56,11 +115,12 @@ export default function Login({ onSwitchToRegister }) {
 
         <button
           type="submit"
-          className="w-full bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white font-semibold py-3.5 rounded-lg hover:shadow-lg hover:shadow-[#C1B6FD]/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 mt-2 flex items-center justify-center gap-2 group animate-slideUp"
+          disabled={isLoading}
+          className="w-full bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white font-semibold py-3.5 rounded-lg hover:shadow-lg hover:shadow-[#C1B6FD]/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 mt-2 flex items-center justify-center gap-2 group animate-slideUp disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           style={{ animationDelay: '0.4s' }}
         >
-          <span>Sign in</span>
-          <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
+          <span>{isLoading ? 'Signing in...' : 'Sign in'}</span>
+          {!isLoading && <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />}
         </button>
       </form>
 

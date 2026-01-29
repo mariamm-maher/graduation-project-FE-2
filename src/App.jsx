@@ -6,6 +6,7 @@ import OwnerDashboard from './pages/OwnerDashboard.jsx';
 import InfluencerDashboard from './pages/InfluencerDashboard.jsx';
 import Landing from './pages/Landing.jsx';
 import AuthForm from './features/auth/AuthForm.jsx';
+import AdminDashboard from './features/dashboard/adminDashboard/AdminDashboard';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/signup" element={<AuthForm />} /> 
         <Route path="/dashboard/owner/*" element={<OwnerDashboard />} />
         <Route path="/dashboard/influencer/*" element={<InfluencerDashboard />} />
+        <Route path="/dashboard/admin/*" element={<AdminDashboard />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

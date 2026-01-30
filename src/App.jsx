@@ -6,7 +6,7 @@ import OwnerDashboard from './pages/OwnerDashboard.jsx';
 import InfluencerDashboard from './pages/InfluencerDashboard.jsx';
 import Landing from './pages/Landing.jsx';
 import AuthForm from './features/auth/AuthForm.jsx';
-import AdminDashboard from './features/dashboard/adminDashboard/AdminDashboard';
+import AdminDashboard from './pages/AdminDashboard.jsx';
 
 function App() {
   return (

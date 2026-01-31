@@ -1,4 +1,5 @@
-import { Users, Briefcase, Handshake, TrendingUp, Activity, ArrowUp, ArrowDown } from 'lucide-react';
+import { useEffect } from 'react';
+import { Users, Briefcase, Handshake, TrendingUp, Activity, ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
 import { Line, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -12,6 +13,7 @@ import {
   Legend,
   Filler
 } from 'chart.js';
+import  useAdminStore from '../../../../../stores/AdminStore';
 
 ChartJS.register(
   CategoryScale,
@@ -26,22 +28,66 @@ ChartJS.register(
 );
 
 function OverviewDashboard() {
+  const { analytics, isLoading, error, fetchAnalytics } = useAdminStore();
+
+  useEffect(() => {
+    fetchAnalytics();
+
+  }, [fetchAnalytics]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-[#C1B6FD] animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <p className="text-red-400 mb-2">Failed to load analytics</p>
+          <p className="text-gray-400 text-sm">{error}</p>
+          <button 
+            onClick={() => fetchAnalytics()}
+            className="mt-4 px-4 py-2 bg-[#745CB4] hover:bg-[#5d4a91] text-white rounded-lg transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Use real data from analytics or fallback to defaults
+  const overview = analytics?.overview || {
+    totalUsers: 0,
+    totalCampaigns: 0,
+    totalCollaborations: 0,
+    activeSessions: 0
+  };
+
   const stats = [
     { 
       id: 1, 
       icon: Users, 
       label: 'Total Users', 
-      value: '2,847', 
-      change: '+12.5%', 
-      isPositive: true,
+      value: overview.totalUsers.toLocaleString(), 
+      change: overview.recentUsers ? `+${overview.recentUsers} recent` : '+0 recent', 
+      isPositive: overview.recentUsers > 0,
       color: 'from-purple-500 to-pink-500'
     },
     { 
       id: 2, 
       icon: Briefcase, 
-      label: 'Active Campaigns', 
-      value: '156', 
-      change: '+8.2%', 
+      label: 'Total Campaigns', 
+      value: overview.totalCampaigns.toLocaleString(), 
+      change: analytics?.campaignStats?.active ? `${analytics.campaignStats.active} active` : '0 active', 
       isPositive: true,
       color: 'from-blue-500 to-cyan-500'
     },
@@ -49,28 +95,31 @@ function OverviewDashboard() {
       id: 3, 
       icon: Handshake, 
       label: 'Collaborations', 
-      value: '423', 
-      change: '+15.3%', 
-      isPositive: true,
+      value: overview.totalCollaborations.toLocaleString(), 
+      change: overview.totalCollaborations > 0 ? 'Active' : 'None', 
+      isPositive: overview.totalCollaborations > 0,
       color: 'from-green-500 to-emerald-500'
     },
     { 
       id: 4, 
       icon: Activity, 
       label: 'Active Sessions', 
-      value: '89', 
-      change: '-3.1%', 
-      isPositive: false,
+      value: overview.activeSessions.toLocaleString(), 
+      change: 'Live now', 
+      isPositive: overview.activeSessions > 0,
       color: 'from-orange-500 to-red-500'
     },
   ];
 
   const userGrowthData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+    labels: ['Owners', 'Influencers'],
     datasets: [
       {
-        label: 'Total Users',
-        data: [1200, 1450, 1800, 2100, 2400, 2650, 2847],
+        label: 'Users by Role',
+        data: [
+          analytics?.usersByRole?.owners || 0,
+          analytics?.usersByRole?.influencers || 0
+        ],
         borderColor: '#C1B6FD',
         backgroundColor: 'rgba(193, 182, 253, 0.1)',
         fill: true,
@@ -80,22 +129,21 @@ function OverviewDashboard() {
   };
 
   const campaignStatusData = {
-    labels: ['Active', 'Pending', 'Completed', 'Cancelled'],
+    labels: ['Active', 'Draft'],
     datasets: [
       {
         label: 'Campaigns',
-        data: [156, 45, 234, 23],
+        data: [
+          analytics?.campaignStats?.active || 0,
+          analytics?.campaignStats?.draft || 0
+        ],
         backgroundColor: [
           'rgba(193, 182, 253, 0.8)',
           'rgba(116, 92, 180, 0.8)',
-          'rgba(52, 211, 153, 0.8)',
-          'rgba(248, 113, 113, 0.8)',
         ],
         borderColor: [
           '#C1B6FD',
           '#745CB4',
-          '#34D399',
-          '#F87171',
         ],
         borderWidth: 1,
       },
@@ -184,13 +232,13 @@ function OverviewDashboard() {
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-white">User Growth</h3>
-              <p className="text-sm text-gray-400">Monthly user registration trend</p>
+              <h3 className="text-lg font-semibold text-white">Users by Role</h3>
+              <p className="text-sm text-gray-400">Distribution of campaign owners and influencers</p>
             </div>
             <TrendingUp className="w-5 h-5 text-[#C1B6FD]" />
           </div>
           <div className="h-64">
-            <Line data={userGrowthData} options={chartOptions} />
+            <Bar data={userGrowthData} options={chartOptions} />
           </div>
         </div>
 

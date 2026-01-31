@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Crown, Users, CheckCircle2, ArrowRight, Sparkles, TrendingUp, BarChart3, Zap, Star, Building2, Rocket } from 'lucide-react';
 import { toast } from 'react-toastify';
 import useAuthStore from '../../stores/authStore';
 
 export default function RoleSelection({ onRoleSelect, onInfluencerNext, onCampaignOwnerNext, onSwitchToLogin, userEmail }) {
+  const navigate = useNavigate();
   const [selectedRole, setSelectedRole] = useState(null);
   const { selectRole, user, isLoading } = useAuthStore();
 
@@ -54,7 +56,7 @@ export default function RoleSelection({ onRoleSelect, onInfluencerNext, onCampai
       
       if (result.success) {
         // Show success toast
-        toast.success(result.message || 'Role assigned successfully', {
+        toast.success('Role assigned successfully! Please sign in to continue.', {
           position: "top-right",
           autoClose: 3000,
           hideProgressBar: false,
@@ -64,12 +66,10 @@ export default function RoleSelection({ onRoleSelect, onInfluencerNext, onCampai
           theme: "dark",
         });
         
-        // Navigate to appropriate onboarding based on selected role
-        if (selectedRole === 'influencer') {
-          onInfluencerNext();
-        } else if (selectedRole === 'campaign_owner') {
-          onCampaignOwnerNext();
-        }
+        // Navigate to login page after role selection
+        setTimeout(() => {
+          navigate('/login');
+        }, 1500);
       } else {
         // Show error toast
         toast.error(result.error || 'Failed to assign role. Please try again.', {

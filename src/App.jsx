@@ -7,6 +7,8 @@ import InfluencerDashboard from './pages/InfluencerDashboard.jsx';
 import Landing from './pages/Landing.jsx';
 import AuthForm from './features/auth/AuthForm.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
+import ProtectedRoute, { AuthorizedRoute } from './pages/protectRoute.jsx';
+import NotFound from './pages/NotFound.jsx';
 
 function App() {
   return (
@@ -16,10 +18,27 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<AuthForm />} />
         <Route path="/signup" element={<AuthForm />} /> 
-        <Route path="/dashboard/owner/*" element={<OwnerDashboard />} />
-        <Route path="/dashboard/influencer/*" element={<InfluencerDashboard />} />
-        <Route path="/dashboard/admin/*" element={<AdminDashboard />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/404" element={<NotFound />} />
+        
+        <Route path="/dashboard/owner/*" element={
+          <AuthorizedRoute allowedRoles={['OWNER']}>
+            <OwnerDashboard />
+          </AuthorizedRoute>
+        } />
+        
+        <Route path="/dashboard/influencer/*" element={
+          <AuthorizedRoute allowedRoles={['INFLUENCER']}>
+            <InfluencerDashboard />
+          </AuthorizedRoute>
+        } />
+        
+        <Route path="/dashboard/admin/*" element={
+          <AuthorizedRoute allowedRoles={['ADMIN']}>
+            <AdminDashboard />
+          </AuthorizedRoute>
+        } />
+        
+        <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
     </Router>
   );

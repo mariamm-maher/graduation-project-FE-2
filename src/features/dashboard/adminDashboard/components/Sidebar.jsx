@@ -1,18 +1,32 @@
-import { LayoutDashboard, Users, Monitor, Handshake, Settings, LogOut, User, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { LayoutDashboard, Users, Monitor, Handshake, Settings, LogOut, User, Menu, X, Briefcase, FileText, Bell } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import useAuthStore from '../../../../stores/authStore';
 
 function Sidebar() {
   const location = useLocation();
   const [isHovered, setIsHovered] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const user = useAuthStore((s) => s.user);
+  const getProfile = useAuthStore((s) => s.getProfile);
 
-  const menuItems = [
-    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard/admin' },
-    { id: 'accounts', icon: Users, label: 'Accounts', path: '/dashboard/admin/accounts' },
-    { id: 'sessions', icon: Monitor, label: 'Sessions', path: '/dashboard/admin/sessions' },
-    { id: 'collaborations', icon: Handshake, label: 'Collaborations', path: '/dashboard/admin/collaborations' },
-  ];
+  useEffect(() => {
+    if (!user ) {
+      getProfile().catch(() => {});
+
+    }
+   
+  }, [user, getProfile]);
+
+const menuItems = [
+  { id: 'overview', icon: LayoutDashboard, label: 'Overview', path: '/dashboard/admin' },
+  { id: 'users', icon: Users, label: 'Users', path: '/dashboard/admin/users' },
+  { id: 'sessions', icon: Monitor, label: 'Sessions', path: '/dashboard/admin/sessions' },
+  { id: 'campaigns', icon: Briefcase, label: 'Campaigns', path: '/dashboard/admin/campaigns' },
+  { id: 'collaborations', icon: Handshake, label: 'Collaborations', path: '/dashboard/admin/collaborations' },
+  { id: 'logs', icon: FileText, label: 'Logs', path: '/dashboard/admin/logs' },
+  { id: 'announcements', icon: Bell, label: 'Announcements', path: '/dashboard/admin/announcements' },
+];
 
   return (
     <>
@@ -48,8 +62,8 @@ function Sidebar() {
         </div>
         {isHovered && (
           <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-semibold text-white whitespace-nowrap">Admin</p>
-            <p className="text-xs text-gray-400 whitespace-nowrap">admin@adsphere.com</p>
+            <p className="text-sm font-semibold text-white whitespace-nowrap">{user?.name || user?.fullName || 'Admin'}</p>
+            <p className="text-xs text-gray-400 whitespace-nowrap">{user?.email || 'admin@adsphere.com'}</p>
           </div>
         )}
       </div>

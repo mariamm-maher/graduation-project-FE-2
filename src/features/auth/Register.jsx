@@ -1,14 +1,25 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { User, Mail, Lock, ArrowRight, Chrome } from 'lucide-react';
 import { toast } from 'react-toastify';
 import useAuthStore from '../../stores/authStore';
 import RoleSelection from './RoleSelection';
-import InfluencerOnboarding from './InfluencerOnboarding';
-import CampaignOwnerOnboarding from './CampaignOwnerOnboarding';
 
 export default function Register({ onSwitchToLogin, onStepChange }) {
-  const [step, setStep] = useState('register'); // 'register', 'role-selection', 'influencer-onboarding', 'campaign-owner-onboarding'
-  const { signup, isLoading, error: authError } = useAuthStore();
+  const location = useLocation();
+  const [step, setStep] = useState('register'); // 'register', 'role-selection'
+  const { signup, isLoading, error: authError, user } = useAuthStore();
+  
+  // Check if we should show role selection from navigation state
+  useEffect(() => {
+    if (location.state?.showRoleSelection && user?.userId) {
+      setStep('role-selection');
+      // Update form email if provided
+      if (location.state?.userEmail) {
+        setFormData(prev => ({ ...prev, email: location.state.userEmail }));
+      }
+    }
+  }, [location.state, user]);
   
   // Notify parent about step changes
   useEffect(() => {
@@ -76,94 +87,12 @@ export default function Register({ onSwitchToLogin, onStepChange }) {
     }
   };
 
-  const handleRoleSelect = (role) => {
-    console.log('Selected role:', role);
-    console.log('Complete registration data:', { ...formData, role });
-    // Complete registration for campaign owner
-    // Here you would typically make an API call
-  };
 
-  const handleInfluencerNext = () => {
-    // Navigate to influencer onboarding
-    setStep('influencer-onboarding');
-  };
-
-  const handleInfluencerOnboardingComplete = (onboardingData) => {
-    console.log('Influencer onboarding completed:', onboardingData);
-    console.log('Complete registration data:', { 
-      ...formData, 
-      role: 'influencer',
-      profile: onboardingData 
-    });
-    // Here you would typically make an API call to complete registration
-  };
-
-  const handleInfluencerOnboardingSkip = () => {
-    console.log('Influencer onboarding skipped');
-    console.log('Complete registration data:', { 
-      ...formData, 
-      role: 'influencer'
-    });
-    // Here you would typically make an API call to complete registration
-  };
-
-  const handleCampaignOwnerNext = () => {
-    // Navigate to campaign owner onboarding
-    setStep('campaign-owner-onboarding');
-  };
-
-  const handleCampaignOwnerOnboardingComplete = (onboardingData) => {
-    console.log('Campaign owner onboarding completed:', onboardingData);
-    console.log('Complete registration data:', { 
-      ...formData, 
-      role: 'campaign_owner',
-      profile: onboardingData 
-    });
-    // Here you would typically make an API call to complete registration
-  };
-
-  const handleCampaignOwnerOnboardingSkip = () => {
-    console.log('Campaign owner onboarding skipped');
-    console.log('Complete registration data:', { 
-      ...formData, 
-      role: 'campaign_owner'
-    });
-    // Here you would typically make an API call to complete registration
-  };
-
-  // Show campaign owner onboarding if step is 'campaign-owner-onboarding'
-  if (step === 'campaign-owner-onboarding') {
-    return (
-      <CampaignOwnerOnboarding 
-        onComplete={handleCampaignOwnerOnboardingComplete}
-        onSkip={handleCampaignOwnerOnboardingSkip}
-        onBack={() => setStep('role-selection')}
-        onSwitchToLogin={onSwitchToLogin}
-        userEmail={formData.email}
-      />
-    );
-  }
-
-  // Show influencer onboarding if step is 'influencer-onboarding'
-  if (step === 'influencer-onboarding') {
-    return (
-      <InfluencerOnboarding 
-        onComplete={handleInfluencerOnboardingComplete}
-        onSkip={handleInfluencerOnboardingSkip}
-        onBack={() => setStep('role-selection')}
-        onSwitchToLogin={onSwitchToLogin}
-        userEmail={formData.email}
-      />
-    );
-  }
 
   // Show role selection if step is 'role-selection'
   if (step === 'role-selection') {
     return (
       <RoleSelection 
-        onRoleSelect={handleRoleSelect}
-        onInfluencerNext={handleInfluencerNext}
-        onCampaignOwnerNext={handleCampaignOwnerNext}
         onSwitchToLogin={onSwitchToLogin}
         userEmail={formData.email}
       />

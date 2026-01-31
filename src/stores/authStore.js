@@ -90,18 +90,40 @@ const useAuthStore = create(
         set({ isLoading: true, error: null });
         try {
           const response = await authService.login(credentials);
+          console.log('Login response from the authService store data:', response.data);
           
-          // Handle successful response: { success: true, status: 200, message: "...", data: { user, token, role? } }
+          // Handle successful response
           if (response.success) {
-            const { user, token, role } = response.data || {};
+            const { 
+              userId, 
+              email, 
+              firstName, 
+              lastName, 
+              accessToken, 
+              needsRoleSelection, 
+              roles 
+            } = response.data || {};
+            
+      
+            // Determine role from roles array
+            const primaryRole = roles && roles.length > 0 ? roles[0] : null;
+            const roleId = primaryRole === 'ADMIN' ? 3 : primaryRole === 'CAMPAIGN_OWNER' ? 1 : primaryRole === 'INFLUENCER' ? 2 : null;
+            
+            // Build user object with all data
+            const userData = {
+              userId,
+              email,
+              firstName,
+              lastName,
+              roles,
+              role: primaryRole,
+              roleId,
+              needsRoleSelection
+            };
             
             set({ 
-              user: { 
-                ...user, 
-                role: role || user?.role,
-                roleId: user?.roleId 
-              }, 
-              token, 
+              user: userData, 
+              token: accessToken, // Map accessToken to token
               isAuthenticated: true, 
               isLoading: false,
               error: null 
@@ -109,14 +131,14 @@ const useAuthStore = create(
             
             return { 
               success: true, 
-              user, 
-              token,
-              role: role || user?.role,
-              roleId: user?.roleId,
+              user: userData, 
+              token: accessToken,
+              role: primaryRole,
+              roleId,
               message: response.message 
             };
           }
-          
+    
           // Handle unexpected response format
           throw new Error(response.message || 'Login failed');
           
@@ -135,7 +157,7 @@ const useAuthStore = create(
         set({ isLoading: true, error: null });
         try {
           const response = await authService.selectRole(userId, roleId);
-          
+
           // Handle successful response
           if (response.success) {
             // Update user with role information
@@ -148,7 +170,7 @@ const useAuthStore = create(
               isLoading: false,
               error: null 
             }));
-            
+
             return { 
               success: true, 
               roleId,
@@ -156,18 +178,44 @@ const useAuthStore = create(
               data: response.data
             };
           }
-          
+
           // Handle unexpected response format
           throw new Error(response.message || 'Role selection failed');
-          
+
         } catch (error) {
           const errorMessage = typeof error === 'string' ? error : error.message || 'Role selection failed';
-          
+
           set({ 
             error: errorMessage, 
             isLoading: false
           });
-          
+
+          return { success: false, error: errorMessage };
+        }
+      },
+
+      // Fetch current user profile from API and update store
+      getProfile: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await authService.getProfile();
+
+          if (response && response.success) {
+            const { user } = response.data || {};
+            set({
+              user: user || null,
+              isAuthenticated: !!user,
+              isLoading: false,
+              error: null,
+            });
+
+            return { success: true, user };
+          }
+
+          throw new Error(response?.message || 'Failed to fetch profile');
+        } catch (error) {
+          const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch profile';
+          set({ error: errorMessage, isLoading: false, isAuthenticated: false, user: null });
           return { success: false, error: errorMessage };
         }
       },

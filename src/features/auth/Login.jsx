@@ -31,10 +31,8 @@ export default function Login({ onSwitchToRegister, onNeedsRoleSelection }) {
           position: 'top-right',
           autoClose: 4000,
         });
-        // Navigate to role selection
-        if (onNeedsRoleSelection) {
-          onNeedsRoleSelection();
-        }
+        // Navigate to signup with role selection state
+        navigate('/signup', { state: { showRoleSelection: true, userEmail: formData.email } });
         return;
       }
       
@@ -49,13 +47,15 @@ export default function Login({ onSwitchToRegister, onNeedsRoleSelection }) {
         });
         
         // Navigate to appropriate dashboard based on role
-        if (role === 'campaign_owner' || roleId === 1) {
-          navigate('/owner-dashboard');
+        if (role === 'admin' || roleId === 3) {
+          navigate('/dashboard/admin');
+        } else if (role === 'campaign_owner' || roleId === 1) {
+          navigate('/dashboard/owner');
         } else if (role === 'influencer' || roleId === 2) {
-          navigate('/influencer-dashboard');
+          navigate('/dashboard/influencer');
         } else {
-          // Fallback if role format is unexpected
-          navigate('/dashboard');
+          // Fallback - route to first available role or influencer by default
+          navigate('/dashboard/influencer');
         }
       } else {
         // Login successful but no role info - shouldn't happen normally

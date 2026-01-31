@@ -1,9 +1,17 @@
 import { Routes, Route } from 'react-router-dom';
-import { Header, Sidebar, MainContent } from '../features/dashboard/adminDashboard/components';
-import CollaborationsLayout from '../features/dashboard/adminDashboard/components/collaborations/CollaborationsLayout';
-import AccountsOverview from '../features/dashboard/adminDashboard/components/accounts/AccountsOverview';
+import { 
+  Header, 
+  Sidebar, 
+  MainContent,
+  OverviewDashboard,
+  AccountsOverview,
+  SessionsOverview,
+  CampaignsOverview,
+  CollaborationsLayout,
+  LogsOverview,
+  AnnouncementsOverview
+} from '../features/dashboard/adminDashboard/components';
 import UserDetail from '../features/dashboard/adminDashboard/components/accounts/UserDetail';
-import SessionsOverview from '../features/dashboard/adminDashboard/components/sessions/SessionsOverview';
 
 function AdminDashboard() {
   return (
@@ -12,11 +20,14 @@ function AdminDashboard() {
       <Sidebar />
       <div className="ml-0 md:ml-20 lg:ml-32 transition-all duration-300 max-w-full">
         <Routes>
-          <Route path="/" element={<MainContent />} />
-          <Route path="accounts" element={<AccountsOverview />} />
-          <Route path="accounts/:id" element={<UserDetail />} />
+          <Route path="/" element={<OverviewDashboard />} />
+          <Route path="users" element={<AccountsOverview />} />
+          <Route path="users/:id" element={<UserDetail />} />
           <Route path="sessions" element={<SessionsOverview />} />
+          <Route path="campaigns" element={<CampaignsOverview />} />
           <Route path="collaborations/*" element={<CollaborationsLayout />} />
+          <Route path="logs" element={<LogsOverview />} />
+          <Route path="announcements" element={<AnnouncementsOverview />} />
         </Routes>
       </div>
     </div>

@@ -61,6 +61,18 @@ const adminService = {
       throw error.response?.data?.message || 'Failed to fetch campaigns';
     }
   },
+
+  // Get recent activity logs
+  getRecentLogs: async () => {
+    try {
+      const response = await api.get('/admin/logs/recent');
+      console.log('Recent logs response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Recent logs error:', error);
+      throw error.response?.data?.message || 'Failed to fetch recent logs';
+    }
+  },
 };
 
 export default adminService;

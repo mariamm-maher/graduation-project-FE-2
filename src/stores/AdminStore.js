@@ -8,6 +8,7 @@ const useAdminStore = create((set) => ({
   sessions: [],
   collaborations: [],
   campaigns: [],
+  recentLogs: [],
   isLoading: false,
   error: null,
 
@@ -133,6 +134,29 @@ const useAdminStore = create((set) => ({
     }
   },
 
+  // Fetch Recent Logs
+  fetchRecentLogs: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await adminService.getRecentLogs();
+      
+      if (response.success) {
+        set({ 
+          recentLogs: response.data || [],
+          isLoading: false,
+          error: null 
+        });
+        return { success: true, data: response.data };
+      }
+      
+      throw new Error(response.message || 'Failed to fetch recent logs');
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch recent logs';
+      set({ error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
   // Clear all data
   clearAdminData: () => set({ 
     analytics: null,
@@ -140,6 +164,7 @@ const useAdminStore = create((set) => ({
     sessions: [],
     collaborations: [],
     campaigns: [],
+    recentLogs: [],
     error: null 
   }),
 }));

@@ -128,6 +128,17 @@ const authService = {
       throw error.response?.data?.message || 'Role selection failed';
     }
   },
+
+  // Google Sign-In
+  googleSignIn: async (idToken) => {
+    try {
+      const response = await api.post('/auth/google', { token: idToken });
+      return response.data;
+    } catch (error) {
+      console.error('Google Sign-In error from axios:', error);
+      throw error.response?.data?.message || 'Google Sign-In failed';
+    }
+  },
 };
 
 export default authService;

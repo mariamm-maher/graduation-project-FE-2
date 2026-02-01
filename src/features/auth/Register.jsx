@@ -4,11 +4,13 @@ import { User, Mail, Lock, ArrowRight, Chrome } from 'lucide-react';
 import { toast } from 'react-toastify';
 import useAuthStore from '../../stores/authStore';
 import RoleSelection from './RoleSelection';
+import { useGoogleSignIn } from '../../hook/useGoogleSignIn';
 
 export default function Register({ onSwitchToLogin, onStepChange }) {
   const location = useLocation();
   const [step, setStep] = useState('register'); // 'register', 'role-selection'
   const { signup, isLoading, error: authError, user } = useAuthStore();
+  const { handleGoogleSignIn } = useGoogleSignIn();
   
   // Check if we should show role selection from navigation state
   useEffect(() => {
@@ -199,7 +201,9 @@ export default function Register({ onSwitchToLogin, onStepChange }) {
 
       <button 
         type="button"
-        className="w-full flex items-center justify-center gap-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg py-3 text-white hover:bg-white/10 hover:border-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group animate-slideUp"
+        onClick={handleGoogleSignIn}
+        disabled={isLoading}
+        className="w-full flex items-center justify-center gap-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg py-3 text-white hover:bg-white/10 hover:border-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group animate-slideUp disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         style={{ animationDelay: '0.6s' }}
       >
         <Chrome className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />

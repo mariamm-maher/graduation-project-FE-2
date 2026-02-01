@@ -219,6 +219,50 @@ const useAuthStore = create(
           return { success: false, error: errorMessage };
         }
       },
+
+      // Initialize auth state from localStorage and validate token
+      initialize: async () => {
+        const state = useAuthStore.getState();
+        
+        // If no token or user, nothing to initialize
+        if (!state.token || !state.user) {
+          set({ isLoading: false });
+          return { success: false, message: 'No stored auth data' };
+        }
+
+        // Validate the stored token by fetching user profile
+        set({ isLoading: true, error: null });
+        try {
+          const response = await authService.getProfile();
+
+          if (response && response.success) {
+            const { user } = response.data || {};
+            
+            // Update with fresh user data from server
+            set({
+              user: user || state.user,
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+            });
+
+            return { success: true, user };
+          }
+
+          throw new Error('Token validation failed');
+        } catch (error) {
+          // Token is invalid or expired, clear auth state
+          console.error('Auth initialization failed:', error);
+          set({ 
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            error: null,
+            isLoading: false
+          });
+          return { success: false, error: 'Session expired' };
+        }
+      },
     }),
     {
       name: 'auth-storage',

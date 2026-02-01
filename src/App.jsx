@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -9,8 +10,16 @@ import AuthForm from './features/auth/AuthForm.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import ProtectedRoute, { AuthorizedRoute } from './pages/protectRoute.jsx';
 import NotFound from './pages/NotFound.jsx';
+import useAuthStore from './stores/authStore.js';
 
 function App() {
+  const initialize = useAuthStore((state) => state.initialize);
+
+  // Initialize auth state from localStorage when app loads
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
   return (
     <Router>
       <ToastContainer />

@@ -1,4 +1,4 @@
-import { Users, Target, DollarSign, TrendingUp, ArrowRight } from 'lucide-react';
+import { UserCheck, UserPlus, History, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 function InfluencersOverview() {
@@ -10,95 +10,78 @@ function InfluencersOverview() {
         <p className="text-sm sm:text-base text-gray-400">Manage and discover influencer collaborations</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-              <Users className="w-5 h-5 text-blue-400" />
-            </div>
-            <span className="text-green-400 text-sm font-semibold">+12%</span>
-          </div>
-          <p className="text-xl sm:text-2xl font-bold text-white mb-1">24</p>
-          <p className="text-xs sm:text-sm text-gray-400">Active Collaborators</p>
-        </div>
-
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 sm:p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-              <Target className="w-5 h-5 text-purple-400" />
-            </div>
-            <span className="text-green-400 text-xs sm:text-sm font-semibold">+8%</span>
-          </div>
-          <p className="text-xl sm:text-2xl font-bold text-white mb-1">10</p>
-          <p className="text-xs sm:text-sm text-gray-400">Ongoing Campaigns</p>
-        </div>
-
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 sm:p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-green-400" />
-            </div>
-            <span className="text-green-400 text-xs sm:text-sm font-semibold">+24%</span>
-          </div>
-          <p className="text-xl sm:text-2xl font-bold text-white mb-1">$146.5K</p>
-          <p className="text-xs sm:text-sm text-gray-400">Total Investment</p>
-        </div>
-
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 sm:p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-yellow-400" />
-            </div>
-            <span className="text-green-400 text-xs sm:text-sm font-semibold">+15%</span>
-          </div>
-          <p className="text-xl sm:text-2xl font-bold text-white mb-1">8.2%</p>
-          <p className="text-xs sm:text-sm text-gray-400">Avg Engagement</p>
-        </div>
-      </div>
-
-      {/* Quick Navigation */}
+      {/*  Navigation */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <Link
           to="/dashboard/owner/influencers/active"
-          className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all group"
+          className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:from-white/15 hover:to-white/10 hover:border-[#C1B6FD]/50 hover:shadow-2xl hover:shadow-[#C1B6FD]/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
         >
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
+          {/* Gradient Accent Border */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#C1B6FD]/20 via-transparent to-[#745CB4]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center shadow-lg shadow-[#745CB4]/30 group-hover:shadow-xl group-hover:shadow-[#C1B6FD]/40 group-hover:scale-110 transition-all duration-300">
+                <UserCheck className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              </div>
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#C1B6FD] transition-all duration-300">
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+              </div>
             </div>
-            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-[#C1B6FD] transition-colors">Active Collaborators</h3>
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-[#C1B6FD]/20 to-[#745CB4]/20 text-white border border-[#C1B6FD]/30">24</span>
+            </div>
+            <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">Manage partnerships currently running and their progress</p>
           </div>
-          <h3 className="text-lg sm:text-xl font-bold text-white mb-2">Active Collaborators</h3>
-          <p className="text-gray-400 text-xs sm:text-sm">View and manage your current influencer partnerships</p>
         </Link>
 
         <Link
           to="/dashboard/owner/influencers/discover"
-          className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 sm:p-6 hover:bg-white/10 transition-all group"
+          className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:from-white/15 hover:to-white/10 hover:border-[#C1B6FD]/50 hover:shadow-2xl hover:shadow-[#C1B6FD]/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
         >
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
-              <Target className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
+          {/* Gradient Accent Border */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#C1B6FD]/20 via-transparent to-[#745CB4]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center shadow-lg shadow-[#745CB4]/30 group-hover:shadow-xl group-hover:shadow-[#C1B6FD]/40 group-hover:scale-110 transition-all duration-300">
+                <UserPlus className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              </div>
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#C1B6FD] transition-all duration-300">
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+              </div>
             </div>
-            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-[#C1B6FD] transition-colors">Discover Collaborators</h3>
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-[#C1B6FD]/20 to-[#745CB4]/20 text-white border border-[#C1B6FD]/30">128</span>
+            </div>
+            <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">Browse and invite new influencers for upcoming campaigns</p>
           </div>
-          <h3 className="text-lg sm:text-xl font-bold text-white mb-2">Discover Talent</h3>
-          <p className="text-gray-400 text-xs sm:text-sm">Find new influencers that match your campaign goals</p>
         </Link>
 
         <Link
           to="/dashboard/owner/influencers/history"
-          className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 sm:p-6 hover:bg-white/10 transition-all group"
+          className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:from-white/15 hover:to-white/10 hover:border-[#C1B6FD]/50 hover:shadow-2xl hover:shadow-[#C1B6FD]/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
         >
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" />
+          {/* Gradient Accent Border */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#C1B6FD]/20 via-transparent to-[#745CB4]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center shadow-lg shadow-[#745CB4]/30 group-hover:shadow-xl group-hover:shadow-[#C1B6FD]/40 group-hover:scale-110 transition-all duration-300">
+                <History className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              </div>
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#C1B6FD] transition-all duration-300">
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+              </div>
             </div>
-            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-[#C1B6FD] transition-colors">Past Collaborators</h3>
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-[#C1B6FD]/20 to-[#745CB4]/20 text-white border border-[#C1B6FD]/30">56</span>
+            </div>
+            <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">See people you've worked with before and their performance</p>
           </div>
-          <h3 className="text-lg sm:text-xl font-bold text-white mb-2">Past Collaborations</h3>
-          <p className="text-gray-400 text-xs sm:text-sm">Review completed partnerships and performance history</p>
         </Link>
       </div>
 

@@ -73,6 +73,18 @@ const adminService = {
       throw error.response?.data?.message || 'Failed to fetch recent logs';
     }
   },
+
+  // Get paginated logs
+  getLogs: async (page = 1, limit = 20) => {
+    try {
+      const response = await api.get(`/admin/logs?page=${page}&limit=${limit}`);
+      console.log('Logs response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Logs error:', error);
+      throw error.response?.data?.message || 'Failed to fetch logs';
+    }
+  },
 };
 
 export default adminService;

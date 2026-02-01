@@ -1,0 +1,282 @@
+import { Search, Filter, Calendar, Users, DollarSign, TrendingUp, MoreVertical, Grid3x3, Eye, Settings, Target, Clock } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { campaigns } from '../campaignsData';
+
+function AllCampaigns() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterGoal, setFilterGoal] = useState('all');
+  const navigate = useNavigate();
+
+  const getStatusBadge = (lifecycleStage) => {
+    const statusStyles = {
+      planning: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+      active: 'bg-green-500/20 text-green-400 border border-green-500/30',
+      paused: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
+      completed: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
+      cancelled: 'bg-red-500/20 text-red-400 border border-red-500/30'
+    };
+    return statusStyles[lifecycleStage] || statusStyles.planning;
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const getDuration = (startDate, endDate) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    return `${days} days`;
+  };
+
+  return (
+    <div className="space-y-6 lg:space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
+            <Grid3x3 className="w-8 h-8 text-purple-400" />
+            All Campaigns
+          </h1>
+          <p className="text-gray-400 text-sm sm:text-base mt-1">
+            View and manage all your marketing campaigns
+          </p>
+        </div>
+        <button 
+          onClick={() => navigate('/dashboard/owner/campaigns/create')}
+          className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all"
+        >
+          + Create Campaign
+        </button>
+      </div>
+
+      {/* Stats Overview */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
+          <p className="text-gray-400 text-sm mb-1">Total Campaigns</p>
+          <p className="text-2xl font-bold text-white">{campaigns.length}</p>
+        </div>
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
+          <p className="text-gray-400 text-sm mb-1">Planning</p>
+          <p className="text-2xl font-bold text-amber-400">{campaigns.filter(c => c.lifecycleStage === 'planning').length}</p>
+        </div>
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
+          <p className="text-gray-400 text-sm mb-1">Active</p>
+          <p className="text-2xl font-bold text-green-400">{campaigns.filter(c => c.lifecycleStage === 'active').length}</p>
+        </div>
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
+          <p className="text-gray-400 text-sm mb-1">Completed</p>
+          <p className="text-2xl font-bold text-blue-400">{campaigns.filter(c => c.lifecycleStage === 'completed').length}</p>
+        </div>
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
+          <p className="text-gray-400 text-sm mb-1">Total Budget</p>
+          <p className="text-2xl font-bold text-white">
+            ${campaigns.reduce((sum, c) => sum + (parseFloat(c.totalBudget) || 0), 0).toLocaleString()}
+          </p>
+        </div>
+      </div>
+
+      {/* Search & Filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1 relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search campaigns by name..."
+            className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-transparent transition-all"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
+        >
+          <option value="all">All Status</option>
+          <option value="planning">Planning</option>
+          <option value="active">Active</option>
+          <option value="paused">Paused</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <select
+          value={filterGoal}
+          onChange={(e) => setFilterGoal(e.target.value)}
+          className="px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
+        >
+          <option value="all">All Goals</option>
+          <option value="brand_awareness">Brand Awareness</option>
+          <option value="engagement">Engagement</option>
+          <option value="conversions">Conversions</option>
+          <option value="traffic">Traffic</option>
+          <option value="sales">Sales</option>
+        </select>
+      </div>
+
+      {/* Campaigns Table */}
+      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden">
+        {/* Table Header */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-white/5 border-b border-white/10">
+              <tr>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Campaign Name</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Status</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Goal</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Budget</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Duration</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Collaborators</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Pending</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">KPIs</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Created</th>
+                <th className="text-right px-6 py-4 text-sm font-semibold text-gray-400">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/10">
+              {campaigns.map((campaign) => (
+                <tr 
+                  key={campaign.id}
+                  className="hover:bg-white/5 transition-colors"
+                >
+                  {/* Campaign Name */}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#745CB4] to-[#C1B6FD] flex items-center justify-center flex-shrink-0">
+                        <Target className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 
+                          onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}`)}
+                          className="text-white font-semibold cursor-pointer hover:text-[#C1B6FD] transition-colors"
+                        >
+                          {campaign.campaignName || campaign.name}
+                        </h3>
+                        <p className="text-xs text-gray-400">ID: {campaign.id}</p>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Status (lifecycleStage) */}
+                  <td className="px-6 py-4">
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusBadge(campaign.lifecycleStage || 'planning')}`}>
+                      {campaign.lifecycleStage || 'Planning'}
+                    </span>
+                  </td>
+
+                  {/* Goal (goalType) */}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-gray-400" />
+                      <span className="text-white text-sm capitalize">
+                        {campaign.goalType || 'Brand Awareness'}
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* Budget (totalBudget + currency) */}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-green-400" />
+                      <span className="text-white font-semibold">
+                        {campaign.currency || '$'}{parseFloat(campaign.totalBudget || campaign.budget?.replace(/[^0-9.]/g, '') || 0).toLocaleString()}
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* Duration (startDate - endDate) */}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-gray-400" />
+                      <div className="text-sm">
+                        <p className="text-white">{getDuration(campaign.startDate, campaign.endDate)}</p>
+                        <p className="text-xs text-gray-400">
+                          {formatDate(campaign.startDate)} - {formatDate(campaign.endDate)}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Collaborators Count */}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-blue-400" />
+                      <span className="text-white font-semibold">{campaign.collaboratorsCount || campaign.influencers || 0}</span>
+                    </div>
+                  </td>
+
+                  {/* Pending Requests */}
+                  <td className="px-6 py-4">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                      (campaign.pendingRequests || 0) > 0 
+                        ? 'bg-amber-500/20 text-amber-400' 
+                        : 'bg-gray-500/20 text-gray-400'
+                    }`}>
+                      {campaign.pendingRequests || 0}
+                    </span>
+                  </td>
+
+                  {/* KPIs Count */}
+                  <td className="px-6 py-4">
+                    <span className="text-white font-semibold">{campaign.kpisCount || 3}</span>
+                  </td>
+
+                  {/* Created At */}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-400">{formatDate(campaign.createdAt || campaign.startDate)}</span>
+                    </div>
+                  </td>
+
+                  {/* Actions */}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}`)}
+                        className="p-2 hover:bg-white/10 rounded-lg transition-all group"
+                        title="View Details"
+                      >
+                        <Eye className="w-5 h-5 text-gray-400 group-hover:text-[#C1B6FD]" />
+                      </button>
+                      <button
+                        onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}/edit`)}
+                        className="p-2 hover:bg-white/10 rounded-lg transition-all group"
+                        title="Manage Campaign"
+                      >
+                        <Settings className="w-5 h-5 text-gray-400 group-hover:text-[#C1B6FD]" />
+                      </button>
+                      <button className="p-2 hover:bg-white/10 rounded-lg transition-all group">
+                        <MoreVertical className="w-5 h-5 text-gray-400 group-hover:text-white" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Empty State */}
+        {campaigns.length === 0 && (
+          <div className="text-center py-16">
+            <Grid3x3 className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">No Campaigns Found</h3>
+            <p className="text-gray-400 mb-6">Get started by creating your first campaign.</p>
+            <button 
+              onClick={() => navigate('/dashboard/owner/campaigns/create')}
+              className="px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all"
+            >
+              + Create Campaign
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default AllCampaigns;

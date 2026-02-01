@@ -1,6 +1,5 @@
-import { Megaphone, Users, DollarSign, TrendingUp, ArrowRight, Target, Play, Clock, BarChart3, Sparkles } from 'lucide-react';
+import { Megaphone, Users, DollarSign, TrendingUp, ArrowRight, Target, Play, Clock, BarChart3, Sparkles, CheckCircle, FileEdit, Grid3x3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import TopPerformingCampaigns from './TopPerformingCampaigns';
 
 function CampaignsOverview() {
   const totalCampaigns = 8;
@@ -114,82 +113,155 @@ function CampaignsOverview() {
         </div>
       </div>
 
-      {/* Top Performing Campaigns */}
-      <TopPerformingCampaigns />
+   
 
  
 
       {/* Quick Navigation */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* All Campaigns */}
+        <Link
+          to="/dashboard/owner/campaigns/all"
+          className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:from-white/15 hover:to-white/10 hover:border-purple-400/50 hover:shadow-2xl hover:shadow-purple-400/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
+        >
+          {/* Gradient Accent Border */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-400/20 via-transparent to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-600/30 group-hover:shadow-xl group-hover:shadow-purple-400/40 group-hover:scale-110 transition-all duration-300">
+                <Grid3x3 className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              </div>
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-purple-400 transition-all duration-300">
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-purple-400 transition-colors">All Campaigns</h3>
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-purple-400/20 to-purple-600/20 text-white border border-purple-400/30">{totalCampaigns}</span>
+            </div>
+            <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">View all your marketing campaigns</p>
+          </div>
+        </Link>
+
+        {/* Active Campaigns */}
         <Link
           to="/dashboard/owner/campaigns/active"
-          className="group relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 overflow-hidden hover:border-blue-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20"
+          className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:from-white/15 hover:to-white/10 hover:border-blue-400/50 hover:shadow-2xl hover:shadow-blue-400/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
         >
-          {/* Gradient Background on Hover */}
-          <div className="absolute inset-0 bg-linear-to-br from-blue-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          {/* Gradient Accent Border */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-400/20 via-transparent to-blue-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
           
           <div className="relative z-10">
-            <div className="flex items-start justify-between mb-6">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-linear-to-br from-blue-500/30 to-blue-600/20 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:shadow-blue-500/50 transition-all duration-300">
-                <Megaphone className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 group-hover:text-blue-300 transition-colors" />
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/30 group-hover:shadow-xl group-hover:shadow-blue-400/40 group-hover:scale-110 transition-all duration-300">
+                <Play className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-blue-500/20 transition-all duration-300">
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-blue-400 transition-all duration-300">
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
               </div>
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 group-hover:text-blue-400 transition-colors">Active Campaigns</h3>
-            <p className="text-gray-400 text-xs sm:text-sm leading-relaxed group-hover:text-gray-300 transition-colors">View and manage currently running campaigns</p>
-            
-            {/* Bottom Accent Line */}
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-linear-to-r from-blue-500 to-blue-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-blue-400 transition-colors">Active Campaigns</h3>
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-blue-400/20 to-blue-600/20 text-white border border-blue-400/30">{activeCampaigns}</span>
+            </div>
+            <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">View and manage currently running campaigns</p>
           </div>
         </Link>
 
+        {/* Create Campaign */}
         <Link
           to="/dashboard/owner/campaigns/create"
-          className="group relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 overflow-hidden hover:border-purple-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20"
+          className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:from-white/15 hover:to-white/10 hover:border-[#C1B6FD]/50 hover:shadow-2xl hover:shadow-[#C1B6FD]/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
         >
-          {/* Gradient Background on Hover */}
-          <div className="absolute inset-0 bg-linear-to-br from-[#C1B6FD]/20 via-[#745CB4]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          {/* Gradient Accent Border */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#C1B6FD]/20 via-transparent to-[#745CB4]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
           
           <div className="relative z-10">
-            <div className="flex items-start justify-between mb-6">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-linear-to-br from-[#C1B6FD]/30 to-[#745CB4]/20 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:shadow-purple-500/50 transition-all duration-300">
-                <Megaphone className="w-6 h-6 sm:w-8 sm:h-8 text-[#C1B6FD] group-hover:text-white transition-colors" />
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center shadow-lg shadow-[#745CB4]/30 group-hover:shadow-xl group-hover:shadow-[#C1B6FD]/40 group-hover:scale-110 transition-all duration-300">
+                <Megaphone className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-purple-500/20 transition-all duration-300">
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-[#C1B6FD] group-hover:translate-x-1 transition-all" />
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#C1B6FD] transition-all duration-300">
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
               </div>
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 group-hover:text-[#C1B6FD] transition-colors">Create Campaign</h3>
-            <p className="text-gray-400 text-xs sm:text-sm leading-relaxed group-hover:text-gray-300 transition-colors">Launch a new marketing campaign</p>
-            
-            {/* Bottom Accent Line */}
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-[#C1B6FD] transition-colors">Create Campaign</h3>
+            </div>
+            <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">Launch a new marketing campaign</p>
           </div>
         </Link>
 
+        {/* Completed Campaigns */}
         <Link
-          to="/dashboard/owner/campaigns/performance"
-          className="group relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 overflow-hidden hover:border-green-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/20"
+          to="/dashboard/owner/campaigns/completed"
+          className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:from-white/15 hover:to-white/10 hover:border-green-400/50 hover:shadow-2xl hover:shadow-green-400/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
         >
-          {/* Gradient Background on Hover */}
-          <div className="absolute inset-0 bg-linear-to-br from-green-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          {/* Gradient Accent Border */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-green-400/20 via-transparent to-green-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
           
           <div className="relative z-10">
-            <div className="flex items-start justify-between mb-6">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-linear-to-br from-green-500/30 to-green-600/20 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:shadow-green-500/50 transition-all duration-300">
-                <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-green-400 group-hover:text-green-300 transition-colors" />
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-lg shadow-green-600/30 group-hover:shadow-xl group-hover:shadow-green-400/40 group-hover:scale-110 transition-all duration-300">
+                <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-green-500/20 transition-all duration-300">
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-green-400 group-hover:translate-x-1 transition-all" />
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-green-400 transition-all duration-300">
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
               </div>
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 group-hover:text-green-400 transition-colors">Performance Reports</h3>
-            <p className="text-gray-400 text-xs sm:text-sm leading-relaxed group-hover:text-gray-300 transition-colors">Analyze campaign metrics and ROI</p>
-            
-            {/* Bottom Accent Line */}
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-linear-to-r from-green-500 to-green-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-green-400 transition-colors">Completed Campaigns</h3>
+            </div>
+            <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">Review finished campaign results</p>
+          </div>
+        </Link>
+
+        {/* Draft Campaigns */}
+        <Link
+          to="/dashboard/owner/campaigns/draft"
+          className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:from-white/15 hover:to-white/10 hover:border-amber-400/50 hover:shadow-2xl hover:shadow-amber-400/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
+        >
+          {/* Gradient Accent Border */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-400/20 via-transparent to-amber-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-600/30 group-hover:shadow-xl group-hover:shadow-amber-400/40 group-hover:scale-110 transition-all duration-300">
+                <FileEdit className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              </div>
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-amber-400 transition-all duration-300">
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-amber-400 transition-colors">Draft Campaigns</h3>
+            </div>
+            <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">Continue working on saved drafts</p>
+          </div>
+        </Link>
+
+        {/* Campaign Analytics */}
+        <Link
+          to="/dashboard/owner/campaigns/analytics"
+          className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:from-white/15 hover:to-white/10 hover:border-indigo-400/50 hover:shadow-2xl hover:shadow-indigo-400/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
+        >
+          {/* Gradient Accent Border */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-400/20 via-transparent to-indigo-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30 group-hover:shadow-xl group-hover:shadow-indigo-400/40 group-hover:scale-110 transition-all duration-300">
+                <BarChart3 className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              </div>
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-indigo-400 transition-all duration-300">
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-indigo-400 transition-colors">Campaign Analytics</h3>
+            </div>
+            <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">Detailed performance insights</p>
           </div>
         </Link>
       </div>

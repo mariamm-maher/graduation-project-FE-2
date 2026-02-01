@@ -9,6 +9,13 @@ const useAdminStore = create((set) => ({
   collaborations: [],
   campaigns: [],
   recentLogs: [],
+  logs: [],
+  logsPagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalLogs: 0,
+    limit: 20
+  },
   isLoading: false,
   error: null,
 
@@ -157,6 +164,35 @@ const useAdminStore = create((set) => ({
     }
   },
 
+  // Fetch Logs with pagination
+  fetchLogs: async (page = 1, limit = 20) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await adminService.getLogs(page, limit);
+      
+      if (response.success) {
+        set({ 
+          logs: response.data?.logs || [],
+          logsPagination: {
+            currentPage: response.data?.currentPage || page,
+            totalPages: response.data?.totalPages || 1,
+            totalLogs: response.data?.totalLogs || 0,
+            limit: response.data?.limit || limit
+          },
+          isLoading: false,
+          error: null 
+        });
+        return { success: true, data: response.data };
+      }
+      
+      throw new Error(response.message || 'Failed to fetch logs');
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch logs';
+      set({ error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
   // Clear all data
   clearAdminData: () => set({ 
     analytics: null,
@@ -165,6 +201,13 @@ const useAdminStore = create((set) => ({
     collaborations: [],
     campaigns: [],
     recentLogs: [],
+    logs: [],
+    logsPagination: {
+      currentPage: 1,
+      totalPages: 1,
+      totalLogs: 0,
+      limit: 20
+    },
     error: null 
   }),
 }));

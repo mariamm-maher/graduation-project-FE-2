@@ -1,9 +1,12 @@
 import { Calendar, DollarSign, Target, Users, FileText, Image } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import useCampaignStore from '../../../../../../stores/campaignStore';
 
 function CreateCampaign() {
   const navigate = useNavigate();
+  const { createCampaign, isLoading } = useCampaignStore();
   const [campaignData, setCampaignData] = useState({
     name: '',
     userDescription: '',
@@ -15,7 +18,6 @@ function CreateCampaign() {
     endDate: '',
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState({ type: '', text: '' });
 
   // Get today's date in YYYY-MM-DD format for min date
@@ -37,7 +39,6 @@ function CreateCampaign() {
 
   const handleSubmit = async () => {
     try {
-      setIsSubmitting(true);
       setSubmitMessage({ type: '', text: '' });
 
       // Validate required fields
@@ -45,7 +46,10 @@ function CreateCampaign() {
           !campaignData.currency || !campaignData.budgetFlexibility || 
           !campaignData.startDate || !campaignData.endDate) {
         setSubmitMessage({ type: 'error', text: 'Please fill in all required fields' });
-        setIsSubmitting(false);
+        toast.error('Please fill in all required fields', {
+          position: 'top-right',
+          autoClose: 4000,
+        });
         return;
       }
 
@@ -61,36 +65,38 @@ function CreateCampaign() {
         endDate: new Date(campaignData.endDate).toISOString(),
       };
 
-      const response = await fetch('http://localhost:5000/api/campaigns', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(apiData),
-      });
+      const result = await createCampaign(apiData);
 
-      const result = await response.json();
-
-      if (response.ok) {
+      if (result.success) {
         setSubmitMessage({ type: 'success', text: 'Campaign created successfully! Redirecting to preview...' });
+        toast.success('Campaign created successfully!', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
         
         // Navigate to the preview page with the campaign data
         setTimeout(() => {
-          navigate('/dashboard/campaigns/generated', { 
+          navigate('/dashboard/owner/campaigns/generated', { 
             state: { 
-              campaign: result.data.campaign,
-              aiPreview: result.data.aiPreview 
+              campaign: result.campaign,
+              aiPreview: result.aiPreview 
             } 
           });
         }, 1500);
       } else {
-        setSubmitMessage({ type: 'error', text: result.message || 'Failed to create campaign' });
+        setSubmitMessage({ type: 'error', text: result.error || 'Failed to create campaign' });
+        toast.error(result.error || 'Failed to create campaign', {
+          position: 'top-right',
+          autoClose: 4000,
+        });
       }
     } catch (error) {
-      setSubmitMessage({ type: 'error', text: 'Network error. Please try again.' });
+      setSubmitMessage({ type: 'error', text: 'An unexpected error occurred' });
+      toast.error('An unexpected error occurred', {
+        position: 'top-right',
+        autoClose: 4000,
+      });
       console.error('Error creating campaign:', error);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -331,10 +337,10 @@ function CreateCampaign() {
           <div className="space-y-3">
             <button 
               onClick={handleSubmit}
-              disabled={isSubmitting}
+              disabled={isLoading}
               className="w-full px-6 py-3.5 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Creating...' : 'Create Campaign'}
+              {isLoading ? 'Creating...' : 'Create Campaign'}
             </button>
             <button className="w-full px-6 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-semibold transition-all">
               Save as Draft

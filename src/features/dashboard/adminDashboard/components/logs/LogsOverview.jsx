@@ -1,87 +1,89 @@
-import { FileText, Search, Filter, Download, AlertCircle, CheckCircle, XCircle, Info } from 'lucide-react';
-import { useState } from 'react';
-
-const mockLogs = [
-  { 
-    id: 1, 
-    timestamp: '2025-01-31 10:45:23',
-    level: 'info',
-    user: 'Sarah Johnson',
-    action: 'User login',
-    ip: '192.168.1.45',
-    details: 'Successful authentication from Cairo, EG'
-  },
-  { 
-    id: 2, 
-    timestamp: '2025-01-31 10:42:15',
-    level: 'warning',
-    user: 'System',
-    action: 'Failed login attempt',
-    ip: '203.45.67.89',
-    details: 'Multiple failed attempts detected'
-  },
-  { 
-    id: 3, 
-    timestamp: '2025-01-31 10:38:52',
-    level: 'success',
-    user: 'Emma Davis',
-    action: 'Campaign created',
-    ip: '192.168.1.67',
-    details: 'New campaign "Spring Collection 2025" created'
-  },
-  { 
-    id: 4, 
-    timestamp: '2025-01-31 10:35:10',
-    level: 'error',
-    user: 'Mike Chen',
-    action: 'Payment failed',
-    ip: '192.168.1.102',
-    details: 'Payment processing error for collaboration #4567'
-  },
-  { 
-    id: 5, 
-    timestamp: '2025-01-31 10:30:45',
-    level: 'info',
-    user: 'James Radcliffe',
-    action: 'Profile updated',
-    ip: '192.168.1.23',
-    details: 'User updated profile information'
-  },
-  { 
-    id: 6, 
-    timestamp: '2025-01-31 10:25:33',
-    level: 'success',
-    user: 'Alex Martinez',
-    action: 'Collaboration completed',
-    ip: '192.168.1.88',
-    details: 'Collaboration #3421 marked as completed'
-  },
-  { 
-    id: 7, 
-    timestamp: '2025-01-31 10:20:18',
-    level: 'warning',
-    user: 'System',
-    action: 'High API usage',
-    ip: '192.168.1.1',
-    details: 'API rate limit approaching for user "tech_guru_2025"'
-  },
-  { 
-    id: 8, 
-    timestamp: '2025-01-31 10:15:07',
-    level: 'info',
-    user: 'Admin',
-    action: 'User role changed',
-    ip: '192.168.1.1',
-    details: 'User "new_influencer" role changed from pending to influencer'
-  },
-];
+import { FileText, Search, Filter, Download, AlertCircle, CheckCircle, XCircle, Info, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import useAdminStore from '../../../../../stores/AdminStore';
 
 function LogsOverview() {
-  const [logs] = useState(mockLogs);
+  const { logs, logsPagination, isLoading, error, fetchLogs } = useAdminStore();
   const [search, setSearch] = useState('');
   const [levelFilter, setLevelFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit] = useState(20);
 
-  const filtered = logs.filter(log => {
+  useEffect(() => {
+    fetchLogs(currentPage, limit);
+  }, [fetchLogs, currentPage, limit]);
+
+  // Helper function to format timestamp
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  };
+
+  // Helper function to determine log level based on action
+  const getLogLevel = (action) => {
+    const errorActions = ['DELETE', 'FAILED', 'ERROR'];
+    const warningActions = ['UPDATE', 'CHANGE_ROLE'];
+    const successActions = ['CREATE', 'SIGNUP'];
+    
+    if (errorActions.some(a => action.includes(a))) return 'error';
+    if (warningActions.some(a => action.includes(a))) return 'warning';
+    if (successActions.some(a => action.includes(a))) return 'success';
+    return 'info';
+  };
+
+  // Helper function to get action display text
+  const getActionText = (action) => {
+    return action.replace(/_/g, ' ').toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Helper function to get details text
+  const getDetailsText = (log) => {
+    const email = log.meta?.email || '';
+    const method = log.meta?.method ? ` via ${log.meta.method}` : '';
+    const roleName = log.meta?.roleName || '';
+    const roles = log.meta?.roles ? ` (${log.meta.roles.join(', ')})` : '';
+    
+    switch (log.action) {
+      case 'LOGIN':
+        return `${email} logged in${method}${roles}`;
+      case 'LOGOUT':
+        return `${email} logged out`;
+      case 'CHANGE_ROLE':
+        return `Role changed to ${roleName}`;
+      case 'CREATE_USER':
+      case 'SIGNUP':
+        return `New user registered: ${email}`;
+      default:
+        return `${log.entity} action: ${log.action}`;
+    }
+  };
+
+  // Transform API logs to display format
+  const transformedLogs = (logs || []).map((log) => ({
+    id: log.id,
+    timestamp: formatTimestamp(log.createdAt),
+    level: getLogLevel(log.action),
+    user: log.meta?.email || log.actor || 'System',
+    action: getActionText(log.action),
+    ip: log.meta?.ip || 'N/A',
+    details: getDetailsText(log),
+    entity: log.entity,
+    roles: log.meta?.roles || []
+  }));
+
+  // Filter logs
+  const filtered = transformedLogs.filter(log => {
     const matchSearch = !search || 
       log.user.toLowerCase().includes(search.toLowerCase()) || 
       log.action.toLowerCase().includes(search.toLowerCase()) ||
@@ -90,10 +92,11 @@ function LogsOverview() {
     return matchSearch && matchLevel;
   });
 
-  const totalLogs = logs.length;
-  const errorLogs = logs.filter(l => l.level === 'error').length;
-  const warningLogs = logs.filter(l => l.level === 'warning').length;
-  const successLogs = logs.filter(l => l.level === 'success').length;
+  // Calculate stats
+  const totalLogs = logsPagination.totalLogs || transformedLogs.length;
+  const errorLogs = transformedLogs.filter(l => l.level === 'error').length;
+  const warningLogs = transformedLogs.filter(l => l.level === 'warning').length;
+  const successLogs = transformedLogs.filter(l => l.level === 'success').length;
 
   const getLevelIcon = (level) => {
     switch(level) {
@@ -117,8 +120,51 @@ function LogsOverview() {
 
   const handleExport = () => {
     // Implement export functionality
-    alert('Exporting logs...');
+    const dataStr = JSON.stringify(filtered, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `logs-${new Date().toISOString()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= logsPagination.totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  // Show loading state
+  if (isLoading && transformedLogs.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-[#C1B6FD] animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">Loading logs...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error && transformedLogs.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <p className="text-red-400 mb-2">Failed to load logs</p>
+          <p className="text-gray-400 text-sm">{error}</p>
+          <button 
+            onClick={() => fetchLogs(currentPage, limit)}
+            className="mt-4 px-4 py-2 bg-[#745CB4] hover:bg-[#5d4a91] text-white rounded-lg transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -240,6 +286,61 @@ function LogsOverview() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {logsPagination.totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-white/10">
+            <div className="text-sm text-gray-400">
+              Page {logsPagination.currentPage} of {logsPagination.totalPages} • Total: {logsPagination.totalLogs} logs
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-1 text-white"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Previous
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, logsPagination.totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (logsPagination.totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= logsPagination.totalPages - 2) {
+                    pageNum = logsPagination.totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-1.5 rounded-lg transition-colors ${
+                        currentPage === pageNum
+                          ? 'bg-[#745CB4] text-white'
+                          : 'bg-white/5 hover:bg-white/10 text-gray-400'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === logsPagination.totalPages}
+                className="px-3 py-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-1 text-white"
+              >
+                Next
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -26,164 +26,255 @@ import {
   Link as LinkIcon
 } from 'lucide-react';
 
-// Mock data - would come from API
+// Mock data - would come from API/Database based on InfluencerProfile schema
 const influencersData = {
-  1: {
-    id: 1,
-    name: 'Sarah Johnson',
-    avatar: 'SJ',
-    niche: 'Fashion & Lifestyle',
-    bio: 'Fashion enthusiast and lifestyle content creator. Sharing daily style inspiration, beauty tips, and sustainable fashion choices. Let\'s make fashion accessible and fun!',
-    location: 'New York, USA',
-    email: 'sarah@influencer.com',
-    followers: 2400000,
-    followersDisplay: '2.4M',
-    engagement: 8.2,
-    engagementDisplay: '8.2%',
-    platform: 'instagram',
-    platforms: [
-      { name: 'Instagram', icon: Instagram, followers: '2.4M', handle: '@sarahjohnson', color: 'text-pink-400' },
-      { name: 'YouTube', icon: Youtube, followers: '850K', handle: '@sarahjohnson', color: 'text-red-400' },
-      { name: 'TikTok', icon: Video, followers: '1.2M', handle: '@sarahj', color: 'text-white' }
-    ],
-    campaigns: 3,
-    revenue: '$45,200',
-    rating: 4.9,
-    totalRatings: 127,
+  4: {
+    id: 4,
+    userId: 104,
+    name: 'Alex Rivera',
+    bio: 'Fitness enthusiast and sports content creator. Helping people achieve their fitness goals through dedicated training, nutrition tips, and motivational content. Let\'s get stronger together!',
+    image: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&h=400&fit=crop',
+    location: 'Los Angeles, CA',
+    isCompleted: true,
+    socialMediaLinks: {
+      instagram: 'https://instagram.com/alexrivera',
+      youtube: 'https://youtube.com/@alexrivera',
+      tiktok: 'https://tiktok.com/@alexrivera'
+    },
+    primaryPlatform: 'Instagram',
+    followersCount: 890000,
+    followersDisplay: '890K',
+    engagementRate: 7.8,
+    engagementDisplay: '7.8%',
+    categories: ['Fitness & Sports', 'Wellness', 'Lifestyle'],
+    contentTypes: ['Reels', 'Stories', 'Posts'],
+    collaborationTypes: ['Sponsored Posts', 'Product Reviews', 'Brand Ambassador'],
+    audienceAgeRange: '18-34',
+    audienceGender: '60% Male, 40% Female',
+    audienceLocation: 'USA (65%), Canada (15%), UK (10%)',
+    interests: ['Fitness', 'Nutrition', 'Sports', 'Health', 'Motivation'],
+    completionPercentage: 100,
+    isOnboarded: true,
+    rating: 4.7,
+    totalRatings: 95,
     joinedDate: 'Jan 2025',
     verified: true,
+    campaigns: 5,
+    revenue: '$52,800',
     stats: {
       avgViews: '125K',
-      avgLikes: '8.5K',
-      avgComments: '420',
-      reach: '1.8M',
-      impressions: '4.2M'
+      avgLikes: '9.8K',
+      avgComments: '385',
+      reach: '980K',
+      impressions: '2.8M'
     },
+    platforms: [
+      { name: 'Instagram', icon: Instagram, followers: '890K', handle: '@alexrivera', color: 'text-pink-400' },
+      { name: 'YouTube', icon: Youtube, followers: '320K', handle: '@alexrivera', color: 'text-red-400' },
+      { name: 'TikTok', icon: Video, followers: '450K', handle: '@alexrivera', color: 'text-white' }
+    ],
     portfolio: [
       {
         id: 1,
+        type: 'video',
+        thumbnail: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400',
+        title: 'Home Workout Series',
+        brand: 'Fitness Brand',
+        engagement: '15.2K',
+        date: '2025-01-20'
+      },
+      {
+        id: 2,
         type: 'image',
-        thumbnail: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400',
-        title: 'Summer Collection Launch',
-        brand: 'Fashion Brand',
-        engagement: '12.5K',
+        thumbnail: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400',
+        title: 'Supplement Review',
+        brand: 'NutritionCo',
+        engagement: '11.8K',
         date: '2025-01-15'
       },
       {
-        id: 2,
-        type: 'video',
-        thumbnail: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400',
-        title: 'Style Transformation',
-        brand: 'Beauty Co',
-        engagement: '18.2K',
-        date: '2025-01-10'
-      },
-      {
         id: 3,
-        type: 'image',
-        thumbnail: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400',
-        title: 'Sustainable Fashion',
-        brand: 'Eco Brand',
-        engagement: '9.8K',
-        date: '2025-01-05'
-      },
-      {
-        id: 4,
         type: 'video',
-        thumbnail: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=400',
-        title: 'Morning Routine',
-        brand: 'Lifestyle',
-        engagement: '15.3K',
-        date: '2024-12-28'
-      },
-      {
-        id: 5,
-        type: 'image',
-        thumbnail: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400',
-        title: 'Holiday Collection',
-        brand: 'Fashion Brand',
-        engagement: '22.1K',
-        date: '2024-12-20'
-      },
-      {
-        id: 6,
-        type: 'video',
-        thumbnail: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400',
-        title: 'Product Review',
-        brand: 'Tech Co',
-        engagement: '11.7K',
-        date: '2024-12-15'
+        thumbnail: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400',
+        title: 'Training Gear Review',
+        brand: 'SportTech',
+        engagement: '18.5K',
+        date: '2025-01-10'
       }
     ],
     achievements: [
-      { title: 'Top Performer', description: 'Highest engagement rate this month', icon: Award },
-      { title: '100K Milestone', description: 'Reached 100K followers in 3 months', icon: TrendingUp },
-      { title: 'Brand Partner', description: 'Featured in 5 major campaigns', icon: CheckCircle }
+      { title: 'Top Fitness Creator', description: '890K followers milestone', icon: Award },
+      { title: 'High Engagement', description: '7.8% engagement rate', icon: TrendingUp },
+      { title: 'Brand Partner', description: 'Completed 5 campaigns', icon: CheckCircle }
     ],
     recentCampaigns: [
-      { id: 1, name: 'Summer Fashion Launch', status: 'active', progress: 75 },
-      { id: 2, name: 'Beauty Essentials', status: 'completed', progress: 100 },
-      { id: 3, name: 'Lifestyle Collection', status: 'active', progress: 45 }
-    ]
-  },
-  2: {
-    id: 2,
-    name: 'Mike Chen',
-    avatar: 'MC',
-    niche: 'Tech Reviews',
-    bio: 'Tech enthusiast and reviewer. Breaking down the latest gadgets, software, and tech trends. Making technology accessible to everyone.',
-    location: 'San Francisco, USA',
-    email: 'mike@influencer.com',
-    followers: 1800000,
-    followersDisplay: '1.8M',
-    engagement: 6.5,
-    engagementDisplay: '6.5%',
-    platform: 'youtube',
-    platforms: [
-      { name: 'YouTube', icon: Youtube, followers: '1.8M', handle: '@mikechen', color: 'text-red-400' },
-      { name: 'Instagram', icon: Instagram, followers: '450K', handle: '@mikechen', color: 'text-pink-400' },
-      { name: 'Twitter', icon: Twitter, followers: '320K', handle: '@mikechen', color: 'text-blue-400' }
+      { id: 1, name: 'Protein Powder Launch', status: 'active', progress: 80 },
+      { id: 2, name: 'Gym Equipment Review', status: 'completed', progress: 100 },
+      { id: 3, name: 'Fitness App Promotion', status: 'active', progress: 55 }
     ],
-    campaigns: 2,
-    revenue: '$38,500',
-    rating: 4.8,
-    totalRatings: 89,
+    createdAt: '2025-01-01T00:00:00Z',
+    updatedAt: '2025-01-31T00:00:00Z'
+  },
+  5: {
+    id: 5,
+    userId: 105,
+    name: 'Jessica Lee',
+    bio: 'Travel photographer and adventure seeker. Exploring the world one destination at a time, sharing travel tips, hidden gems, and unforgettable experiences. Join my journey!',
+    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop',
+    location: 'New York, NY',
+    isCompleted: true,
+    socialMediaLinks: {
+      instagram: 'https://instagram.com/jessicalee',
+      youtube: 'https://youtube.com/@jessicalee',
+      tiktok: 'https://tiktok.com/@jessicalee'
+    },
+    primaryPlatform: 'YouTube',
+    followersCount: 1200000,
+    followersDisplay: '1.2M',
+    engagementRate: 8.9,
+    engagementDisplay: '8.9%',
+    categories: ['Travel & Adventure', 'Photography', 'Lifestyle'],
+    contentTypes: ['Vlogs', 'Tutorials', 'Reviews'],
+    collaborationTypes: ['Sponsored Videos', 'Travel Partnerships', 'Affiliate Marketing'],
+    audienceAgeRange: '25-44',
+    audienceGender: '45% Male, 55% Female',
+    audienceLocation: 'USA (50%), Europe (30%), Asia (20%)',
+    interests: ['Travel', 'Photography', 'Adventure', 'Culture', 'Food'],
+    completionPercentage: 100,
+    isOnboarded: true,
+    rating: 4.9,
+    totalRatings: 142,
     joinedDate: 'Dec 2024',
     verified: true,
+    campaigns: 8,
+    revenue: '$98,500',
     stats: {
-      avgViews: '250K',
-      avgLikes: '12K',
-      avgComments: '850',
-      reach: '1.2M',
-      impressions: '3.5M'
+      avgViews: '280K',
+      avgLikes: '18.5K',
+      avgComments: '920',
+      reach: '1.5M',
+      impressions: '5.2M'
     },
+    platforms: [
+      { name: 'YouTube', icon: Youtube, followers: '1.2M', handle: '@jessicalee', color: 'text-red-400' },
+      { name: 'Instagram', icon: Instagram, followers: '850K', handle: '@jessicalee', color: 'text-pink-400' },
+      { name: 'TikTok', icon: Video, followers: '420K', handle: '@jessicalee', color: 'text-white' }
+    ],
     portfolio: [
       {
         id: 1,
         type: 'video',
-        thumbnail: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400',
-        title: 'iPhone 15 Review',
-        brand: 'Tech Brand',
+        thumbnail: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400',
+        title: 'Bali Travel Guide',
+        brand: 'Tourism Board',
         engagement: '45.2K',
+        date: '2025-01-25'
+      },
+      {
+        id: 2,
+        type: 'image',
+        thumbnail: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+        title: 'Mountain Adventure',
+        brand: 'Outdoor Gear Co',
+        engagement: '32.8K',
+        date: '2025-01-18'
+      },
+      {
+        id: 3,
+        type: 'video',
+        thumbnail: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=400',
+        title: 'City Exploration Series',
+        brand: 'Travel Agency',
+        engagement: '28.5K',
         date: '2025-01-12'
+      }
+    ],
+    achievements: [
+      { title: 'Million Subscribers', description: 'Reached 1.2M on YouTube', icon: Award },
+      { title: 'Top Travel Creator', description: 'Featured in Travel Magazine', icon: TrendingUp },
+      { title: 'Partnership Pro', description: 'Completed 8 successful campaigns', icon: CheckCircle }
+    ],
+    recentCampaigns: [
+      { id: 1, name: 'Hotel Chain Promotion', status: 'active', progress: 70 },
+      { id: 2, name: 'Travel Gear Review', status: 'completed', progress: 100 }
+    ],
+    createdAt: '2024-12-15T00:00:00Z',
+    updatedAt: '2025-01-31T00:00:00Z'
+  },
+  6: {
+    id: 6,
+    userId: 106,
+    name: 'David Park',
+    bio: 'Food enthusiast and culinary creator. Sharing delicious recipes, restaurant reviews, and cooking tips. Let\'s make cooking fun and accessible for everyone!',
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
+    location: 'San Francisco, CA',
+    isCompleted: true,
+    socialMediaLinks: {
+      instagram: 'https://instagram.com/davidpark',
+      youtube: 'https://youtube.com/@davidpark',
+      tiktok: 'https://tiktok.com/@davidpark'
+    },
+    primaryPlatform: 'TikTok',
+    followersCount: 650000,
+    followersDisplay: '650K',
+    engagementRate: 10.2,
+    engagementDisplay: '10.2%',
+    categories: ['Food & Cooking', 'Lifestyle', 'Reviews'],
+    contentTypes: ['Short Videos', 'Recipes', 'Live Streams'],
+    collaborationTypes: ['Recipe Features', 'Restaurant Reviews', 'Product Placements'],
+    audienceAgeRange: '18-35',
+    audienceGender: '40% Male, 60% Female',
+    audienceLocation: 'USA (70%), Canada (15%), Australia (15%)',
+    interests: ['Cooking', 'Food', 'Recipes', 'Restaurants', 'Culinary Arts'],
+    completionPercentage: 100,
+    isOnboarded: true,
+    rating: 4.6,
+    totalRatings: 78,
+    joinedDate: 'Feb 2025',
+    verified: true,
+    campaigns: 4,
+    revenue: '$38,200',
+    stats: {
+      avgViews: '95K',
+      avgLikes: '12.8K',
+      avgComments: '580',
+      reach: '720K',
+      impressions: '2.1M'
+    },
+    platforms: [
+      { name: 'TikTok', icon: Video, followers: '650K', handle: '@davidpark', color: 'text-white' },
+      { name: 'Instagram', icon: Instagram, followers: '380K', handle: '@davidpark', color: 'text-pink-400' },
+      { name: 'YouTube', icon: Youtube, followers: '220K', handle: '@davidpark', color: 'text-red-400' }
+    ],
+    portfolio: [
+      {
+        id: 1,
+        type: 'video',
+        thumbnail: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400',
+        title: '60-Second Recipe',
+        brand: 'Kitchen Tools Co',
+        engagement: '22.5K',
+        date: '2025-01-28'
       },
       {
         id: 2,
         type: 'video',
-        thumbnail: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400',
-        title: 'Laptop Comparison',
-        brand: 'Tech Co',
-        engagement: '38.7K',
-        date: '2025-01-08'
+        thumbnail: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
+        title: 'Restaurant Review',
+        brand: 'Food Delivery App',
+        engagement: '18.2K',
+        date: '2025-01-22'
       }
     ],
     achievements: [
-      { title: 'Tech Expert', description: 'Verified tech reviewer', icon: Award },
-      { title: '1M Subscribers', description: 'Reached 1M on YouTube', icon: TrendingUp }
+      { title: 'Top Food Creator', description: 'Highest engagement in niche', icon: Award },
+      { title: 'Viral Content', description: 'Multiple videos with 1M+ views', icon: TrendingUp }
     ],
     recentCampaigns: [
-      { id: 1, name: 'Tech Product Launch', status: 'active', progress: 60 }
-    ]
+      { id: 1, name: 'Kitchen Appliance Launch', status: 'active', progress: 65 }
+    ],
+    createdAt: '2025-02-01T00:00:00Z',
+    updatedAt: '2025-01-31T00:00:00Z'
   }
 };
 
@@ -199,10 +290,10 @@ function InfluencerProfile() {
           <h3 className="text-xl font-semibold text-white mb-2">Influencer Not Found</h3>
           <p className="text-sm text-gray-400 mb-4">The influencer profile you're looking for doesn't exist.</p>
           <button
-            onClick={() => navigate('/dashboard/influencers/active')}
+            onClick={() => navigate('/dashboard/owner/influencers/discover')}
             className="px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
           >
-            Back to Influencers
+            Back to Discover
           </button>
         </div>
       </div>
@@ -210,11 +301,14 @@ function InfluencerProfile() {
   }
 
   const getPlatformIcon = (platform) => {
-    switch (platform) {
+    const platformLower = platform?.toLowerCase() || '';
+    switch (platformLower) {
       case 'instagram':
         return <Instagram className="w-5 h-5 text-pink-400" />;
       case 'youtube':
         return <Youtube className="w-5 h-5 text-red-400" />;
+      case 'tiktok':
+        return <Video className="w-5 h-5 text-white" />;
       case 'facebook':
         return <Facebook className="w-5 h-5 text-blue-400" />;
       default:
@@ -231,7 +325,7 @@ function InfluencerProfile() {
         className="flex items-center gap-4"
       >
         <button
-          onClick={() => navigate('/dashboard/influencers/active')}
+          onClick={() => navigate(-1)}
           className="p-2 hover:bg-white/5 rounded-lg transition-all"
         >
           <ArrowLeft className="w-5 h-5 text-gray-400 hover:text-white" />
@@ -261,7 +355,7 @@ function InfluencerProfile() {
 
         <div className="relative z-10 p-8 lg:p-12 backdrop-blur-sm">
           <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8">
-            {/* Professional Avatar */}
+            {/* Professional Avatar/Image */}
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -270,9 +364,17 @@ function InfluencerProfile() {
             >
               {/* Subtle Glow */}
               <div className="absolute inset-0 bg-gradient-to-r from-[#C1B6FD]/20 via-[#745CB4]/20 to-[#C1B6FD]/20 rounded-3xl blur-xl"></div>
-              <div className="relative w-36 h-36 lg:w-44 lg:h-44 rounded-3xl bg-gradient-to-br from-[#745CB4] via-[#5D459D] to-[#745CB4] flex items-center justify-center font-bold text-white text-4xl lg:text-5xl shadow-2xl border-2 border-white/10">
-                {influencer.avatar}
-              </div>
+              {influencer.image ? (
+                <img
+                  src={influencer.image}
+                  alt={influencer.name}
+                  className="relative w-36 h-36 lg:w-44 lg:h-44 rounded-3xl object-cover shadow-2xl border-2 border-white/10 ring-4 ring-[#745CB4]/20"
+                />
+              ) : (
+                <div className="relative w-36 h-36 lg:w-44 lg:h-44 rounded-3xl bg-gradient-to-br from-[#745CB4] via-[#5D459D] to-[#745CB4] flex items-center justify-center font-bold text-white text-4xl lg:text-5xl shadow-2xl border-2 border-white/10">
+                  {influencer.name?.substring(0, 2).toUpperCase()}
+                </div>
+              )}
               {influencer.verified && (
                 <motion.div
                   initial={{ scale: 0 }}
@@ -293,7 +395,7 @@ function InfluencerProfile() {
                 transition={{ delay: 0.3 }}
                 className="flex items-center gap-4 mb-4"
               >
-                <h1 className="text-4xl lg:text-5xl font-bold text-white">
+                <h1 className="text-4xl lg:textrimaryP-5xl font-bold text-white">
                   {influencer.name}
                 </h1>
                 <motion.div

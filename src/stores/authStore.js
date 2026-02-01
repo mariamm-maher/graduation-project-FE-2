@@ -31,13 +31,28 @@ const useAuthStore = create(
       
       clearError: () => set({ error: null }),
       
-      logout: () => 
-        set({ 
-          user: null, 
-          token: null, 
-          isAuthenticated: false, 
-          error: null 
-        }),
+      logout: async () => {
+        try {
+          // Call backend logout endpoint
+          await authService.logout();
+        } catch (error) {
+          console.error('Logout error:', error);
+          // Continue with logout even if API call fails
+        } finally {
+          // Clear auth state
+          set({ 
+            user: null, 
+            token: null, 
+            isAuthenticated: false, 
+            error: null,
+            isLoading: false
+          });
+          
+          // Clear localStorage
+          localStorage.removeItem('auth-storage');
+          localStorage.clear();
+        }
+      },
       
       updateUser: (updates) => 
         set((state) => ({ 

@@ -1,11 +1,32 @@
 import { LayoutDashboard, Search, Users, Share2, BarChart3, MessageCircle, Settings, LogOut, User, Briefcase, Menu, X } from 'lucide-react';
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import useAuthStore from '../../../../stores/authStore';
 
 function Sidebar() {
+  const navigate = useNavigate();
   const location = useLocation();
   const [isHovered, setIsHovered] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const logout = useAuthStore((s) => s.logout);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Logged out successfully', {
+        position: 'top-right',
+        autoClose: 2000,
+      });
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Logout failed', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+    }
+  };
 
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Overview', path: '/dashboard/influencer' },
@@ -97,6 +118,7 @@ function Sidebar() {
           )}
         </button>
         <button 
+          onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200"
           title={!isHovered ? 'Logout' : ''}
         >

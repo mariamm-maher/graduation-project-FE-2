@@ -33,8 +33,8 @@ export default function Login({ onSwitchToRegister, onNeedsRoleSelection }) {
           position: 'top-right',
           autoClose: 4000,
         });
-        // Navigate to signup with role selection state
-        navigate('/signup', { state: { showRoleSelection: true, userEmail: formData.email } });
+        // Navigate to role-selection route
+        navigate('/role-selection', { state: { userEmail: formData.email } });
         return;
       }
       

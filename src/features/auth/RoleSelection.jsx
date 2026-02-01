@@ -1,14 +1,18 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Crown, Users, CheckCircle2, ArrowRight, Sparkles, TrendingUp, BarChart3, Zap, Star, Building2, Rocket } from 'lucide-react';
 import { toast } from 'react-toastify';
 import useAuthStore from '../../stores/authStore';
 
-export default function RoleSelection({ onRoleSelect, onInfluencerNext, onCampaignOwnerNext, onSwitchToLogin, userEmail }) {
+export default function RoleSelection() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedRole, setSelectedRole] = useState(null);
   const { selectRole, user, isLoading } = useAuthStore();
+  
+  // Get user email from navigation state
+  const userEmail = location.state?.userEmail || user?.email || '';
 
   const roles = [
     {
@@ -309,17 +313,15 @@ export default function RoleSelection({ onRoleSelect, onInfluencerNext, onCampai
             <span>You can update your role anytime in settings</span>
           </p>
           
-          {onSwitchToLogin && (
-            <p className="text-sm text-gray-400">
-              Already have an account?{' '}
-              <button
-                onClick={onSwitchToLogin}
-                className="text-[#C1B6FD] font-semibold hover:text-white transition-colors duration-300 underline-offset-4 hover:underline"
-              >
-                Sign in here
-              </button>
-            </p>
-          )}
+          <p className="text-sm text-gray-400">
+            Already have an account?{' '}
+            <button
+              onClick={() => navigate('/login')}
+              className="text-[#C1B6FD] font-semibold hover:text-white transition-colors duration-300 underline-offset-4 hover:underline"
+            >
+              Sign in here
+            </button>
+          </p>
         </div>
       </motion.div>
     </div>

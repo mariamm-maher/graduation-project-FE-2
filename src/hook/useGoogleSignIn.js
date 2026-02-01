@@ -1,7 +1,8 @@
 import { useGoogleLogin } from '@react-oauth/google';
 import { toast } from 'react-toastify';
 
-const GOOGLE_CALLBACK_URL = 'http://localhost:5000/api/auth/google/callback';
+// Backend endpoint that handles Google OAuth
+const GOOGLE_BACKEND_URL = 'http://localhost:5000/api/auth/google/callback';
 
 export const useGoogleSignIn = () => {
   const handleGoogleSignIn = useGoogleLogin({
@@ -18,7 +19,7 @@ export const useGoogleSignIn = () => {
     },
     flow: 'auth-code',
     ux_mode: 'redirect',
-    redirect_uri: GOOGLE_CALLBACK_URL,
+    redirect_uri: GOOGLE_BACKEND_URL,
   });
 
   return { handleGoogleSignIn };

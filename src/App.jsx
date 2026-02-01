@@ -7,6 +7,8 @@ import OwnerDashboard from './pages/OwnerDashboard.jsx';
 import InfluencerDashboard from './pages/InfluencerDashboard.jsx';
 import Landing from './pages/Landing.jsx';
 import AuthForm from './features/auth/AuthForm.jsx';
+import RoleSelectionPage from './pages/RoleSelectionPage.jsx';
+import GoogleCallback from './pages/GoogleCallback.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import ProtectedRoute, { AuthorizedRoute } from './pages/protectRoute.jsx';
 import NotFound from './pages/NotFound.jsx';
@@ -26,7 +28,9 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<AuthForm />} />
-        <Route path="/signup" element={<AuthForm />} /> 
+        <Route path="/signup" element={<AuthForm />} />
+        <Route path="/role-selection" element={<RoleSelectionPage />} />
+        <Route path="/auth/google/callback" element={<GoogleCallback />} />
         <Route path="/404" element={<NotFound />} />
         
         <Route path="/dashboard/owner/*" element={

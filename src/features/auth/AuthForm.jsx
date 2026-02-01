@@ -9,15 +9,11 @@ export default function AuthForm() {
   
   const isSignupPath = location.pathname === '/signup';
   const [isLogin, setIsLogin] = useState(!isSignupPath);
-  const [registerStep, setRegisterStep] = useState('register');
 
   useEffect(() => {
     const shouldBeLogin = location.pathname !== '/signup';
     setIsLogin(shouldBeLogin);
   }, [location.pathname]);
-  
-  // Hide tabs when in role selection or onboarding
-  const showTabs = isLogin || registerStep === 'register';
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#000000] via-[#05060F] to-[#1e1632] flex items-center justify-center p-4 relative overflow-hidden">
@@ -68,33 +64,30 @@ export default function AuthForm() {
         transition={{ duration: 0.6 }}
         className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 md:p-10 lg:p-12 shadow-2xl w-full max-w-3xl lg:max-w-4xl z-10"
       >
-        
-        {showTabs && (
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex bg-white/5 backdrop-blur-sm border border-white/10 rounded-full p-1.5">
-              <button
-                onClick={() => setIsLogin(true)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                  isLogin
-                    ? 'bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg shadow-[#C1B6FD]/30'
-                    : 'text-gray-400 hover:text-gray-200'
-                }`}
-              >
-                Sign in
-              </button>
-              <button
-                onClick={() => setIsLogin(false)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                  !isLogin
-                    ? 'bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg shadow-[#C1B6FD]/30'
-                    : 'text-gray-400 hover:text-gray-200'
-                }`}
-              >
-                Sign up
-              </button>
-            </div>
+        <div className="flex justify-center mb-8">
+          <div className="inline-flex bg-white/5 backdrop-blur-sm border border-white/10 rounded-full p-1.5">
+            <button
+              onClick={() => setIsLogin(true)}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                isLogin
+                  ? 'bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg shadow-[#C1B6FD]/30'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              Sign in
+            </button>
+            <button
+              onClick={() => setIsLogin(false)}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                !isLogin
+                  ? 'bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg shadow-[#C1B6FD]/30'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              Sign up
+            </button>
           </div>
-        )}
+        </div>
 
         <motion.div
           key={isLogin ? 'login' : 'register'}
@@ -106,7 +99,7 @@ export default function AuthForm() {
           {isLogin ? (
             <Login onSwitchToRegister={() => setIsLogin(false)} />
           ) : (
-            <Register onSwitchToLogin={() => setIsLogin(true)} onStepChange={setRegisterStep} />
+            <Register onSwitchToLogin={() => setIsLogin(true)} />
           )}
         </motion.div>
       </motion.div>

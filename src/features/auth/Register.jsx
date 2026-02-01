@@ -1,34 +1,14 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, ArrowRight, Chrome } from 'lucide-react';
 import { toast } from 'react-toastify';
 import useAuthStore from '../../stores/authStore';
-import RoleSelection from './RoleSelection';
 import { useGoogleSignIn } from '../../hook/useGoogleSignIn';
 
-export default function Register({ onSwitchToLogin, onStepChange }) {
-  const location = useLocation();
-  const [step, setStep] = useState('register'); // 'register', 'role-selection'
-  const { signup, isLoading, error: authError, user } = useAuthStore();
+export default function Register({ onSwitchToLogin }) {
+  const navigate = useNavigate();
+  const { signup, isLoading, error: authError } = useAuthStore();
   const { handleGoogleSignIn } = useGoogleSignIn();
-  
-  // Check if we should show role selection from navigation state
-  useEffect(() => {
-    if (location.state?.showRoleSelection && user?.userId) {
-      setStep('role-selection');
-      // Update form email if provided
-      if (location.state?.userEmail) {
-        setFormData(prev => ({ ...prev, email: location.state.userEmail }));
-      }
-    }
-  }, [location.state, user]);
-  
-  // Notify parent about step changes
-  useEffect(() => {
-    if (onStepChange) {
-      onStepChange(step);
-    }
-  }, [step, onStepChange]);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -69,8 +49,12 @@ export default function Register({ onSwitchToLogin, onStepChange }) {
         theme: "dark",
       });
       
-      // Move to role selection step
-      setStep('role-selection');
+      // Navigate to role selection route
+      navigate('/role-selection', { 
+        state: { 
+          userEmail: formData.email 
+        } 
+      });
     } else {
       console.error('Registration failed:', result.error);
       
@@ -89,19 +73,6 @@ export default function Register({ onSwitchToLogin, onStepChange }) {
     }
   };
 
-
-
-  // Show role selection if step is 'role-selection'
-  if (step === 'role-selection') {
-    return (
-      <RoleSelection 
-        onSwitchToLogin={onSwitchToLogin}
-        userEmail={formData.email}
-      />
-    );
-  }
-
-  // Show registration form
   return (
     <div className="w-full animate-fadeIn">
       <div className="text-center mb-6 sm:mb-8">

@@ -32,25 +32,25 @@ function App() {
         <Route path="/role-selection" element={<RoleSelectionPage />} />
         <Route path="/auth/google/callback" element={<GoogleCallback />} />
         <Route path="/404" element={<NotFound />} />
-        
+
         <Route path="/dashboard/owner/*" element={
           <AuthorizedRoute allowedRoles={['OWNER']}>
             <OwnerDashboard />
           </AuthorizedRoute>
         } />
-        
+
         <Route path="/dashboard/influencer/*" element={
           <AuthorizedRoute allowedRoles={['INFLUENCER']}>
             <InfluencerDashboard />
           </AuthorizedRoute>
         } />
-        
+
         <Route path="/dashboard/admin/*" element={
           <AuthorizedRoute allowedRoles={['ADMIN']}>
             <AdminDashboard />
           </AuthorizedRoute>
         } />
-        
+
         <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
     </Router>

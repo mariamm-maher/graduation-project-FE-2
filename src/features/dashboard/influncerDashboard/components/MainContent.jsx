@@ -1,8 +1,9 @@
-import { 
-  StatisticsChart, 
-  ActiveCampaignCards, 
-  PendingCampaigns, 
-  InfluencerActivity
+import {
+  StatisticsChart,
+  ActiveCampaignCards,
+  PendingCampaigns,
+  InfluencerActivity,
+  ProfileCompletionWidget
 } from './overview';
 
 function MainContent() {
@@ -16,9 +17,10 @@ function MainContent() {
 
       {/* Right Column - Available Campaigns & Recent Activity */}
       <div className="space-y-6">
+        <ProfileCompletionWidget />
         <PendingCampaigns />
         <InfluencerActivity />
-  
+
       </div>
     </div>
   );

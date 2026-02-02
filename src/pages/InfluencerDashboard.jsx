@@ -3,6 +3,7 @@ import { Header, Sidebar, MainContent } from '../features/dashboard/influncerDas
 import CampaignsLayout from '../features/dashboard/influncerDashboard/components/campaigns/CampaignsLayout';
 import CollaborationsLayout from '../features/dashboard/influncerDashboard/components/collaborations/CollaborationsLayout';
 import Profile from '../features/dashboard/influncerDashboard/components/profile/Profile';
+import CompleteProfileWizard from '../features/dashboard/influncerDashboard/components/profile/CompleteProfileWizard';
 import Messages from '../features/dashboard/influncerDashboard/components/messages';
 
 function InfluencerDashboard() {
@@ -16,6 +17,7 @@ function InfluencerDashboard() {
           <Route path="campaigns/*" element={<CampaignsLayout />} />
           <Route path="collaborations/*" element={<CollaborationsLayout />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="complete-profile" element={<CompleteProfileWizard />} />
           <Route path="social-media/*" element={<div>Social Media Content</div>} />
           <Route path="analytics/*" element={<div>Performance Analytics</div>} />
           <Route path="messages/*" element={<Messages />} />

@@ -1,28 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, DollarSign, MessageSquare, Briefcase, X } from 'lucide-react';
+import { ArrowLeft, Send, DollarSign, MessageSquare, Briefcase, X, Loader } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-// Mock campaigns data - would come from API
-const mockCampaigns = [
-  { id: 1, name: 'Summer Fashion Launch', status: 'active' },
-  { id: 2, name: 'Tech Product Review', status: 'active' },
-  { id: 3, name: 'Lifestyle Brand Partnership', status: 'planning' },
-  { id: 4, name: 'Food & Beverage Campaign', status: 'active' },
-];
+import useCampaignStore from '../../../../../../stores/campaignStore';
+import useCollaborationStore from '../../../../../../stores/collaborationStore';
 
 function SendCollabRequest() {
   const { influencerId } = useParams();
   const navigate = useNavigate();
-  
+
+  // Campaign Store
+  const { campaigns, fetchCampaigns, isLoading: isLoadingCampaigns } = useCampaignStore();
+  // Collaboration Store
+  const { createCollaboration } = useCollaborationStore();
+
   const [formData, setFormData] = useState({
     campaignId: '',
     proposedBudget: '',
     message: ''
   });
-  
+
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetchCampaigns();
+  }, [fetchCampaigns]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,48 +41,53 @@ function SendCollabRequest() {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.proposedBudget || parseFloat(formData.proposedBudget) <= 0) {
       newErrors.proposedBudget = 'Please enter a valid budget amount';
     }
-    
+
     if (!formData.message.trim()) {
       newErrors.message = 'Please enter a message';
     } else if (formData.message.trim().length < 20) {
       newErrors.message = 'Message must be at least 20 characters';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     setIsSubmitting(true);
-    
-    // Simulate API call
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Log the collaboration request data
-      console.log('Collaboration Request:', {
-        influencerId,
-        campaignId: formData.campaignId || null,
+      const payload = {
+        campaignId: formData.campaignId ? Number(formData.campaignId) : null,
+        influencerId: Number(influencerId),
         proposedBudget: parseFloat(formData.proposedBudget),
         message: formData.message
-      });
-      
-      // Show success and navigate back
-      alert('Collaboration request sent successfully!');
-      navigate(-1);
+      };
+
+      const result = await createCollaboration(payload);
+
+      if (result.success) {
+        // Log the collaboration request data
+        console.log('Collaboration Request Sent:', payload);
+
+        // Show success and navigate back
+        alert('Collaboration request sent successfully!');
+        navigate(-1);
+      } else {
+        throw new Error(result.error || 'Failed to send request');
+      }
     } catch (error) {
       console.error('Error sending request:', error);
-      alert('Failed to send request. Please try again.');
+      alert(error.message || 'Failed to send request. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -116,7 +124,7 @@ function SendCollabRequest() {
       >
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#C1B6FD]/5 via-transparent to-[#745CB4]/5"></div>
-        
+
         <form onSubmit={handleSubmit} className="relative z-10 space-y-6">
           {/* Campaign Selection (Optional) */}
           <div>
@@ -129,16 +137,22 @@ function SendCollabRequest() {
               name="campaignId"
               value={formData.campaignId}
               onChange={handleChange}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/50 transition-all"
+              disabled={isLoadingCampaigns}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/50 transition-all disabled:opacity-50"
             >
               <option value="" className="bg-[#1a0933] text-gray-300">No specific campaign</option>
-              {mockCampaigns.map(campaign => (
-                <option key={campaign.id} value={campaign.id} className="bg-[#1a0933] text-white">
-                  {campaign.name} ({campaign.status})
-                </option>
-              ))}
+              {(() => {
+                const campaignList = campaigns?.campaigns || (Array.isArray(campaigns) ? campaigns : []);
+                return campaignList.map(campaign => (
+                  <option key={campaign.id} value={campaign.id} className="bg-[#1a0933] text-white">
+                    {campaign.campaignName}
+                  </option>
+                ));
+              })()}
             </select>
-            <p className="text-xs text-gray-400 mt-2">Choose a campaign or leave empty for a general collaboration</p>
+            <p className="text-xs text-gray-400 mt-2">
+              {isLoadingCampaigns ? 'Loading campaigns...' : 'Choose a campaign or leave empty for a general collaboration'}
+            </p>
           </div>
 
           {/* Proposed Budget */}

@@ -1,21 +1,19 @@
 import { useState, useEffect } from 'react';
 import { Edit2, Save, X, Loader } from 'lucide-react';
+import { motion } from 'framer-motion';
 import useAuthStore from '../../../../../stores/authStore';
 
 import ProfileHeader from './ProfileHeader';
 import PersonalInfoCard from './PersonalInfoCard';
 import ProfessionalDetailsCard from './ProfessionalDetailsCard';
 import AudienceInsightsCard from './AudienceInsightsCard';
-import RatesPricingCard from './RatesPricingCard';
 import SocialMediaCard from './SocialMediaCard';
-import AchievementsCard from './AchievementsCard';
-import AvailabilityCard from './AvailabilityCard';
 
 function Profile() {
   const { getProfile, isLoading } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
-  
-  // Initialize with default structure to prevent runtime errors before data load
+
+  // Initialize with default structure
   const [profileData, setProfileData] = useState({
     // Personal Information
     firstName: '',
@@ -23,13 +21,13 @@ function Profile() {
     email: '',
     phone: '',
     location: '',
-    dateOfBirth: '',
-    
+
     // InfluencerProfile Schema Fields
     bio: '',
-    image: '', 
+    image: '',
     isCompleted: false,
-    
+    completionPercentage: 0,
+
     // Social Media Links
     socialMediaLinks: {
       instagram: { username: '', followers: '0', verified: false },
@@ -37,109 +35,67 @@ function Profile() {
       tiktok: { username: '', followers: '0', verified: false },
       twitter: { username: '', followers: '0', verified: false }
     },
-    
+
     // Primary Platform
     primaryPlatform: 'instagram',
-    
-    // Followers & Engagement (Default Mocks if missing)
-    followersCount: 0, 
-    engagementRate: 0, 
-    
+
+    // Followers & Engagement
+    followersCount: 0,
+    engagementRate: 0,
+
     // Categories & Content
     categories: [],
     contentTypes: [],
     collaborationTypes: [],
-    
+
     // Audience Demographics
     audienceAgeRange: '',
     audienceGender: '',
     audienceLocation: '',
     interests: [],
-    
+
     // Profile Status
-    completionPercentage: 0,
     isOnboarded: false,
-    
-    // Professional Details
-    yearsOfExperience: 0,
-    languages: [],
-    
-    // Statistics (Mock defaults)
-    stats: {
-      totalCampaigns: 0,
-      activeCampaigns: 0,
-      completedCampaigns: 0,
-      totalEarnings: '$0',
-      averageRating: 0.0,
-      totalReach: '0'
-    },
-    
-    // Achievements
-    achievements: [],
-    
-    // Rates & Pricing
-    rates: {
-      instagram: { post: '', story: '', reel: '' },
-      youtube: { video: '', short: '' },
-      tiktok: { video: '', series: '' }
-    },
-    
-    // Availability
-    availability: 'Available',
-    responseTime: '',
-    preferredBrands: []
   });
 
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
         const response = await getProfile();
-        // Expected response structure: { success: true, user: {...}, data: { user: {...}, influencerProfile: {...} } }
-        
+
         if (response && response.success && response.data) {
-          const { user, influencerProfile } = response.data;
-          
+          const { user, influencerProfile, completionPercentage } = response.data;
+
           if (user && influencerProfile) {
-            // Map API data to component state
             setProfileData(prev => ({
               ...prev,
-              // User Data
               firstName: user.firstName || prev.firstName,
               lastName: user.lastName || prev.lastName,
               email: user.email || prev.email,
-              phone: user.phone || prev.phone, // Assuming phone might be on user object
-              location: influencerProfile.location || prev.location, // or user.location
-              
-              // Bio & Profile Info
+              phone: user.phone || prev.phone,
+              location: influencerProfile.location || prev.location,
+
               bio: influencerProfile.bio || prev.bio,
-              image: influencerProfile.profileImage || user.profileImage || prev.image,
+              image: influencerProfile.image || prev.image,
               isCompleted: influencerProfile.isCompleted || prev.isCompleted,
-              
-              // Social Media
-              // Ensure we merge with existing structure if API returns partial or matches format
-              socialMediaLinks: influencerProfile.socialMediaLinks || prev.socialMediaLinks, 
-              
-              // Content Info
+              completionPercentage: completionPercentage || 0,
+
+              socialMediaLinks: influencerProfile.socialMediaLinks || prev.socialMediaLinks,
+
               primaryPlatform: influencerProfile.primaryPlatform || prev.primaryPlatform,
-              
-              // Lists
-              categories: influencerProfile.niche ? [influencerProfile.niche] : influencerProfile.interests || prev.categories,
-              contentTypes: influencerProfile.content || prev.contentTypes,
+              followersCount: influencerProfile.followersCount || 0,
+              engagementRate: influencerProfile.engagementRate || 0,
+
+              categories: influencerProfile.categories || prev.categories,
+              contentTypes: influencerProfile.contentTypes || prev.contentTypes,
+              collaborationTypes: influencerProfile.collaborationTypes || prev.collaborationTypes,
               interests: influencerProfile.interests || prev.interests,
-              
-              // Audience - Parsing complex objects if strictly needed, or taking direct values if simplified
-              audienceAgeRange: influencerProfile.audienceDemographics?.ageRange || prev.audienceAgeRange,
-              audienceLocation: influencerProfile.audienceDemographics?.topLocations?.[0] || prev.audienceLocation,
-              
-              // Achievements
-              achievements: influencerProfile.achievements || prev.achievements,
-              
-              // Stats / Mapped from previousCollab or stats object if available
-              // If API doesn't provide computed stats, we might calculate or keep 0
-              stats: {
-                ...prev.stats,
-                completedCampaigns: influencerProfile.previousCollab ? influencerProfile.previousCollab.length : 0
-              }
+
+              audienceAgeRange: influencerProfile.audienceAgeRange || prev.audienceAgeRange,
+              audienceGender: influencerProfile.audienceGender || prev.audienceGender,
+              audienceLocation: influencerProfile.audienceLocation || prev.audienceLocation,
+
+              isOnboarded: influencerProfile.isOnboarded || prev.isOnboarded,
             }));
           }
         }
@@ -153,10 +109,7 @@ function Profile() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setProfileData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setProfileData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleArrayChange = (fieldName, value) => {
@@ -179,35 +132,18 @@ function Profile() {
     }));
   };
 
-  const handleRateChange = (platform, type, value) => {
-    setProfileData(prev => ({
-      ...prev,
-      rates: {
-        ...prev.rates,
-        [platform]: {
-          ...prev.rates?.[platform],
-          [type]: value
-        }
-      }
-    }));
-  };
-
   const handleImageChange = () => {
-    // In real app, this would open file picker and upload image
     console.log('Upload profile image');
   };
 
   const handleSave = () => {
-    // Here you would make an API call to save the profile
     console.log('Saving profile:', profileData);
     setIsEditing(false);
-    // TODO: API call to backend
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    // Re-fetch or reset if needed
-    getProfile(); 
+    getProfile();
   };
 
   if (isLoading) {
@@ -218,104 +154,124 @@ function Profile() {
     );
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 100, damping: 15 }
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-8 relative"
+    >
+      {/* Subtle background glow for premium feel */}
+      <div className="absolute -top-20 -right-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-40 -left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">My Profile</h1>
-          <p className="text-sm sm:text-base text-gray-400">Manage your profile information and settings</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Profile Settings</h1>
+          <p className="text-gray-400 mt-1">Manage your personal information and public profile</p>
         </div>
-        <div className="flex gap-2">
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           {isEditing ? (
-            <>
+            <div className="flex gap-3">
               <button
                 onClick={handleCancel}
-                className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-all"
+                className="flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-white/10 transition-all font-medium"
               >
                 <X className="w-4 h-4" />
                 Cancel
               </button>
               <button
                 onClick={handleSave}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all"
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all"
               >
                 <Save className="w-4 h-4" />
                 Save Changes
               </button>
-            </>
+            </div>
           ) : (
             <button
               onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all"
             >
               <Edit2 className="w-4 h-4" />
               Edit Profile
             </button>
           )}
-        </div>
+        </motion.div>
       </div>
 
       {/* Profile Header Card */}
-      <ProfileHeader 
-        profileData={profileData}
-        isEditing={isEditing}
-        onInputChange={handleInputChange}
-        onImageChange={handleImageChange}
-      />
+      <motion.div variants={itemVariants}>
+        <ProfileHeader
+          profileData={profileData}
+          isEditing={isEditing}
+          onInputChange={handleInputChange}
+          onImageChange={handleImageChange}
+        />
+      </motion.div>
 
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column */}
-        <div className="space-y-6">
-          <PersonalInfoCard 
-            profileData={profileData}
-            isEditing={isEditing}
-            onInputChange={handleInputChange}
-          />
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 relative z-10">
+        {/* Left/Main Column - Wider */}
+        <div className="xl:col-span-2 space-y-6">
+          <motion.div variants={itemVariants}>
+            <PersonalInfoCard
+              profileData={profileData}
+              isEditing={isEditing}
+              onInputChange={handleInputChange}
+            />
+          </motion.div>
 
-          <ProfessionalDetailsCard 
-            profileData={profileData}
-            isEditing={isEditing}
-            onInputChange={handleInputChange}
-            onArrayChange={handleArrayChange}
-          />
+          <motion.div variants={itemVariants}>
+            <ProfessionalDetailsCard
+              profileData={profileData}
+              isEditing={isEditing}
+              onInputChange={handleInputChange}
+              onArrayChange={handleArrayChange}
+            />
+          </motion.div>
 
-          <AudienceInsightsCard 
-            profileData={profileData}
-            isEditing={isEditing}
-            onInputChange={handleInputChange}
-            onArrayChange={handleArrayChange}
-          />
-
-          <RatesPricingCard 
-            profileData={profileData}
-            isEditing={isEditing}
-            onRateChange={handleRateChange}
-          />
+          <motion.div variants={itemVariants}>
+            <AudienceInsightsCard
+              profileData={profileData}
+              isEditing={isEditing}
+              onInputChange={handleInputChange}
+              onArrayChange={handleArrayChange}
+            />
+          </motion.div>
         </div>
 
-        {/* Right Column */}
+        {/* Right Sidebar - Narrower */}
         <div className="space-y-6">
-          <SocialMediaCard 
-            profileData={profileData}
-            isEditing={isEditing}
-            onSocialMediaChange={handleSocialMediaChange}
-          />
-
-          <AchievementsCard profileData={profileData} />
-
-          <AvailabilityCard 
-            profileData={profileData}
-            isEditing={isEditing}
-            onInputChange={handleInputChange}
-            onArrayChange={handleArrayChange}
-          />
+          <motion.div variants={itemVariants} className="xl:sticky xl:top-6">
+            <SocialMediaCard
+              profileData={profileData}
+              isEditing={isEditing}
+              onSocialMediaChange={handleSocialMediaChange}
+            />
+          </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 export default Profile;
-

@@ -10,6 +10,7 @@ function Sidebar() {
   const [isHovered, setIsHovered] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const logout = useAuthStore((s) => s.logout);
+  const user = useAuthStore((s) => s.user);
 
   const handleLogout = async () => {
     try {
@@ -34,8 +35,8 @@ function Sidebar() {
     { id: 'collaborations', icon: Users, label: 'My Collaborations', path: '/dashboard/influencer/collaborations' },
     // { id: 'content', icon: Share2, label: 'My Content', path: '/dashboard/influencer/social-media' },
     // { id: 'analytics', icon: BarChart3, label: 'Performance', path: '/dashboard/influencer/analytics' },
-    // { id: 'messages', icon: MessageCircle, label: 'Messages', path: '/dashboard/influencer/messages' },
-    { id: 'profile', icon: Briefcase, label: 'My Profile', path: '/dashboard/influencer/profile' },
+    { id: 'messages', icon: MessageCircle, label: 'Messages', path: '/dashboard/influencer/messages' },
+    { id: 'profile', icon: User, label: 'My Profile', path: '/dashboard/influencer/profile' },
   ];
 
   return (
@@ -72,8 +73,8 @@ function Sidebar() {
         </div>
         {isHovered && (
           <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-semibold text-white whitespace-nowrap">James Radcliffe</p>
-            <p className="text-xs text-gray-400 whitespace-nowrap">james@adsphere.com</p>
+            <p className="text-sm font-semibold text-white whitespace-nowrap">{user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Guest User'}</p>
+            <p className="text-xs text-gray-400 whitespace-nowrap">{user?.email || 'No email'}</p>
           </div>
         )}
       </div>

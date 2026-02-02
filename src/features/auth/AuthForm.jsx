@@ -62,7 +62,7 @@ export default function AuthForm() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 md:p-10 lg:p-12 shadow-2xl w-full max-w-3xl lg:max-w-4xl z-10"
+        className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 md:p-10 lg:p-12 shadow-2xl w-full max-w-md lg:max-w-lg z-10"
       >
         <div className="flex justify-center mb-8">
           <div className="inline-flex bg-white/5 backdrop-blur-sm border border-white/10 rounded-full p-1.5">

@@ -216,7 +216,13 @@ const useAuthStore = create(
           const response = await authService.getProfile();
 
           if (response && response.success) {
-            const { user } = response.data || {};
+            // Keep the full response data structure if needed, but primarily we want the user object
+            // User request implies response.data has { user, ownerProfile, influencerProfile }
+            const fullData = response.data || {};
+            const user = fullData.user || null;
+            
+            // We update the store with the 'user' object, but we return the FULL data
+            // so components can access influencerProfile/ownerProfile
             set({
               user: user || null,
               isAuthenticated: !!user,
@@ -224,7 +230,7 @@ const useAuthStore = create(
               error: null,
             });
 
-            return { success: true, user };
+            return { success: true, user, data: fullData };
           }
 
           throw new Error(response?.message || 'Failed to fetch profile');

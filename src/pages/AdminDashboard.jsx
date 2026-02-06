@@ -12,6 +12,7 @@ import {
   AnnouncementsOverview
 } from '../features/dashboard/adminDashboard/components';
 import UserDetail from '../features/dashboard/adminDashboard/components/accounts/UserDetail';
+import CampaignDetail from '../features/dashboard/adminDashboard/components/campaigns/CampaignDetail';
 
 function AdminDashboard() {
   return (
@@ -25,6 +26,7 @@ function AdminDashboard() {
           <Route path="users/:id" element={<UserDetail />} />
           <Route path="sessions" element={<SessionsOverview />} />
           <Route path="campaigns" element={<CampaignsOverview />} />
+          <Route path="campaigns/:id" element={<CampaignDetail />} />
           <Route path="collaborations/*" element={<CollaborationsLayout />} />
           <Route path="logs" element={<LogsOverview />} />
           <Route path="announcements" element={<AnnouncementsOverview />} />

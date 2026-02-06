@@ -1,15 +1,70 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, User, Users, Calendar, CheckCircle, DollarSign, MessageSquare, Star, FileText } from 'lucide-react';
-import { mockCollaborations } from '../adminData';
+import useAdminStore from '../../../../../stores/AdminStore';
+import adminService from '../../../../../api/adminApi';
+import { mapCollaboration } from '../adminData';
+import { toast } from 'react-toastify';
 
 function CollaborationDetail() {
   const { id } = useParams();
-  const collab = mockCollaborations.find(c => c.id === Number(id));
+  const { collaborations, fetchCollaborations } = useAdminStore();
+  const [collab, setCollab] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const rawList = Array.isArray(collaborations) ? collaborations : [];
+
+  useEffect(() => {
+    fetchCollaborations();
+  }, [fetchCollaborations]);
+
+  useEffect(() => {
+    const found = rawList.find((c) => String(c.id) === String(id));
+    if (found) {
+      const mapped = mapCollaboration(found);
+      if (mapped) {
+        setCollab(mapped);
+        setLoading(false);
+      }
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      try {
+        const res = await adminService.getCollaborationById(id);
+        const raw = res.data?.collaboration ?? res.collaboration ?? res.data?.data ?? res.data;
+        const c = raw && typeof raw === 'object' && raw.id != null ? raw : null;
+        if (!cancelled && c) {
+          setCollab(mapCollaboration(c));
+        } else if (!cancelled) {
+          setCollab(null);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          toast.error(e.message || 'Failed to load collaboration');
+          setCollab(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id, rawList.length]);
+
+  if (loading && !collab) {
+    return (
+      <div className="flex items-center justify-center py-12 text-gray-400">
+        Loading collaboration...
+      </div>
+    );
+  }
 
   if (!collab) {
     return (
       <div className="text-center py-12 text-gray-400">
-        Collaboration not found. <Link to="/dashboard/admin/collaborations" className="text-[#C1B6FD] hover:underline">Back to Collaborations</Link>
+        Collaboration not found.{' '}
+        <Link to="/dashboard/admin/collaborations" className="text-[#C1B6FD] hover:underline">Back to Collaborations</Link>
       </div>
     );
   }
@@ -22,7 +77,7 @@ function CollaborationDetail() {
 
       <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6">
         <h1 className="text-2xl font-bold text-white mb-2">{collab.campaign}</h1>
-        <p className="text-gray-400 text-sm mb-6">{collab.notes}</p>
+        <p className="text-gray-400 text-sm mb-6">{collab.notes || '—'}</p>
 
         {/* Who with who - Owner & Influencer */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 pb-6 border-b border-white/10">
@@ -33,7 +88,9 @@ function CollaborationDetail() {
             <div className="p-4 bg-white/5 rounded-xl border border-white/10">
               <p className="font-semibold text-white">{collab.owner}</p>
               <p className="text-sm text-gray-400">{collab.ownerEmail}</p>
-              <Link to={`/dashboard/admin/accounts/${collab.ownerId}`} className="text-xs text-[#C1B6FD] hover:underline mt-2 inline-block">View account</Link>
+              {collab.ownerId && (
+                <Link to={`/dashboard/admin/users/${collab.ownerId}`} className="text-xs text-[#C1B6FD] hover:underline mt-2 inline-block">View account</Link>
+              )}
             </div>
           </div>
           <div>
@@ -43,7 +100,9 @@ function CollaborationDetail() {
             <div className="p-4 bg-white/5 rounded-xl border border-white/10">
               <p className="font-semibold text-white">{collab.influencer}</p>
               <p className="text-sm text-gray-400">{collab.influencerEmail}</p>
-              <Link to={`/dashboard/admin/accounts/${collab.influencerId}`} className="text-xs text-[#C1B6FD] hover:underline mt-2 inline-block">View account</Link>
+              {collab.influencerId && (
+                <Link to={`/dashboard/admin/users/${collab.influencerId}`} className="text-xs text-[#C1B6FD] hover:underline mt-2 inline-block">View account</Link>
+              )}
             </div>
           </div>
         </div>
@@ -56,7 +115,7 @@ function CollaborationDetail() {
               collab.status === 'active' ? 'bg-green-500/20 text-green-400' :
               collab.status === 'completed' ? 'bg-blue-500/20 text-blue-400' : 'bg-yellow-500/20 text-yellow-400'
             }`}>
-              {collab.status.replace('_', ' ')}
+              {(collab.status || '').replace('_', ' ')}
             </span>
           </div>
           <div>
@@ -70,7 +129,7 @@ function CollaborationDetail() {
             <p className="text-xs text-gray-400 mb-1">Deliverables</p>
             <p className="font-semibold text-white flex items-center gap-1">
               <CheckCircle className="w-4 h-4 text-green-400" />
-              {collab.deliverables.completed} / {collab.deliverables.total}
+              {collab.deliverables?.completed ?? 0} / {collab.deliverables?.total ?? 0}
             </p>
           </div>
           <div>
@@ -103,16 +162,18 @@ function CollaborationDetail() {
           </div>
         </div>
 
-        <div className="mb-6">
-          <p className="text-xs text-gray-400 mb-2">Platforms</p>
-          <div className="flex flex-wrap gap-2">
-            {collab.platforms.map((p) => (
-              <span key={p} className="px-3 py-1.5 bg-white/5 rounded-lg text-sm text-gray-300 border border-white/10">{p}</span>
-            ))}
+        {collab.platforms && collab.platforms.length > 0 && (
+          <div className="mb-6">
+            <p className="text-xs text-gray-400 mb-2">Platforms</p>
+            <div className="flex flex-wrap gap-2">
+              {collab.platforms.map((p) => (
+                <span key={p} className="px-3 py-1.5 bg-white/5 rounded-lg text-sm text-gray-300 border border-white/10">{p}</span>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {collab.rating && (
+        {collab.rating != null && collab.rating > 0 && (
           <div className="flex items-center gap-2 p-4 bg-white/5 rounded-xl border border-white/10 mb-6">
             <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
             <span className="font-semibold text-white">Rating: {collab.rating}</span>

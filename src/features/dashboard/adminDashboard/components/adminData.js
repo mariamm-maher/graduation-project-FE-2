@@ -1,17 +1,35 @@
-// Shared mock data for admin dashboard (accounts + collaborations)
-
-export const mockAccounts = [
-  { id: 1, name: 'James Radcliffe', email: 'james@adsphere.com', role: 'owner', status: 'active', createdAt: '2025-01-15' },
-  { id: 2, name: 'Sarah Johnson', email: 'sarah@example.com', role: 'influencer', status: 'active', createdAt: '2025-01-18' },
-  { id: 3, name: 'Alex Martinez', email: 'alex@example.com', role: 'influencer', status: 'active', createdAt: '2025-01-20' },
-  { id: 4, name: 'Emma Davis', email: 'emma@example.com', role: 'owner', status: 'active', createdAt: '2025-01-22' },
-  { id: 5, name: 'Mike Chen', email: 'mike@example.com', role: 'influencer', status: 'inactive', createdAt: '2025-01-10' },
-  { id: 6, name: 'Admin User', email: 'admin@adsphere.com', role: 'admin', status: 'active', createdAt: '2025-01-01' },
-];
-
-export const mockCollaborations = [
-  { id: 1, ownerId: 1, owner: 'James Radcliffe', ownerEmail: 'james@adsphere.com', influencerId: 2, influencer: 'Sarah Johnson', influencerEmail: 'sarah@example.com', campaign: 'Summer Fashion Launch', status: 'active', progress: 75, unreadMessages: 3, deliverables: { completed: 3, total: 4 }, payment: 'pending', rating: null, deadline: '2025-12-15', platforms: ['Instagram', 'TikTok'], startedAt: '2025-11-01', notes: 'Fashion campaign for summer collection launch.' },
-  { id: 2, ownerId: 1, owner: 'James Radcliffe', ownerEmail: 'james@adsphere.com', influencerId: 3, influencer: 'Alex Martinez', influencerEmail: 'alex@example.com', campaign: 'Tech Product Review', status: 'active', progress: 45, unreadMessages: 0, deliverables: { completed: 2, total: 5 }, payment: 'approved', rating: null, deadline: '2025-11-30', platforms: ['YouTube'], startedAt: '2025-11-10', notes: 'Tech review video series.' },
-  { id: 3, ownerId: 4, owner: 'Emma Davis', ownerEmail: 'emma@example.com', influencerId: 2, influencer: 'Sarah Johnson', influencerEmail: 'sarah@example.com', campaign: 'Holiday Collection', status: 'completed', progress: 100, unreadMessages: 0, deliverables: { completed: 6, total: 6 }, payment: 'paid', rating: 4.8, deadline: '2025-11-20', platforms: ['Instagram', 'Pinterest'], startedAt: '2025-10-15', notes: 'Holiday campaign completed successfully.' },
-  { id: 4, ownerId: 1, owner: 'James Radcliffe', ownerEmail: 'james@adsphere.com', influencerId: 5, influencer: 'Mike Chen', influencerEmail: 'mike@example.com', campaign: 'Fitness Challenge', status: 'pending_review', progress: 90, unreadMessages: 1, deliverables: { completed: 5, total: 5 }, payment: 'processing', rating: null, deadline: '2025-11-25', platforms: ['TikTok', 'YouTube'], startedAt: '2025-11-05', notes: '30-day fitness challenge.' },
-];
+// Map backend collaboration to UI shape (owner/influencer may be objects or ids)
+export function mapCollaboration(c) {
+  if (!c || typeof c !== 'object') return null;
+  const owner = c.owner && typeof c.owner === 'object' ? c.owner : {};
+  const influencer = c.influencer && typeof c.influencer === 'object' ? c.influencer : {};
+  const ownerName = [owner.firstName, owner.lastName].filter(Boolean).join(' ').trim() || owner.name || '—';
+  const influencerName = [influencer.firstName, influencer.lastName].filter(Boolean).join(' ').trim() || influencer.name || '—';
+  const campaignName = c.campaign?.name ?? c.campaignName ?? (typeof c.campaign === 'string' ? c.campaign : '—');
+  const deliverables = c.deliverables && typeof c.deliverables === 'object'
+    ? { completed: c.deliverables.completed ?? 0, total: c.deliverables.total ?? 0 }
+    : { completed: 0, total: 0 };
+  const platforms = Array.isArray(c.platforms) ? c.platforms : (c.platforms ? [c.platforms] : []);
+  const formatDate = (d) => !d ? '—' : (typeof d === 'string' && d.length >= 10 ? d.split('T')[0] : new Date(d).toISOString().split('T')[0]);
+  return {
+    id: c.id,
+    ownerId: owner.id ?? c.ownerId,
+    owner: ownerName,
+    ownerEmail: owner.email ?? c.ownerEmail ?? '—',
+    influencerId: influencer.id ?? c.influencerId,
+    influencer: influencerName,
+    influencerEmail: influencer.email ?? c.influencerEmail ?? '—',
+    campaign: campaignName,
+    status: (c.status || 'active').toLowerCase().replace(/\s/g, '_'),
+    progress: Number(c.progress) || 0,
+    unreadMessages: Number(c.unreadMessages) || 0,
+    deliverables,
+    payment: (c.paymentStatus ?? c.payment ?? 'pending').toLowerCase(),
+    rating: c.rating != null ? Number(c.rating) : null,
+    deadline: formatDate(c.deadline ?? c.endDate),
+    platforms,
+    startedAt: formatDate(c.startedAt ?? c.createdAt),
+    notes: c.notes ?? '',
+    raw: c
+  };
+}

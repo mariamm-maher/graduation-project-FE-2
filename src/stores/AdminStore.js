@@ -49,25 +49,39 @@ const useAdminStore = create((set) => ({
     }
   },
 
-  // Fetch Users
-  fetchUsers: async () => {
+  // Fetch Users (params: page, limit, role, search) — always from backend GET /api/admin/users
+  fetchUsers: async (params = {}) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await adminService.getUsers();
-      
-      if (response.success) {
-        set({ 
-          users: response.data || [],
-          isLoading: false,
-          error: null 
-        });
-        return { success: true, data: response.data };
-      }
-      
-      throw new Error(response.message || 'Failed to fetch users');
+      const response = await adminService.getUsers(params);
+      const users = response.data?.users ?? response.users ?? (Array.isArray(response.data) ? response.data : []);
+      const list = Array.isArray(users) ? users : [];
+      set({
+        users: list,
+        isLoading: false,
+        error: null
+      });
+      return { success: true, data: list };
     } catch (error) {
       const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch users';
-      set({ error: errorMessage, isLoading: false });
+      set({ users: [], error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Delete user (calls API then removes from state)
+  deleteUser: async (id) => {
+    set({ error: null });
+    try {
+      await adminService.deleteUser(id);
+      set((state) => ({
+        users: state.users.filter((u) => String(u.id) !== String(id)),
+        error: null
+      }));
+      return { success: true };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to delete user';
+      set({ error: errorMessage });
       return { success: false, error: errorMessage };
     }
   },
@@ -100,43 +114,72 @@ const useAdminStore = create((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await adminService.getCollaborations();
-      
-      if (response.success) {
-        set({ 
-          collaborations: response.data || [],
-          isLoading: false,
-          error: null 
-        });
-        return { success: true, data: response.data };
-      }
-      
-      throw new Error(response.message || 'Failed to fetch collaborations');
+      const list = response.data?.collaborations ?? response.collaborations ?? (Array.isArray(response.data) ? response.data : []);
+      set({
+        collaborations: Array.isArray(list) ? list : [],
+        isLoading: false,
+        error: null
+      });
+      return { success: true, data: Array.isArray(list) ? list : response.data };
     } catch (error) {
       const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch collaborations';
-      set({ error: errorMessage, isLoading: false });
+      set({ collaborations: [], error: errorMessage, isLoading: false });
       return { success: false, error: errorMessage };
     }
   },
 
-  // Fetch Campaigns
-  fetchCampaigns: async () => {
+  // Fetch Campaigns (params: page, limit, goalType, lifecycleStage)
+  fetchCampaigns: async (params = {}) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await adminService.getCampaigns();
-      
-      if (response.success) {
-        set({ 
-          campaigns: response.data || [],
-          isLoading: false,
-          error: null 
-        });
-        return { success: true, data: response.data };
-      }
-      
-      throw new Error(response.message || 'Failed to fetch campaigns');
+      const response = await adminService.getCampaigns(params);
+      const list = response.data?.campaigns ?? response.campaigns ?? (Array.isArray(response.data) ? response.data : []);
+      const campaigns = Array.isArray(list) ? list : [];
+      set({
+        campaigns,
+        isLoading: false,
+        error: null
+      });
+      return { success: true, data: campaigns };
     } catch (error) {
       const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch campaigns';
-      set({ error: errorMessage, isLoading: false });
+      set({ campaigns: [], error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Delete campaign
+  deleteCampaign: async (id) => {
+    set({ error: null });
+    try {
+      await adminService.deleteCampaign(id);
+      set((state) => ({
+        campaigns: state.campaigns.filter((c) => String(c.id) !== String(id)),
+        error: null
+      }));
+      return { success: true };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to delete campaign';
+      set({ error: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Update campaign status (lifecycleStage)
+  updateCampaignStatus: async (id, status) => {
+    set({ error: null });
+    try {
+      await adminService.updateCampaignStatus(id, status);
+      set((state) => ({
+        campaigns: state.campaigns.map((c) =>
+          String(c.id) === String(id) ? { ...c, lifecycleStage: status } : c
+        ),
+        error: null
+      }));
+      return { success: true };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to update campaign status';
+      set({ error: errorMessage });
       return { success: false, error: errorMessage };
     }
   },

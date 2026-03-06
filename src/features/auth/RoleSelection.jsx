@@ -9,10 +9,11 @@ export default function RoleSelection() {
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedRole, setSelectedRole] = useState(null);
-  const { selectRole, user, isLoading } = useAuthStore();
-  
-  // Get user email from navigation state
+  const { selectRole, user, isLoading, logout } = useAuthStore();
+
+  // Get user email and userId from navigation state or auth store
   const userEmail = location.state?.userEmail || user?.email || '';
+  const userIdFromState = location.state?.userId;
 
   const roles = [
     {
@@ -38,7 +39,7 @@ export default function RoleSelection() {
       subtitle: 'For Content Creators',
       description: 'Discover opportunities, grow your brand, and monetize your influence',
       icon: Star,
-   
+
       features: [
         { text: 'Exclusive campaign opportunities', icon: Zap },
         { text: 'Professional portfolio builder', icon: Star },
@@ -51,41 +52,69 @@ export default function RoleSelection() {
   ];
 
   const handleContinue = async () => {
-    if (selectedRole && user?.userId) {
-      // Map role to roleId: 1 for campaign_owner, 2 for influencer
-      const roleId = selectedRole === 'campaign_owner' ? 1 : 2;
+    if (!selectedRole) return;
+
+    // Try to get userId from auth store first, then from navigation state
+    let userId = user?.userId || userIdFromState;
+
+    console.log('RoleSelection - Debug:', { 
+      userFromStore: user, 
+      userIdFromState,
+      finalUserId: userId 
+    });
+
+    // If no userId in auth store or navigation state, we have a problem
+    if (!userId) {
+      toast.error('User ID not found. Please try logging in again.', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
       
-      // Call selectRole from authStore
-      const result = await selectRole(user.userId, roleId);
-      
-      if (result.success) {
-        // Show success toast
-        toast.success('Role assigned successfully! Please sign in to continue.', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          theme: "dark",
-        });
-        
-        // Navigate to login page after role selection
-        setTimeout(() => {
-          navigate('/login');
-        }, 1500);
-      } else {
-        // Show error toast
-        toast.error(result.error || 'Failed to assign role. Please try again.', {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          theme: "dark",
-        });
-      }
+      // Redirect to login
+      navigate('/login');
+      return;
+    }
+
+    // Map role to roleId: 1 for campaign_owner, 2 for influencer
+    const roleId = selectedRole === 'campaign_owner' ? 1 : 2;
+
+    // Call selectRole from authStore
+    const result = await selectRole(userId, roleId);
+
+    if (result.success) {
+      // Show success toast
+      toast.success('Role assigned successfully! Please login again', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
+
+      // Logout and navigate to login page after role selection
+      await logout();
+
+      setTimeout(() => {
+        navigate('/login');
+      }, 1500);
+    } else {
+      // Show error toast
+      toast.error(result.error || 'Failed to assign role. Please try again.', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
     }
   };
 
@@ -98,9 +127,9 @@ export default function RoleSelection() {
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         className="text-center mb-8"
       >
- 
-        
-        <motion.h2 
+
+
+        <motion.h2
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -108,8 +137,8 @@ export default function RoleSelection() {
         >
           Choose Your Path
         </motion.h2>
-        
-        <motion.p 
+
+        <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
@@ -117,7 +146,7 @@ export default function RoleSelection() {
         >
           Select the role that best describes you
         </motion.p>
-        
+
         {userEmail && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -135,16 +164,16 @@ export default function RoleSelection() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 flex-1">
         {roles.map((role, index) => {
           const Icon = role.icon;
-    
+
           const isSelected = selectedRole === role.id;
-          
+
           return (
             <motion.div
               key={role.id}
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ 
-                duration: 0.6, 
+              transition={{
+                duration: 0.6,
                 delay: 0.6 + (index * 0.2),
                 ease: [0.22, 1, 0.36, 1]
               }}
@@ -160,19 +189,19 @@ export default function RoleSelection() {
                 animate={{ opacity: [0.5, 0.8, 0.5] }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
-              
+
               {/* Card */}
               <div className="relative h-full rounded-3xl overflow-hidden transition-all duration-500 ">
                 {/* Background with gradient */}
                 <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/60 to-black/80 backdrop-blur-xl" />
-                
+
                 {/* Animated gradient overlay */}
                 <motion.div
                   className={`absolute inset-0 bg-gradient-to-br ${role.gradient} opacity-10 transition-opacity duration-500`}
                   animate={{ opacity: [0.1, 0.15, 0.1] }}
                   transition={{ duration: 3, repeat: Infinity }}
                 />
-                
+
                 {/* Content */}
                 <div className="relative p-8 h-full flex flex-col">
                   {/* Header with Icon */}
@@ -201,15 +230,15 @@ export default function RoleSelection() {
                         </h3>
                         <p className="text-sm text-[#C1B6FD] font-medium">{role.subtitle}</p>
                       </div>
-                      
+
                       <p className="text-gray-400 text-sm leading-relaxed">
                         {role.description}
                       </p>
                     </div>
-                    
-                
+
+
                   </div>
-                  
+
                   {/* Features Grid */}
                   <div className="space-y-4 flex-1">
                     {role.features.map((feature, idx) => {
@@ -218,14 +247,14 @@ export default function RoleSelection() {
                           key={idx}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
-                          transition={{ 
+                          transition={{
                             delay: 0.8 + (index * 0.15) + (idx * 0.08),
                             duration: 0.5,
                             ease: [0.25, 0.46, 0.45, 0.94]
                           }}
                           className="flex items-start gap-4 group/item"
                         >
-                          <motion.div 
+                          <motion.div
                             className={`relative flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br ${role.gradient} opacity-90 group-hover/item:opacity-100 transition-all duration-300 shadow-lg`}
                             whileHover={{ scale: 1.2 }}
                             transition={{ type: "spring", stiffness: 400, damping: 15 }}
@@ -240,7 +269,7 @@ export default function RoleSelection() {
                       );
                     })}
                   </div>
-                  
+
                   {/* Selection Indicator */}
                   <AnimatePresence>
                     {isSelected && (
@@ -280,17 +309,16 @@ export default function RoleSelection() {
               className="absolute -inset-1 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] rounded-2xl blur-xl opacity-50 group-hover/btn:opacity-75 transition-opacity"
             />
           )}
-          
+
           <motion.button
             whileHover={selectedRole ? { scale: 1.02 } : {}}
             whileTap={selectedRole ? { scale: 0.98 } : {}}
             onClick={handleContinue}
             disabled={!selectedRole || isLoading}
-            className={`relative w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 ${
-              selectedRole && !isLoading
-                ? 'bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg'
-                : 'bg-white/5 text-gray-500 cursor-not-allowed'
-            }`}
+            className={`relative w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 ${selectedRole && !isLoading
+              ? 'bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg'
+              : 'bg-white/5 text-gray-500 cursor-not-allowed'
+              }`}
           >
             <span className="flex items-center justify-center gap-3">
               <span>{isLoading ? 'Assigning role...' : 'Continue to Next Step'}</span>
@@ -305,14 +333,14 @@ export default function RoleSelection() {
             </span>
           </motion.button>
         </div>
-        
+
         {/* Footer */}
         <div className="text-center space-y-3">
           <p className="text-xs text-gray-500 flex items-center justify-center gap-2">
             <Sparkles className="w-3 h-3" />
             <span>You can update your role anytime in settings</span>
           </p>
-          
+
           <p className="text-sm text-gray-400">
             Already have an account?{' '}
             <button

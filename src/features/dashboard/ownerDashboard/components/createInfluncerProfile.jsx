@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Briefcase, Sparkles, ArrowRight, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-function CreateOwnerProfile({ onClose, onContinue }) {
+function CreateInfluencerProfile({ onClose, onContinue }) {
   const navigate = useNavigate();
   return (
     <motion.div
@@ -34,10 +34,10 @@ function CreateOwnerProfile({ onClose, onContinue }) {
           <div className="relative">
         
             <h2 className="text-2xl font-bold text-center text-white mb-2">
-              Become a Campaign Owner
+              Become an Influencer
             </h2>
             <p className="text-gray-400 text-center text-sm">
-              To create and manage campaigns, you need an Owner profile
+              Create your influencer profile to receive campaign invites, build your portfolio, and monetize your audience.
             </p>
           </div>
         </div>
@@ -48,18 +48,18 @@ function CreateOwnerProfile({ onClose, onContinue }) {
             <div className="flex items-start gap-3 mb-4">
               <div className="w-2 h-2 bg-[#C1B6FD] rounded-full mt-2"></div>
               <div>
-                <h3 className="text-white font-medium mb-1">Dual Role Benefits</h3>
+                <h3 className="text-white font-medium mb-1">Dual Role Flexibility</h3>
                 <p className="text-gray-400 text-sm">
-                  Keep your influencer profile and add owner capabilities. Switch between roles seamlessly.
+                  Keep your owner account while adding influencer features — apply to campaigns and accept brand deals without losing access to owner tools.
                 </p>
               </div>
             </div>
             <div className="flex items-start gap-3 mb-4">
               <div className="w-2 h-2 bg-[#C1B6FD] rounded-full mt-2"></div>
               <div>
-                <h3 className="text-white font-medium mb-1">Create Campaigns</h3>
+                <h3 className="text-white font-medium mb-1">Campaign Opportunities</h3>
                 <p className="text-gray-400 text-sm">
-                  Launch your own campaigns, manage budgets, and collaborate with other influencers.
+                  Get matched with sponsored campaigns, collaborate with brands, and monetize your content through streamlined offers.
                 </p>
               </div>
             </div>
@@ -73,13 +73,19 @@ function CreateOwnerProfile({ onClose, onContinue }) {
               className="px-3 py-1.5 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/30 rounded-full text-xs text-purple-300 font-medium flex items-center gap-1.5"
             >
               <Sparkles className="w-3 h-3" />
-              AI Campaign Generator
+              Sponsored Opportunities
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.05 }}
               className="px-3 py-1.5 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/30 rounded-full text-xs text-purple-300 font-medium"
             >
-              Analytics Dashboard
+              Audience Analytics
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="px-3 py-1.5 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/30 rounded-full text-xs text-purple-300 font-medium"
+            >
+              Creator Portfolio Builder
             </motion.div>
       
           </div>
@@ -91,7 +97,7 @@ function CreateOwnerProfile({ onClose, onContinue }) {
               whileTap={{ scale: 0.98 }}
               onClick={() => {
                 onClose();
-                navigate('/role-selection', { state: { addingRole: 'owner' } });
+                navigate('/role-selection', { state: { addingRole: 'influencer' } });
               }}
               className="flex-1 relative px-6 py-3 text-sm font-medium text-white rounded-lg overflow-hidden group"
             >
@@ -121,4 +127,4 @@ function CreateOwnerProfile({ onClose, onContinue }) {
   );
 }
 
-export default CreateOwnerProfile;
+export default CreateInfluencerProfile;

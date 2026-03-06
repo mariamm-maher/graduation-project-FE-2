@@ -1,23 +1,45 @@
-import { Search, Filter, Calendar, Users, DollarSign, TrendingUp, MoreVertical, Grid3x3, Eye, Settings, Target, Clock } from 'lucide-react';
-import { useState } from 'react';
+import { Search, Filter, Calendar, Users, DollarSign, TrendingUp, MoreVertical, Grid3x3, Eye, Settings, Target, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { campaigns } from '../campaignsData';
+import useCampaignStore from '../../../../../../stores/campaignStore';
+
+const LIMIT = 10;
 
 function AllCampaigns() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterGoal, setFilterGoal] = useState('all');
+  const [page, setPage] = useState(1);
   const navigate = useNavigate();
+  
+  const { campaigns: campaignsRaw, pagination, isLoading, error, fetchCampaigns } = useCampaignStore();
+  const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
+  const totalPages = pagination?.totalPages || 1;
+  const totalItems = pagination?.total || 0;
+
+  useEffect(() => {
+    fetchCampaigns({
+      page,
+      limit: LIMIT,
+      lifecycleStage: filterStatus !== 'all' ? filterStatus : undefined,
+    });
+  }, [page, filterStatus, fetchCampaigns]);
+
+  // Reset to page 1 when status filter changes
+  const handleStatusChange = (val) => {
+    setFilterStatus(val);
+    setPage(1);
+  };
 
   const getStatusBadge = (lifecycleStage) => {
     const statusStyles = {
-      planning: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+      draft: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
       active: 'bg-green-500/20 text-green-400 border border-green-500/30',
-      paused: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
+      paused: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
       completed: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
       cancelled: 'bg-red-500/20 text-red-400 border border-red-500/30'
     };
-    return statusStyles[lifecycleStage] || statusStyles.planning;
+    return statusStyles[lifecycleStage] || statusStyles.draft;
   };
 
   const formatDate = (dateString) => {
@@ -31,6 +53,14 @@ function AllCampaigns() {
     const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
     return `${days} days`;
   };
+
+  // Client-side filter for search and goal only (lifecycleStage is handled server-side)
+  const filteredCampaigns = campaigns.filter(campaign => {
+    const matchesSearch = !searchQuery || 
+      (campaign.campaignName || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesGoal = filterGoal === 'all' || campaign.goalType === filterGoal;
+    return matchesSearch && matchesGoal;
+  });
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -57,11 +87,11 @@ function AllCampaigns() {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
           <p className="text-gray-400 text-sm mb-1">Total Campaigns</p>
-          <p className="text-2xl font-bold text-white">{campaigns.length}</p>
+          <p className="text-2xl font-bold text-white">{totalItems}</p>
         </div>
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
-          <p className="text-gray-400 text-sm mb-1">Planning</p>
-          <p className="text-2xl font-bold text-amber-400">{campaigns.filter(c => c.lifecycleStage === 'planning').length}</p>
+          <p className="text-gray-400 text-sm mb-1">Draft</p>
+          <p className="text-2xl font-bold text-amber-400">{campaigns.filter(c => c.lifecycleStage === 'draft').length}</p>
         </div>
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
           <p className="text-gray-400 text-sm mb-1">Active</p>
@@ -93,11 +123,11 @@ function AllCampaigns() {
         </div>
         <select
           value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
+          onChange={(e) => handleStatusChange(e.target.value)}
           className="px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
         >
           <option value="all">All Status</option>
-          <option value="planning">Planning</option>
+          <option value="draft">Draft</option>
           <option value="active">Active</option>
           <option value="paused">Paused</option>
           <option value="completed">Completed</option>
@@ -109,9 +139,9 @@ function AllCampaigns() {
           className="px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
         >
           <option value="all">All Goals</option>
-          <option value="brand_awareness">Brand Awareness</option>
+          <option value="awareness">Awareness</option>
           <option value="engagement">Engagement</option>
-          <option value="conversions">Conversions</option>
+          <option value="conversion">Conversion</option>
           <option value="traffic">Traffic</option>
           <option value="sales">Sales</option>
         </select>
@@ -119,25 +149,48 @@ function AllCampaigns() {
 
       {/* Campaigns Table */}
       <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden">
+        {/* Loading State */}
+        {isLoading && (
+          <div className="text-center py-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C1B6FD] mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading campaigns...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !isLoading && (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">⚠️</span>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Error Loading Campaigns</h3>
+            <p className="text-gray-400 mb-6">{error}</p>
+            <button 
+              onClick={() => fetchCampaigns()}
+              className="px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
         {/* Table Header */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-white/5 border-b border-white/10">
-              <tr>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Campaign Name</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Status</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Goal</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Budget</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Duration</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Collaborators</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Pending</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">KPIs</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Created</th>
-                <th className="text-right px-6 py-4 text-sm font-semibold text-gray-400">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/10">
-              {campaigns.map((campaign) => (
+        {!isLoading && !error && (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-white/5 border-b border-white/10">
+                <tr>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Campaign Name</th>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Status</th>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Goal</th>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Budget</th>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Duration</th>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Created</th>
+                  <th className="text-right px-6 py-4 text-sm font-semibold text-gray-400">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10">
+                {filteredCampaigns.map((campaign) => (
                 <tr 
                   key={campaign.id}
                   className="hover:bg-white/5 transition-colors"
@@ -153,7 +206,7 @@ function AllCampaigns() {
                           onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}`)}
                           className="text-white font-semibold cursor-pointer hover:text-[#C1B6FD] transition-colors"
                         >
-                          {campaign.campaignName || campaign.name}
+                          {campaign.campaignName}
                         </h3>
                         <p className="text-xs text-gray-400">ID: {campaign.id}</p>
                       </div>
@@ -162,8 +215,8 @@ function AllCampaigns() {
 
                   {/* Status (lifecycleStage) */}
                   <td className="px-6 py-4">
-                    <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusBadge(campaign.lifecycleStage || 'planning')}`}>
-                      {campaign.lifecycleStage || 'Planning'}
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize ${getStatusBadge(campaign.lifecycleStage || 'draft')}`}>
+                      {campaign.lifecycleStage || 'Draft'}
                     </span>
                   </td>
 
@@ -172,7 +225,7 @@ function AllCampaigns() {
                     <div className="flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-gray-400" />
                       <span className="text-white text-sm capitalize">
-                        {campaign.goalType || 'Brand Awareness'}
+                        {campaign.goalType || 'N/A'}
                       </span>
                     </div>
                   </td>
@@ -182,7 +235,7 @@ function AllCampaigns() {
                     <div className="flex items-center gap-2">
                       <DollarSign className="w-4 h-4 text-green-400" />
                       <span className="text-white font-semibold">
-                        {campaign.currency || '$'}{parseFloat(campaign.totalBudget || campaign.budget?.replace(/[^0-9.]/g, '') || 0).toLocaleString()}
+                        {campaign.currency || '$'}{parseFloat(campaign.totalBudget || 0).toLocaleString()}
                       </span>
                     </div>
                   </td>
@@ -200,35 +253,11 @@ function AllCampaigns() {
                     </div>
                   </td>
 
-                  {/* Collaborators Count */}
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-blue-400" />
-                      <span className="text-white font-semibold">{campaign.collaboratorsCount || campaign.influencers || 0}</span>
-                    </div>
-                  </td>
-
-                  {/* Pending Requests */}
-                  <td className="px-6 py-4">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                      (campaign.pendingRequests || 0) > 0 
-                        ? 'bg-amber-500/20 text-amber-400' 
-                        : 'bg-gray-500/20 text-gray-400'
-                    }`}>
-                      {campaign.pendingRequests || 0}
-                    </span>
-                  </td>
-
-                  {/* KPIs Count */}
-                  <td className="px-6 py-4">
-                    <span className="text-white font-semibold">{campaign.kpisCount || 3}</span>
-                  </td>
-
                   {/* Created At */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-400">{formatDate(campaign.createdAt || campaign.startDate)}</span>
+                      <span className="text-sm text-gray-400">{formatDate(campaign.createdAt)}</span>
                     </div>
                   </td>
 
@@ -259,22 +288,85 @@ function AllCampaigns() {
             </tbody>
           </table>
         </div>
+        )}
 
         {/* Empty State */}
-        {campaigns.length === 0 && (
+        {!isLoading && !error && filteredCampaigns.length === 0 && (
           <div className="text-center py-16">
             <Grid3x3 className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">No Campaigns Found</h3>
-            <p className="text-gray-400 mb-6">Get started by creating your first campaign.</p>
-            <button 
-              onClick={() => navigate('/dashboard/owner/campaigns/create')}
-              className="px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all"
-            >
-              + Create Campaign
-            </button>
+            <p className="text-gray-400 mb-6">
+              {campaigns.length === 0 
+                ? 'Get started by creating your first campaign.'
+                : 'No campaigns match your current filters. Try adjusting your search or filters.'}
+            </p>
+            {campaigns.length === 0 && (
+              <button 
+                onClick={() => navigate('/dashboard/owner/campaigns/create')}
+                className="px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all"
+              >
+                + Create Campaign
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {!isLoading && !error && totalPages > 1 && (
+        <div className="flex items-center justify-between px-2">
+          <p className="text-sm text-gray-400">
+            Page <span className="text-white font-semibold">{page}</span> of{' '}
+            <span className="text-white font-semibold">{totalPages}</span>
+            <span className="ml-2 text-gray-500">({totalItems} total)</span>
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-300 bg-white/5 border border-white/10 rounded-xl hover:border-[#C1B6FD]/40 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronLeft className="w-4 h-4" /> Previous
+            </button>
+
+            {/* Page numbers */}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                .reduce((acc, p, idx, arr) => {
+                  if (idx > 0 && p - arr[idx - 1] > 1) acc.push('...');
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((item, i) =>
+                  item === '...' ? (
+                    <span key={`ellipsis-${i}`} className="px-2 text-gray-500 text-sm">…</span>
+                  ) : (
+                    <button
+                      key={item}
+                      onClick={() => setPage(item)}
+                      className={`w-9 h-9 rounded-lg text-sm font-semibold transition-all ${
+                        item === page
+                          ? 'bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-md'
+                          : 'text-gray-400 bg-white/5 border border-white/10 hover:border-[#C1B6FD]/40 hover:text-white'
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  )
+                )}
+            </div>
+
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-300 bg-white/5 border border-white/10 rounded-xl hover:border-[#C1B6FD]/40 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              Next <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

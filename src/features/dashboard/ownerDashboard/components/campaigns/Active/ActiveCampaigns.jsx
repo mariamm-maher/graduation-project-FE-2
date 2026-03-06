@@ -1,16 +1,27 @@
-import { Search, Filter, Calendar, Users, CheckCircle, FileText, AlertCircle, MoreVertical, Clock } from 'lucide-react';
-import { useState } from 'react';
+import { Search, Filter, Calendar, Users, CheckCircle, FileText, AlertCircle, MoreVertical, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { campaigns } from '../campaignsData';
+import useCampaignStore from '../../../../../../stores/campaignStore';
+
+const LIMIT = 10;
 
 function ActiveCampaigns() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
-  // Filter only active campaigns
-  const activeCampaigns = campaigns.filter(campaign => 
-    campaign.lifecycleStage === 'active' &&
-    (searchQuery === '' || campaign.campaignName?.toLowerCase().includes(searchQuery.toLowerCase()) || campaign.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+  const { campaigns: campaignsRaw, pagination, isLoading, error, fetchCampaigns } = useCampaignStore();
+  const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
+  const totalPages = pagination?.totalPages || 1;
+  const totalItems = pagination?.total || 0;
+
+  useEffect(() => {
+    fetchCampaigns({ page, limit: LIMIT, lifecycleStage: 'active' });
+  }, [page, fetchCampaigns]);
+
+  // Client-side search filter only
+  const activeCampaigns = campaigns.filter(campaign =>
+    searchQuery === '' || campaign.campaignName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Calculate time progress
@@ -40,7 +51,7 @@ function ActiveCampaigns() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white">Active Campaigns</h1>
           <p className="text-gray-400 text-sm sm:text-base mt-1">
-            Campaigns currently running and operational ({activeCampaigns.length})
+            Campaigns currently running and operational ({totalItems})
           </p>
         </div>
         <button 
@@ -70,7 +81,31 @@ function ActiveCampaigns() {
 
       {/* Campaigns List – Card-based execution view */}
       <div className="space-y-5">
-        {activeCampaigns.length === 0 ? (
+        {/* Loading */}
+        {isLoading && (
+          <div className="text-center py-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C1B6FD] mx-auto mb-4" />
+            <p className="text-gray-400">Loading active campaigns...</p>
+          </div>
+        )}
+
+        {/* Error */}
+        {error && !isLoading && (
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-12 text-center">
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-red-400" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Error Loading Campaigns</h3>
+            <p className="text-gray-400 mb-6">{error}</p>
+            <button onClick={() => fetchCampaigns({ page, limit: LIMIT, lifecycleStage: 'active' })}
+              className="px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all">
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {/* Empty */}
+        {!isLoading && !error && activeCampaigns.length === 0 && (
           <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-12 text-center">
             <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <Calendar className="w-8 h-8 text-gray-400" />
@@ -83,7 +118,10 @@ function ActiveCampaigns() {
               Create Your First Campaign
             </button>
           </div>
-        ) : (
+        )}
+
+        {/* Campaign Cards */}
+        {!isLoading && !error && activeCampaigns.length > 0 && (
           activeCampaigns.map((campaign) => {
             const timeProgress = getTimeProgress(campaign.startDate, campaign.endDate);
             const daysRemaining = getDaysRemaining(campaign.endDate);
@@ -233,6 +271,52 @@ function ActiveCampaigns() {
           })
         )}
       </div>
+
+      {/* Pagination */}
+      {!isLoading && !error && totalPages > 1 && (
+        <div className="flex items-center justify-between px-2">
+          <p className="text-sm text-gray-400">
+            Page <span className="text-white font-semibold">{page}</span> of{' '}
+            <span className="text-white font-semibold">{totalPages}</span>
+            <span className="ml-2 text-gray-500">({totalItems} total)</span>
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-300 bg-white/5 border border-white/10 rounded-xl hover:border-[#C1B6FD]/40 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronLeft className="w-4 h-4" /> Previous
+            </button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                .reduce((acc, p, idx, arr) => {
+                  if (idx > 0 && p - arr[idx - 1] > 1) acc.push('...');
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((item, i) =>
+                  item === '...' ? (
+                    <span key={`e-${i}`} className="px-2 text-gray-500 text-sm">…</span>
+                  ) : (
+                    <button key={item} onClick={() => setPage(item)}
+                      className={`w-9 h-9 rounded-lg text-sm font-semibold transition-all ${item === page ? 'bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-md' : 'text-gray-400 bg-white/5 border border-white/10 hover:border-[#C1B6FD]/40 hover:text-white'}`}>
+                      {item}
+                    </button>
+                  )
+                )}
+            </div>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-300 bg-white/5 border border-white/10 rounded-xl hover:border-[#C1B6FD]/40 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              Next <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -33,7 +33,7 @@ export default function GoogleCallback() {
             position: 'top-right',
             autoClose: 5000,
           });
-          
+
           setTimeout(() => {
             navigate('/login');
           }, 3000);
@@ -48,7 +48,7 @@ export default function GoogleCallback() {
             position: 'top-right',
             autoClose: 5000,
           });
-          
+
           setTimeout(() => {
             navigate('/login');
           }, 3000);
@@ -67,10 +67,10 @@ export default function GoogleCallback() {
 
         // Determine primary role
         const primaryRole = parsedRoles && parsedRoles.length > 0 ? parsedRoles[0] : null;
-        const roleId = primaryRole === 'ADMIN' ? 3 
-                     : primaryRole === 'CAMPAIGN_OWNER' ? 1 
-                     : primaryRole === 'INFLUENCER' ? 2 
-                     : null;
+        const roleId = primaryRole === 'ADMIN' ? 3
+          : primaryRole === 'CAMPAIGN_OWNER' ? 1
+            : primaryRole === 'INFLUENCER' ? 2
+              : null;
 
         // Build user object
         const userData = {
@@ -96,14 +96,17 @@ export default function GoogleCallback() {
         // Navigate based on role selection needs
         setTimeout(() => {
           if (needsRoleSelection) {
-            navigate('/role-selection', { 
-              state: { userEmail: email } 
+            navigate('/role-selection', {
+              state: { 
+                userEmail: email,
+                userId: userId 
+              }
             });
           } else if (primaryRole) {
             // Navigate to appropriate dashboard
             if (primaryRole === 'ADMIN' || roleId === 3) {
               navigate('/dashboard/admin');
-            } else if (primaryRole === 'CAMPAIGN_OWNER' || roleId === 1) {
+            } else if (primaryRole === 'OWNER' || roleId === 1) {
               navigate('/dashboard/owner');
             } else if (primaryRole === 'INFLUENCER' || roleId === 2) {
               navigate('/dashboard/influencer');
@@ -112,8 +115,11 @@ export default function GoogleCallback() {
             }
           } else {
             // No role assigned, go to role selection
-            navigate('/role-selection', { 
-              state: { userEmail: email } 
+            navigate('/role-selection', {
+              state: { 
+                userEmail: email,
+                userId: userId 
+              }
             });
           }
         }, 1500);
@@ -126,7 +132,7 @@ export default function GoogleCallback() {
           position: 'top-right',
           autoClose: 5000,
         });
-        
+
         setTimeout(() => {
           navigate('/login');
         }, 3000);

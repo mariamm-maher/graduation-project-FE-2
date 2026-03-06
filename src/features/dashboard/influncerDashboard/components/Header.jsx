@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import CreateOwnerProfile from './createOwnerProfile';
+import useAuthStore from '../../../../stores/authStore';
 
 function Header() {
   const navigate = useNavigate();
@@ -13,8 +14,15 @@ function Header() {
   const [showOwnerProfileModal, setShowOwnerProfileModal] = useState(false);
   const searchRef = useRef(null);
 
-  // Mock user roles - replace with actual user data from auth/context
-  const [userRoles, setUserRoles] = useState(['Influencer']); // ['Influencer', 'Owner'] if user has both
+  // Replace mock roles with actual user data from auth store
+  const user = useAuthStore((s) => s.user);
+  const hasOwnerRole = Boolean(
+    user && (
+      (Array.isArray(user.roles) && user.roles.some(r => String(r).toUpperCase().includes('OWNER'))) ||
+      (typeof user.role === 'string' && String(user.role).toUpperCase().includes('OWNER')) ||
+      (typeof user.role === 'string' && String(user.role).toUpperCase().includes('CAMPAIGN_OWNER'))
+    )
+  );
 
   // Mock search suggestions - replace with actual data
   const searchSuggestions = [
@@ -78,9 +86,6 @@ function Header() {
   };
 
   const handleGeneratePlanAI = () => {
-    // Check if user has Owner role
-    const hasOwnerRole = userRoles.includes('Owner');
-    
     if (!hasOwnerRole) {
       // Show modal to prompt user to add Owner role
       setShowOwnerProfileModal(true);
@@ -206,26 +211,26 @@ function Header() {
         </div>
         
         <div className="flex items-center gap-2 sm:gap-4 flex-wrap w-full sm:w-auto">
-          {/* AI Campaign Plan Button */}
-          <motion.button
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleGeneratePlanAI}
-            className="relative px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-white rounded-lg overflow-hidden group flex-1 sm:flex-initial"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-purple-300 to-indigo-400"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-purple-300 to-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
-            <span className="relative flex items-center justify-center sm:justify-start space-x-2">
-              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <span className="hidden sm:inline">Generate Campaign Plan with AI</span>
-              <span className="sm:hidden">AI Plan</span>
-            </span>
-          </motion.button>
+       
+
+          {/* Join as Owner Promotion Button (shows when user is not an owner) */}
+          {!hasOwnerRole && (
+            <motion.button
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.45 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setShowOwnerProfileModal(true)}
+              className="relative px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white rounded-lg overflow-hidden group flex-1 sm:flex-initial bg-gradient-to-r from-[#FF9A9E] via-[#FECDA5] to-[#FBD786]"
+            >
+              <div className="absolute inset-0 opacity-30"></div>
+              <span className="relative flex items-center justify-center sm:justify-start space-x-2">
+                <span className="hidden sm:inline">Join as Owner — unlock owner features</span>
+                <span className="sm:hidden">Join as Owner</span>
+              </span>
+            </motion.button>
+          )}
 
           {/* Notifications */}
           <motion.button 

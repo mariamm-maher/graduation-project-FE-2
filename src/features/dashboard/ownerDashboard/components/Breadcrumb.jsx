@@ -23,6 +23,11 @@ function Breadcrumb() {
     accounts: 'Accounts',
     schedule: 'Schedule',
     content: 'Content',
+    marketplace: 'Market Place',
+    browse: 'Browse',
+    services: 'Services',
+    offer: 'Send Offer',
+    collaborations: 'Collaborations',
   };
 
   return (

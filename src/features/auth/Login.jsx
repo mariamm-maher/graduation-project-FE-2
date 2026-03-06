@@ -9,7 +9,7 @@ export default function Login({ onSwitchToRegister, onNeedsRoleSelection }) {
   const navigate = useNavigate();
   const { login, isLoading } = useAuthStore();
   const { handleGoogleSignIn } = useGoogleSignIn();
-  
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,11 +21,11 @@ export default function Login({ onSwitchToRegister, onNeedsRoleSelection }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const result = await login(formData);
-    
+
     console.log('Login result:', result);
-    
+
     if (result?.success) {
       // Check if user needs role selection
       if (result.user?.needsRoleSelection) {
@@ -34,26 +34,31 @@ export default function Login({ onSwitchToRegister, onNeedsRoleSelection }) {
           autoClose: 4000,
         });
         // Navigate to role-selection route
-        navigate('/role-selection', { state: { userEmail: formData.email } });
+        navigate('/role-selection', { 
+          state: { 
+            userEmail: formData.email,
+            userId: result.user?.userId 
+          } 
+        });
         return;
       }
-      
+
       // Check if user has a role - redirect to appropriate dashboard
       const role = result.role || result.user?.role;
       const roleId = result.roleId || result.user?.roleId;
-      
+
       if (role || roleId) {
         toast.success(result.message || 'Login successful!', {
           position: 'top-right',
           autoClose: 3000,
         });
-        
+
         // Navigate to appropriate dashboard based on role
-        if (role === 'admin' || roleId === 3) {
+        if (role === 'ADMIN' || roleId === 3) {
           navigate('/dashboard/admin');
-        } else if (role === 'campaign_owner' || roleId === 1) {
+        } else if (role === 'OWNER' || roleId === 1) {
           navigate('/dashboard/owner');
-        } else if (role === 'influencer' || roleId === 2) {
+        } else if (role === 'INFLUENCER' || roleId === 2) {
           navigate('/dashboard/influencer');
         } else {
           // Fallback - route to first available role or influencer by default
@@ -132,7 +137,7 @@ export default function Login({ onSwitchToRegister, onNeedsRoleSelection }) {
         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
       </div>
 
-      <button 
+      <button
         type="button"
         onClick={handleGoogleSignIn}
         disabled={isLoading}

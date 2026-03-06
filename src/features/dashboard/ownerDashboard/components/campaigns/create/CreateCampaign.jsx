@@ -6,7 +6,7 @@ import useCampaignStore from '../../../../../../stores/campaignStore';
 
 function CreateCampaign() {
   const navigate = useNavigate();
-  const { createCampaign, isLoading } = useCampaignStore();
+  const { generateCampaignAI, createCampaign, isLoading } = useCampaignStore();
   const [campaignData, setCampaignData] = useState({
     name: '',
     userDescription: '',
@@ -37,13 +37,13 @@ function CreateCampaign() {
 
   const duration = calculateDuration();
 
-  const handleSubmit = async () => {
+  const handleGenerateAI = async () => {
     try {
       setSubmitMessage({ type: '', text: '' });
 
       // Validate required fields
-      if (!campaignData.name || !campaignData.goalType || !campaignData.budget || 
-          !campaignData.currency || !campaignData.budgetFlexibility || 
+      if (!campaignData.name || !campaignData.goalType || !campaignData.budget ||
+          !campaignData.currency || !campaignData.budgetFlexibility ||
           !campaignData.startDate || !campaignData.endDate) {
         setSubmitMessage({ type: 'error', text: 'Please fill in all required fields' });
         toast.error('Please fill in all required fields', {
@@ -65,27 +65,23 @@ function CreateCampaign() {
         endDate: new Date(campaignData.endDate).toISOString(),
       };
 
-      const result = await createCampaign(apiData);
+      setSubmitMessage({ type: '', text: 'Generating AI campaign strategy...' });
+      const result = await generateCampaignAI(apiData);
 
       if (result.success) {
-        setSubmitMessage({ type: 'success', text: 'Campaign created successfully! Redirecting to preview...' });
-        toast.success('Campaign created successfully!', {
+        toast.success('AI campaign generated successfully!', {
           position: 'top-right',
           autoClose: 3000,
         });
-        
-        // Navigate to the preview page with the campaign data
-        setTimeout(() => {
-          navigate('/dashboard/owner/campaigns/generated', { 
-            state: { 
-              campaign: result.campaign,
-              aiPreview: result.aiPreview 
-            } 
-          });
-        }, 1500);
+        navigate('/dashboard/owner/campaigns/generated', {
+          state: {
+            campaignData: apiData,
+            aiPreview: result.aiPreview,
+          },
+        });
       } else {
-        setSubmitMessage({ type: 'error', text: result.error || 'Failed to create campaign' });
-        toast.error(result.error || 'Failed to create campaign', {
+        setSubmitMessage({ type: 'error', text: result.error || 'Failed to generate campaign' });
+        toast.error(result.error || 'Failed to generate campaign', {
           position: 'top-right',
           autoClose: 4000,
         });
@@ -96,7 +92,39 @@ function CreateCampaign() {
         position: 'top-right',
         autoClose: 4000,
       });
-      console.error('Error creating campaign:', error);
+      console.error('Error generating campaign:', error);
+    }
+  };
+
+  const handleSaveAsDraft = async () => {
+    try {
+      setSubmitMessage({ type: '', text: '' });
+      if (!campaignData.name || !campaignData.goalType || !campaignData.budget ||
+          !campaignData.currency || !campaignData.budgetFlexibility ||
+          !campaignData.startDate || !campaignData.endDate) {
+        toast.error('Please fill in all required fields', { position: 'top-right', autoClose: 4000 });
+        return;
+      }
+      const apiData = {
+        campaignName: campaignData.name,
+        userDescription: campaignData.userDescription,
+        goalType: campaignData.goalType,
+        totalBudget: parseFloat(campaignData.budget),
+        currency: campaignData.currency,
+        budgetFlexibility: campaignData.budgetFlexibility,
+        startDate: new Date(campaignData.startDate).toISOString(),
+        endDate: new Date(campaignData.endDate).toISOString(),
+        lifecycleStage: 'draft',
+      };
+      const result = await createCampaign(apiData);
+      if (result.success) {
+        toast.success('Campaign saved as draft!', { position: 'top-right', autoClose: 3000 });
+        navigate('/dashboard/owner/campaigns/all');
+      } else {
+        toast.error(result.error || 'Failed to save draft', { position: 'top-right', autoClose: 4000 });
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred', { position: 'top-right', autoClose: 4000 });
     }
   };
 
@@ -335,14 +363,22 @@ function CreateCampaign() {
 
           {/* Action Buttons */}
           <div className="space-y-3">
-            <button 
-              onClick={handleSubmit}
+            <button
+              onClick={handleGenerateAI}
               disabled={isLoading}
-              className="w-full px-6 py-3.5 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-6 py-3.5 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {isLoading ? 'Creating...' : 'Create Campaign'}
+              {isLoading ? (
+                <><span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span> Generating...</>
+              ) : (
+                '✨ Generate with AI'
+              )}
             </button>
-            <button className="w-full px-6 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-semibold transition-all">
+            <button
+              onClick={handleSaveAsDraft}
+              disabled={isLoading}
+              className="w-full px-6 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               Save as Draft
             </button>
           </div>

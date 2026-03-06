@@ -52,7 +52,8 @@ export default function Register({ onSwitchToLogin }) {
       // Navigate to role selection route
       navigate('/role-selection', { 
         state: { 
-          userEmail: formData.email 
+          userEmail: formData.email,
+          userId: result.userId 
         } 
       });
     } else {

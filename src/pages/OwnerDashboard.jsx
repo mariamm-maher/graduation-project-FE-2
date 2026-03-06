@@ -4,6 +4,7 @@ import CampaignsLayout from '../features/dashboard/ownerDashboard/components/cam
 import AnalyticsLayout from '../features/dashboard/ownerDashboard/components/analytics/AnalyticsLayout';
 import InfluencersLayout from '../features/dashboard/ownerDashboard/components/influencers/InfluencersLayout';
 import SocialMediaLayout from '../features/dashboard/ownerDashboard/components/social-media/SocialMediaLayout';
+import MarketplaceLayout from '../features/dashboard/ownerDashboard/components/marketPlace/MarketplaceLayout';
 
 function OwnerDashboard() {
   return (
@@ -18,6 +19,7 @@ function OwnerDashboard() {
           <Route path="influencers/*" element={<InfluencersLayout />} />
           <Route path="collaborations/*" element={<CollaborationsLayout />} />
           <Route path="social-media/*" element={<SocialMediaLayout />} />
+          <Route path="marketplace/*" element={<MarketplaceLayout />} />
         </Routes>
       </div>
     </div>

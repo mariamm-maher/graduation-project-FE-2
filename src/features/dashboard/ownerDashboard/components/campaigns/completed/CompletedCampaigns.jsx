@@ -1,18 +1,28 @@
-import { Search, CheckCircle, Download, FileText, Calendar, DollarSign } from 'lucide-react';
-import { useState } from 'react';
+import { Search, CheckCircle, Download, FileText, Calendar, DollarSign, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { campaigns } from '../campaignsData';
+import useCampaignStore from '../../../../../../stores/campaignStore';
+
+const LIMIT = 10;
 
 function CompletedCampaigns() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
-  // Filter only completed campaigns based on lifecycleStage
-  const completedCampaigns = campaigns.filter(campaign => 
-    campaign.lifecycleStage === 'completed' &&
-    (searchQuery === '' || 
-     campaign.campaignName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-     campaign.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+  const { campaigns: campaignsRaw, pagination, isLoading, error, fetchCampaigns } = useCampaignStore();
+  const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
+  const totalPages = pagination?.totalPages || 1;
+  const totalItems = pagination?.total || 0;
+
+  useEffect(() => {
+    fetchCampaigns({ page, limit: LIMIT, lifecycleStage: 'completed' });
+  }, [page, fetchCampaigns]);
+
+  // Client-side search filter only
+  const completedCampaigns = campaigns.filter(campaign =>
+    searchQuery === '' ||
+    campaign.campaignName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Calculate campaign duration in days
@@ -52,7 +62,7 @@ function CompletedCampaigns() {
             Completed Campaigns
           </h1>
           <p className="text-gray-400 text-sm sm:text-base mt-1">
-            Historical reference and evaluation ({completedCampaigns.length})
+            Historical reference and evaluation ({totalItems})
           </p>
         </div>
         <button className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-green-500/30 transition-all flex items-center justify-center gap-2">
@@ -65,7 +75,7 @@ function CompletedCampaigns() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-green-500/10 to-green-600/5 backdrop-blur-md border border-green-500/20 rounded-xl p-4">
           <p className="text-gray-400 text-sm mb-1">Total Completed</p>
-          <p className="text-2xl font-bold text-green-400">{completedCampaigns.length}</p>
+          <p className="text-2xl font-bold text-green-400">{totalItems}</p>
         </div>
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
           <p className="text-gray-400 text-sm mb-1">Total Budget</p>
@@ -100,7 +110,31 @@ function CompletedCampaigns() {
       </div>
 
       {/* Campaigns Table */}
-      {completedCampaigns.length === 0 ? (
+      {/* Loading */}
+      {isLoading && (
+        <div className="text-center py-16">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-400 mx-auto mb-4" />
+          <p className="text-gray-400">Loading completed campaigns...</p>
+        </div>
+      )}
+
+      {/* Error */}
+      {error && !isLoading && (
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-12 text-center">
+          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-400" />
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">Error Loading Campaigns</h3>
+          <p className="text-gray-400 mb-6">{error}</p>
+          <button onClick={() => fetchCampaigns({ page, limit: LIMIT, lifecycleStage: 'completed' })}
+            className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-green-500/30 transition-all">
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {/* Empty */}
+      {!isLoading && !error && completedCampaigns.length === 0 && (
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-12 text-center">
           <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-8 h-8 text-green-400" />
@@ -108,7 +142,10 @@ function CompletedCampaigns() {
           <h3 className="text-xl font-bold text-white mb-2">No Completed Campaigns</h3>
           <p className="text-gray-400">You don't have any completed campaigns yet.</p>
         </div>
-      ) : (
+      )}
+
+      {/* Table */}
+      {!isLoading && !error && completedCampaigns.length > 0 && (
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden">
           {/* Desktop Table View */}
           <div className="hidden lg:block overflow-x-auto">
@@ -234,6 +271,52 @@ function CompletedCampaigns() {
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!isLoading && !error && totalPages > 1 && (
+        <div className="flex items-center justify-between px-2">
+          <p className="text-sm text-gray-400">
+            Page <span className="text-white font-semibold">{page}</span> of{' '}
+            <span className="text-white font-semibold">{totalPages}</span>
+            <span className="ml-2 text-gray-500">({totalItems} total)</span>
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-300 bg-white/5 border border-white/10 rounded-xl hover:border-green-500/40 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronLeft className="w-4 h-4" /> Previous
+            </button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                .reduce((acc, p, idx, arr) => {
+                  if (idx > 0 && p - arr[idx - 1] > 1) acc.push('...');
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((item, i) =>
+                  item === '...' ? (
+                    <span key={`e-${i}`} className="px-2 text-gray-500 text-sm">…</span>
+                  ) : (
+                    <button key={item} onClick={() => setPage(item)}
+                      className={`w-9 h-9 rounded-lg text-sm font-semibold transition-all ${item === page ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md' : 'text-gray-400 bg-white/5 border border-white/10 hover:border-green-500/40 hover:text-white'}`}>
+                      {item}
+                    </button>
+                  )
+                )}
+            </div>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-300 bg-white/5 border border-white/10 rounded-xl hover:border-green-500/40 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              Next <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}

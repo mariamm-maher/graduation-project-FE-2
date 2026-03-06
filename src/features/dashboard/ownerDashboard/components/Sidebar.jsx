@@ -1,4 +1,4 @@
-import { LayoutDashboard, Megaphone, Share2, BarChart3, MessageCircle, Settings, LogOut, User, Users, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Megaphone, ShoppingCart, Share2, BarChart3, MessageCircle, Settings, LogOut, User, Users, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -10,6 +10,7 @@ function Sidebar() {
   const [isHovered, setIsHovered] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const logout = useAuthStore((s) => s.logout);
+  const user = useAuthStore((s) => s.user);
 
   const handleLogout = async () => {
     try {
@@ -31,6 +32,7 @@ function Sidebar() {
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard/owner' },
     { id: 'campaigns', icon: Megaphone, label: 'Campaigns', path: '/dashboard/owner/campaigns' },
+    { id: 'marketplace', icon: ShoppingCart, label: 'Market Place', path: '/dashboard/owner/marketplace' },
     { id: 'collaborations', icon: Users, label: 'Collaborations', path: '/dashboard/owner/collaborations' },
     { id: 'social', icon: Share2, label: 'Social Media', path: '/dashboard/owner/social-media' },
     { id: 'analytics', icon: BarChart3, label: 'Analytics', path: '/dashboard/owner/analytics' },
@@ -56,7 +58,7 @@ function Sidebar() {
       )}
 
       <div 
-        className={`fixed left-3 md:left-6 top-20 md:top-32 flex flex-col gap-2 backdrop-blur-md rounded-2xl p-4 border border-white/10 transition-all duration-300 ease-in-out z-50 ${
+        className={`fixed left-3 md:left-6 top-12 md:top-20 flex flex-col gap-2 backdrop-blur-md rounded-2xl p-4 border border-white/10 transition-all duration-300 ease-in-out z-50 ${
           isHovered ? 'w-64 bg-[#1a1a1a]/95' : 'w-20 bg-white/5'
         } ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
@@ -71,8 +73,10 @@ function Sidebar() {
         </div>
         {isHovered && (
           <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-semibold text-white whitespace-nowrap">James Radcliffe</p>
-            <p className="text-xs text-gray-400 whitespace-nowrap">james@adsphere.com</p>
+            <p className="text-sm font-semibold text-white whitespace-nowrap">
+              {user ? ((`${user.firstName || ''} ${user.lastName || ''}`).trim() || user.email) : 'Guest'}
+            </p>
+            <p className="text-xs text-gray-400 whitespace-nowrap">{user?.email || ''}</p>
           </div>
         )}
       </div>

@@ -2,6 +2,8 @@ import { Search, Bell, MessageSquare, ChevronDown, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import useAuthStore from '../../../../stores/authStore';
+import CreateInfluencerProfile from './createInfluncerProfile';
 
 function Header() {
   const navigate = useNavigate();
@@ -10,6 +12,15 @@ function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
   const searchRef = useRef(null);
+  const [showInfluencerModal, setShowInfluencerModal] = useState(false);
+
+  const user = useAuthStore((s) => s.user);
+  const hasInfluencerRole = Boolean(
+    user && (
+      (Array.isArray(user.roles) && user.roles.some(r => String(r).toUpperCase().includes('INFLUENCER'))) ||
+      (typeof user.role === 'string' && String(user.role).toUpperCase().includes('INFLUENCER'))
+    )
+  );
 
   // Mock search suggestions - replace with actual data
   const searchSuggestions = [
@@ -73,7 +84,7 @@ function Header() {
   };
 
   const handleCreateCampaignAI = () => {
-    navigate('/dashboard/campaigns/create-ai');
+    navigate('/dashboard/owner/campaigns/create');
   };
 
   return (
@@ -182,26 +193,28 @@ function Header() {
         </div>
         
         <div className="flex items-center gap-2 sm:gap-4 flex-wrap w-full sm:w-auto">
-          {/* AI Campaign Button */}
-          <motion.button
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleCreateCampaignAI}
-            className="relative px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-white rounded-lg overflow-hidden group flex-1 sm:flex-initial"
-          >
-            <div className="absolute inset-0 bg-linear-to-r from-purple-400 via-purple-300 to-indigo-400"></div>
-            <div className="absolute inset-0 bg-linear-to-r from-purple-400 via-purple-300 to-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
-            <span className="relative flex items-center justify-center sm:justify-start space-x-2">
-              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <span className="hidden sm:inline">Create Campaign with AI</span>
-              <span className="sm:hidden">AI Campaign</span>
-            </span>
-          </motion.button>
+    
+
+          {/* Join as Influencer Promotion Button (shows when user is not an influencer) */}
+          {!hasInfluencerRole && (
+            <>
+            <motion.button
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.45 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setShowInfluencerModal(true)}
+              className="relative px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white rounded-lg overflow-hidden group flex-1 sm:flex-initial bg-gradient-to-r from-green-400 via-teal-300 to-cyan-400"
+            >
+              <div className="absolute inset-0 opacity-20"></div>
+              <span className="relative flex items-center justify-center sm:justify-start space-x-2">
+                <span className="hidden sm:inline">Join as Influencer — get campaign opportunities</span>
+                <span className="sm:hidden">Become Influencer</span>
+              </span>
+            </motion.button>
+            </>
+          )}
 
           {/* Team Status */}
           <motion.div 
@@ -309,6 +322,17 @@ function Header() {
           </motion.div>
         </div>
       </div>
+      <AnimatePresence>
+        {showInfluencerModal && (
+          <CreateInfluencerProfile
+            onClose={() => setShowInfluencerModal(false)}
+            onContinue={() => {
+              setShowInfluencerModal(false);
+              navigate('/onboarding/influencer');
+            }}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

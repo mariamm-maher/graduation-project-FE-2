@@ -10,6 +10,8 @@ import AuthForm from './features/auth/AuthForm.jsx';
 import RoleSelectionPage from './pages/RoleSelectionPage.jsx';
 import GoogleCallback from './pages/GoogleCallback.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
+import OwnerOnboarding from './pages/ownerOnboarding.jsx';
+import InfluencerOnboarding from './pages/influncerOnboarding.jsx';
 import ProtectedRoute, { AuthorizedRoute } from './pages/protectRoute.jsx';
 import NotFound from './pages/NotFound.jsx';
 import useAuthStore from './stores/authStore.js';
@@ -30,6 +32,8 @@ function App() {
         <Route path="/login" element={<AuthForm />} />
         <Route path="/signup" element={<AuthForm />} />
         <Route path="/role-selection" element={<RoleSelectionPage />} />
+        <Route path="/onboarding/campaign-owner" element={<OwnerOnboarding />} />
+        <Route path="/onboarding/influencer" element={<InfluencerOnboarding />} />
         <Route path="/auth/google/callback" element={<GoogleCallback />} />
         <Route path="/404" element={<NotFound />} />
 

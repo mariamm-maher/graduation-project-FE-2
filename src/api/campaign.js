@@ -112,6 +112,32 @@ const campaignService = {
       throw error.response?.data?.message || 'Failed to delete campaign';
     }
   },
+
+  // Complete Campaign
+  // POST /api/campaigns/{id}/complete
+  completeCampaign: async (id) => {
+    try {
+      const response = await api.post(`/campaigns/${id}/complete`);
+      console.log('Complete campaign response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Complete campaign error:', error);
+      throw error.response?.data?.message || 'Failed to complete campaign';
+    }
+  },
+
+  // Cancel Campaign
+  // POST /api/campaigns/{id}/cancel
+  cancelCampaign: async (id) => {
+    try {
+      const response = await api.post(`/campaigns/${id}/cancel`);
+      console.log('Cancel campaign response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Cancel campaign error:', error);
+      throw error.response?.data?.message || 'Failed to cancel campaign';
+    }
+  },
 };
 
 export default campaignService;

@@ -18,6 +18,7 @@ const authService = {
   login: async (credentials) => {
     try {
       const response = await api.post('/auth/login', credentials);
+      console.log('Login response from axios:', response);
       return response.data;
     } catch (error) {
       console.error('Login error from axios:', error);
@@ -87,9 +88,9 @@ const authService = {
 
 
   // Campaign Owner specific onboarding
-  completeCampaignOwnerOnboarding: async (data) => {
+  completeCampaignOwnerOnboarding: async (userId, data) => {
     try {
-      const response = await api.post('/auth/onboarding/campaign-owner', data);
+      const response = await api.patch(`/auth/owner/onboarding?id=${userId}`, data);
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Onboarding failed';
@@ -97,9 +98,9 @@ const authService = {
   },
 
   // Influencer specific onboarding
-  completeInfluencerOnboarding: async (data) => {
+  completeInfluencerOnboarding: async (userId, data) => {
     try {
-      const response = await api.post('/auth/onboarding/influencer', data);
+      const response = await api.patch(`/auth/influencer/onboarding?id=${userId}`, data);
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Onboarding failed';

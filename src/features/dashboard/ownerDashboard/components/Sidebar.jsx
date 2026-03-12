@@ -73,10 +73,12 @@ function Sidebar() {
         </div>
         {isHovered && (
           <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-semibold text-white whitespace-nowrap">
-              {user ? ((`${user.firstName || ''} ${user.lastName || ''}`).trim() || user.email) : 'Guest'}
-            </p>
-            <p className="text-xs text-gray-400 whitespace-nowrap">{user?.email || ''}</p>
+            <Link to="/dashboard/owner/profile" className="block truncate hover:underline hover:underline-offset-2 hover:decoration-[#C1B6FD]">
+              <p className="text-sm font-semibold text-white whitespace-nowrap">
+                {user ? ((`${user.firstName || ''} ${user.lastName || ''}`).trim() || user.email) : 'Guest'}
+              </p>
+              <p className="text-xs text-gray-400 whitespace-nowrap">{user?.email || ''}</p>
+            </Link>
           </div>
         )}
       </div>

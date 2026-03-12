@@ -8,14 +8,17 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import useAuthStore from '../stores/authStore';
+import uploadService from '../api/uploadApi';
 
 export default function OwnerOnboarding() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuthStore();
+  const { user, completeCampaignOwnerOnboarding, isLoading } = useAuthStore();
   const userId = location.state?.userId || user?.userId;
 
   const [currentStep, setCurrentStep] = useState(0);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageUploaded, setImageUploaded] = useState(false);
   const [formData, setFormData] = useState({
     businessName: '',
     businessType: '',
@@ -24,6 +27,7 @@ export default function OwnerOnboarding() {
     description: '',
     image: null,
     imagePreview: null,
+    imageUrl: null,
     website: '',
     phoneNumber: '',
     platformsUsed: [],
@@ -130,8 +134,39 @@ export default function OwnerOnboarding() {
     setFormData(prev => ({
       ...prev,
       image: null,
-      imagePreview: null
+      imagePreview: null,
+      imageUrl: null
     }));
+    setImageUploaded(false);
+  };
+
+  const handleUploadImage = async () => {
+    if (!formData.image) {
+      toast.error('Please select an image first');
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      toast.info('Uploading image to cloud...', { position: 'top-right', autoClose: 2000 });
+      
+      const uploadResponse = await uploadService.uploadImage(formData.image, 'brandLogo');
+      
+      if (uploadResponse && uploadResponse.data && uploadResponse.data.data && uploadResponse.data.data.url) {
+        const imageUrl = uploadResponse.data.data.url;
+        setFormData(prev => ({ ...prev, imageUrl }));
+        setImageUploaded(true);
+        toast.success('Image uploaded successfully!', { position: 'top-right', autoClose: 2000 });
+      } else {
+        toast.error('Image upload failed. Please try again.');
+      }
+    } catch (err) {
+      const errorMsg = typeof err === 'string' ? err : err?.message || 'Upload failed';
+      toast.error(errorMsg, { position: 'top-right' });
+      console.error('Upload error:', err);
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleNext = () => {
@@ -231,18 +266,43 @@ export default function OwnerOnboarding() {
   const handleSubmit = async () => {
     if (!validateStep(currentStep)) return;
 
-    // TODO: Submit to API
-    console.log('Submitting onboarding data:', formData);
+    try {
+      // Prepare payload with image URL (already uploaded or null)
+      const payload = {
+        userId,
+        businessName: formData.businessName,
+        businessType: formData.businessType,
+        industry: formData.industry,
+        location: formData.location,
+        description: formData.description,
+        image: formData.imageUrl,
+        website: formData.website,
+        phoneNumber: formData.phoneNumber,
+        platformsUsed: formData.platformsUsed,
+        primaryMarketingGoal: formData.primaryMarketingGoal,
+        targetAudience: formData.targetAudience
+      };
 
-    toast.success('Onboarding completed successfully!', {
-      position: 'top-right',
-      autoClose: 3000,
-    });
+      const res = await completeCampaignOwnerOnboarding(payload);
+      if (res && res.success) {
+        toast.success(res.message || 'Onboarding completed successfully!', {
+          position: 'top-right',
+          autoClose: 2000,
+        });
 
-    // Navigate to dashboard
-    setTimeout(() => {
-      navigate('/dashboard/owner');
-    }, 1500);
+        setTimeout(() => {
+          navigate('/dashboard/owner');
+        }, 1200);
+      } else {
+        toast.error(res?.error || res?.message || 'Failed to complete onboarding', {
+          position: 'top-right',
+          autoClose: 4000,
+        });
+      }
+    } catch (err) {
+      const errorMsg = typeof err === 'string' ? err : err?.message || 'Onboarding failed';
+      toast.error(errorMsg, { position: 'top-right' });
+    }
   };
 
   const steps = [
@@ -379,18 +439,56 @@ export default function OwnerOnboarding() {
               </div>
             </label>
           ) : (
-            <div className="relative">
-              <img
-                src={formData.imagePreview}
-                alt="Preview"
-                className="w-full max-h-64 object-contain rounded-lg bg-white/5"
-              />
-              <button
-                onClick={removeImage}
-                className="absolute top-2 right-2 p-2 bg-red-500 hover:bg-red-600 rounded-full transition-colors duration-300"
-              >
-                <X className="w-5 h-5 text-white" />
-              </button>
+            <div className="space-y-4">
+              <div className="relative">
+                <img
+                  src={formData.imagePreview}
+                  alt="Preview"
+                  className="w-full max-h-64 object-contain rounded-lg bg-white/5"
+                />
+                <button
+                  onClick={removeImage}
+                  className="absolute top-2 right-2 p-2 bg-red-500 hover:bg-red-600 rounded-full transition-colors duration-300"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+                {imageUploaded && (
+                  <div className="absolute top-2 left-2 bg-green-500 rounded-full p-2">
+                    <CheckCircle2 className="w-5 h-5 text-white" />
+                  </div>
+                )}
+              </div>
+              
+              {/* Upload Button */}
+              {!imageUploaded ? (
+                <motion.button
+                  type="button"
+                  onClick={handleUploadImage}
+                  disabled={uploadingImage}
+                  whileHover={{ scale: uploadingImage ? 1 : 1.02 }}
+                  whileTap={{ scale: uploadingImage ? 1 : 0.98 }}
+                  className={`w-full py-3 px-6 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
+                    uploadingImage ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg shadow-[#C1B6FD]/30'
+                  }`}
+                >
+                  {uploadingImage ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-5 h-5" />
+                      Upload to Cloud
+                    </>
+                  )}
+                </motion.button>
+              ) : (
+                <div className="flex items-center justify-center gap-2 text-green-400 bg-green-400/10 rounded-lg py-3 px-6 border border-green-400/30">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span className="font-medium">Image uploaded successfully!</span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -632,7 +730,8 @@ export default function OwnerOnboarding() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={currentStep === steps.length - 1 ? handleSubmit : handleNext}
-              className="flex-1 py-3 px-6 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg shadow-lg shadow-[#C1B6FD]/20 transition-all duration-300 flex items-center justify-center gap-2"
+              disabled={isLoading && currentStep === steps.length - 1}
+              className={`flex-1 py-3 px-6 text-white rounded-lg shadow-lg shadow-[#C1B6FD]/20 transition-all duration-300 flex items-center justify-center gap-2 ${currentStep === steps.length - 1 ? 'bg-gradient-to-r from-[#745CB4] to-[#C1B6FD]' : 'bg-white/5'} ${isLoading && currentStep === steps.length - 1 ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}`}
             >
               {currentStep === steps.length - 1 ? 'Complete' : 'Next'}
               {currentStep === steps.length - 1 ? (

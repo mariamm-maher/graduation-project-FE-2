@@ -87,65 +87,44 @@ export default function RoleSelection() {
     const result = await selectRole(userId, roleId);
 
     if (result.success) {
-      // Check if user needs onboarding
-      if (result.data?.needsOnboarding || result.needsOnboarding) {
-        toast.success('Role assigned successfully! Let\'s complete your profile', {
-          position: "top-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          theme: "dark",
-        });
+      toast.success("Role assigned successfully! Let's complete your profile", {
+        position: 'top-right',
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: 'dark'
+      });
 
-        // Navigate to appropriate onboarding page based on selected role
-        setTimeout(() => {
-          if (selectedRole === 'campaign_owner') {
-            navigate('/onboarding/campaign-owner', {
-              state: {
-                userId,
-                userEmail
-              }
-            });
-          } else if (selectedRole === 'influencer') {
-            navigate('/onboarding/influencer', {
-              state: {
-                userId,
-                userEmail
-              }
-            });
-          }
-        }, 1000);
-      } else {
-        // No onboarding needed - logout and login again
-        toast.success('Role assigned successfully! Please login again', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          theme: "dark",
-        });
-
-        // Logout and navigate to login page after role selection
-        await logout();
-
-        setTimeout(() => {
-          navigate('/login');
-        }, 1500);
-      }
+      // Always navigate to appropriate onboarding page based on selected role
+      setTimeout(() => {
+        if (selectedRole === 'campaign_owner') {
+          navigate('/onboarding/campaign-owner', {
+            state: {
+              userId,
+              userEmail
+            }
+          });
+        } else if (selectedRole === 'influencer') {
+          navigate('/onboarding/influencer', {
+            state: {
+              userId,
+              userEmail
+            }
+          });
+        }
+      }, 600);
     } else {
       // Show error toast
       toast.error(result.error || 'Failed to assign role. Please try again.', {
-        position: "top-right",
+        position: 'top-right',
         autoClose: 5000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
-        theme: "dark",
+        theme: 'dark'
       });
     }
   };

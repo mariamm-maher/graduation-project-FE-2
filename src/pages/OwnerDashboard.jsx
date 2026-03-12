@@ -1,5 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Header, Sidebar, MainContent, CollaborationsLayout } from '../features/dashboard/ownerDashboard/components';
+import OwnerProfile from '../features/dashboard/ownerDashboard/components/profile/OwnerProfile';
+import EditOwnerProfile from '../features/dashboard/ownerDashboard/components/profile/EditOwnerProfile';
+import CompleteOwnerProfile from '../features/dashboard/ownerDashboard/components/profile/CompleteOwnerProfile';
 import CampaignsLayout from '../features/dashboard/ownerDashboard/components/campaigns/CampaignsLayout';
 import AnalyticsLayout from '../features/dashboard/ownerDashboard/components/analytics/AnalyticsLayout';
 import InfluencersLayout from '../features/dashboard/ownerDashboard/components/influencers/InfluencersLayout';
@@ -14,6 +17,9 @@ function OwnerDashboard() {
       <div className="ml-0 md:ml-20 lg:ml-32 transition-all duration-300 max-w-full">
         <Routes>
           <Route path="/" element={<MainContent />} />
+          <Route path="profile" element={<OwnerProfile />} />
+          <Route path="profile/edit" element={<EditOwnerProfile />} />
+          <Route path="profile/complete" element={<CompleteOwnerProfile />} />
           <Route path="campaigns/*" element={<CampaignsLayout />} />
           <Route path="analytics/*" element={<AnalyticsLayout />} />
           <Route path="influencers/*" element={<InfluencersLayout />} />

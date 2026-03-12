@@ -106,25 +106,25 @@ const useAuthStore = create(
         try {
           const response = await authService.login(credentials);
           console.log('Login response from the authService store data:', response.data);
-          
+
           // Handle successful response
           if (response.success) {
-            const { 
-              userId, 
-              email, 
-              firstName, 
-              lastName, 
-              accessToken, 
-              needsRoleSelection, 
-              roles 
+            const {
+              userId,
+              email,
+              firstName,
+              lastName,
+              accessToken,
+              needsRoleSelection,
+              needsOnboarding,
+              roles
             } = response.data || {};
-            
-      
+
             // Determine role from roles array
             const primaryRole = roles && roles.length > 0 ? roles[0] : null;
             const roleId = primaryRole === 'ADMIN' ? 3 : primaryRole === 'CAMPAIGN_OWNER' ? 1 : primaryRole === 'INFLUENCER' ? 2 : null;
-            
-            // Build user object with all data
+
+            // Build user object with all data, include onboarding flag
             const userData = {
               userId,
               email,
@@ -133,36 +133,38 @@ const useAuthStore = create(
               roles,
               role: primaryRole,
               roleId,
-              needsRoleSelection
+              needsRoleSelection,
+              needsOnboarding
             };
-            
-            set({ 
-              user: userData, 
+
+            set({
+              user: userData,
               token: accessToken, // Map accessToken to token
-              isAuthenticated: true, 
+              isAuthenticated: true,
               isLoading: false,
-              error: null 
+              error: null
             });
-            
-            return { 
-              success: true, 
-              user: userData, 
+
+            return {
+              success: true,
+              user: userData,
               token: accessToken,
               role: primaryRole,
               roleId,
-              message: response.message 
+              needsOnboarding,
+              message: response.message
             };
           }
-    
+
           // Handle unexpected response format
           throw new Error(response.message || 'Login failed');
-          
+
         } catch (error) {
           const errorMessage = typeof error === 'string' ? error : error.message || 'Login failed';
-          set({ 
-            error: errorMessage, 
+          set({
+            error: errorMessage,
             isLoading: false,
-            isAuthenticated: false 
+            isAuthenticated: false
           });
           return { success: false, error: errorMessage };
         }
@@ -205,6 +207,61 @@ const useAuthStore = create(
             isLoading: false
           });
 
+          return { success: false, error: errorMessage };
+        }
+      },
+
+      // Complete campaign owner onboarding
+      completeCampaignOwnerOnboarding: async (data) => {
+        set({ isLoading: true, error: null });
+        try {
+          // Extract userId from data and pass separately
+          const { userId, ...onboardingData } = data;
+          const response = await authService.completeCampaignOwnerOnboarding(userId, onboardingData);
+
+          if (response && response.success) {
+            // If API returns updated user/profile info, merge into store
+            const returned = response.data || {};
+            set((state) => ({
+              user: { ...state.user, ...returned.user },
+              isLoading: false,
+              error: null
+            }));
+
+            return { success: true, data: returned, message: response.message };
+          }
+
+          throw new Error(response?.message || 'Onboarding failed');
+        } catch (error) {
+          const errorMessage = typeof error === 'string' ? error : error.message || 'Onboarding failed';
+          set({ error: errorMessage, isLoading: false });
+          return { success: false, error: errorMessage };
+        }
+      },
+
+      // Complete influencer onboarding
+      completeInfluencerOnboarding: async (data) => {
+        set({ isLoading: true, error: null });
+        try {
+          // Extract userId from data and pass separately
+          const { userId, ...onboardingData } = data;
+          const response = await authService.completeInfluencerOnboarding(userId, onboardingData);
+
+          if (response && response.success) {
+            const returned = response.data || {};
+            set((state) => ({
+              user: { ...state.user, ...returned.user },
+              isLoading: false,
+              error: null
+            }));
+
+            return { success: true, data: returned, message: response.message };
+          }
+
+          throw new Error(response?.message || 'Onboarding failed');
+        } catch (error) {
+          const errorMessage = typeof error === 'string' ? error : error.message || 'Onboarding failed';
+          set({ error: errorMessage, isLoading: false });
           return { success: false, error: errorMessage };
         }
       },

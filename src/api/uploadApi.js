@@ -1,89 +1,53 @@
 import api from '../config/axios';
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+
 const uploadService = {
+	/**
+	 * Upload a single image file to the server which will forward to Cloudinary.
+	 * @param {File} file - File object from input (field name must be 'file')
+	 * @param {string} [type] - optional query param: avatar | brandLogo | campaignAsset
+	 * @returns {Promise<object>} response.data from the API
+	 */
+	uploadImage: async (file, type) => {
+		if (!file) {
+			throw 'No file provided';
+		}
 
-  // POST /api/upload/image
-  // Upload a single image
-  uploadSingleImage: async (imageFile) => {
-    try {
-      const formData = new FormData();
-      formData.append('image', imageFile);
+		if (file.size > MAX_FILE_SIZE) {
+			throw 'File size exceeds 5MB limit';
+		}
 
-      const response = await api.post('/upload/image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Upload single image error:', error);
-      throw error.response?.data?.message || 'Failed to upload image';
-    }
-  },
+		// Some browsers report 'image/jpg' as 'image/jpeg' so both are allowed
+		if (!ALLOWED_TYPES.includes(file.type)) {
+			// also allow checking by extension as fallback
+			const name = (file.name || '').toLowerCase();
+			if (!name.endsWith('.png') && !name.endsWith('.jpg') && !name.endsWith('.jpeg') && !name.endsWith('.webp')) {
+				throw 'Unsupported file type. Allowed: PNG, JPEG, JPG, WEBP';
+			}
+		}
 
-  // POST /api/upload/images
-  // Upload multiple images
-  uploadMultipleImages: async (imageFiles) => {
-    try {
-      const formData = new FormData();
-      imageFiles.forEach((file) => {
-        formData.append('images', file);
-      });
+		const formData = new FormData();
+		formData.append('file', file);
 
-      const response = await api.post('/upload/images', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Upload multiple images error:', error);
-      throw error.response?.data?.message || 'Failed to upload images';
-    }
-  },
+		const query = type ? `?type=${encodeURIComponent(type)}` : '';
 
-  // POST /api/upload/document
-  // Upload a document (PDF or DOCX)
-  uploadDocument: async (documentFile) => {
-    try {
-      const formData = new FormData();
-      formData.append('document', documentFile);
+		try {
+			const response = await api.post(`/upload${query}`, formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data'
+				}
+			});
 
-      const response = await api.post('/upload/document', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Upload document error:', error);
-      throw error.response?.data?.message || 'Failed to upload document';
-    }
-  },
-
-  // GET /api/upload/{fileId}
-  // Get file metadata
-  getFileMetadata: async (fileId) => {
-    try {
-      const response = await api.get(`/upload/${fileId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Get file metadata error:', error);
-      throw error.response?.data?.message || 'Failed to fetch file metadata';
-    }
-  },
-
-  // DELETE /api/upload/{fileId}
-  // Delete uploaded file
-  deleteFile: async (fileId) => {
-    try {
-      const response = await api.delete(`/upload/${fileId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Delete file error:', error);
-      throw error.response?.data?.message || 'Failed to delete file';
-    }
-  },
+			return response;
+		} catch (error) {
+			// Align with other services in repo: throw message string when possible
+			const msg = (error && error.response && error.response.data && (error.response.data.message || error.response.data.error)) || error.message || 'Upload failed';
+			console.error('Upload error:', msg, error);
+			throw msg;
+		}
+	}
 };
 
 export default uploadService;

@@ -77,6 +77,18 @@ const campaignService = {
     }
   },
 
+  // Get campaigns overview
+  getCampaignsOverview: async () => {
+    try {
+      const response = await api.get('/campaigns/overview');
+      console.log('Campaigns overview response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Campaigns overview error:', error);
+      throw error.response?.data?.message || 'Failed to fetch campaigns overview';
+    }
+  },
+
   // Get campaign by ID
   getCampaignById: async (id) => {
     try {

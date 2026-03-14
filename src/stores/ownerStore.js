@@ -4,6 +4,9 @@ import ownerService from '../api/ownerApi';
 const useOwnerStore = create((set) => ({
     // ─── Influencers ────────────────────────────────────────────────────────
     influencers: [],
+    currentInfluencer: null,
+    influencerLoading: false,
+    influencerError: null,
     pagination: {
         currentPage: 1,
         totalPages: 1,
@@ -13,30 +16,62 @@ const useOwnerStore = create((set) => ({
     isLoading: false,
     error: null,
 
-    // Fetch influencers
+    // Fetch influencers (robust to multiple response shapes)
     getInfluencers: async (page = 1, limit = 10) => {
         set({ isLoading: true, error: null });
         try {
             const response = await ownerService.getInfluencers(page, limit);
-            if (response && response.success) {
+            // Normalize payload: ownerService may return axios response or a normalized object
+            const payload = response?.data ?? response ?? {};
+            const ok = response?.success === true || payload?.status === 'success' || payload?.success === true;
+            if (response && ok) {
+                // influencers array may be at payload.data.influencers or payload.influencers
+                const influencers = payload.data?.influencers ?? payload.influencers ?? [];
+
+                // pagination may be nested under payload.data.pagination or payload.pagination
+                const paginationSource = payload.data?.pagination ?? payload.pagination ?? payload.data ?? {};
+
                 set({
-                    influencers: response.data.influencers || [],
+                    influencers: influencers,
                     pagination: {
-                        currentPage: response.data.currentPage || page,
-                        totalPages: response.data.totalPages || 1,
-                        totalItems: response.data.totalItems || 0,
-                        itemsPerPage: limit
+                        currentPage: paginationSource.currentPage ?? paginationSource.page ?? page,
+                        totalPages: paginationSource.totalPages ?? 1,
+                        totalItems: paginationSource.totalItems ?? paginationSource.total ?? (influencers.length || 0),
+                        itemsPerPage: paginationSource.itemsPerPage ?? limit
                     },
                     isLoading: false
                 });
-                return response;
+
+                return { success: true, data: payload.data ?? payload };
             } else {
-                throw new Error(response?.message || 'Failed to fetch influencers');
+                throw new Error(payload?.message || response?.message || 'Failed to fetch influencers');
             }
         } catch (error) {
             const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch influencers';
             set({ error: errorMessage, isLoading: false });
             return { success: false, error: errorMessage };
+        }
+    },
+
+    // Fetch single influencer profile
+    fetchInfluencerById: async (id) => {
+        set({ influencerLoading: true, influencerError: null, currentInfluencer: null });
+        try {
+            const response = await ownerService.getInfluencerById(id);
+            const payload = response?.data ?? response ?? {};
+            const ok = response?.success === true || payload?.status === 'success' || payload?.success === true;
+
+            if (response && ok) {
+                const influencer = payload.data?.influencer ?? payload.influencer ?? null;
+                set({ currentInfluencer: influencer, influencerLoading: false });
+                return { success: true, data: influencer };
+            } else {
+                throw new Error(payload?.message || response?.message || 'Failed to fetch influencer');
+            }
+        } catch (error) {
+            const msg = typeof error === 'string' ? error : error.message || 'Failed to fetch influencer';
+            set({ influencerError: msg, influencerLoading: false });
+            return { success: false, error: msg };
         }
     },
 

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Edit2, Save, X, Loader } from 'lucide-react';
 import { motion } from 'framer-motion';
 import useAuthStore from '../../../../../stores/authStore';
+import useProfileStore from '../../../../../stores/profileStore';
+import { toast } from 'react-toastify';
 
 import ProfileHeader from './ProfileHeader';
 import PersonalInfoCard from './PersonalInfoCard';
@@ -136,9 +138,28 @@ function Profile() {
     console.log('Upload profile image');
   };
 
-  const handleSave = () => {
-    console.log('Saving profile:', profileData);
-    setIsEditing(false);
+  const updateInfluencerProfile = useProfileStore((s) => s.updateInfluencerProfile);
+
+  const handleSave = async () => {
+    try {
+      toast.info('Saving profile...', { position: 'top-right' });
+      const res = await updateInfluencerProfile(profileData);
+      if (res && res.success) {
+        toast.success('Profile updated', { position: 'top-right' });
+        // update local state with normalized profile from store
+        const p = res.profile || res.data?.profile || res.data;
+        if (p) {
+          setProfileData(prev => ({ ...prev, ...p }));
+        }
+        setIsEditing(false);
+      } else {
+        toast.error(res?.error || 'Failed to update profile', { position: 'top-right' });
+      }
+    } catch (err) {
+      const msg = typeof err === 'string' ? err : err?.message || 'Save failed';
+      toast.error(msg, { position: 'top-right' });
+      console.error('Update profile error:', err);
+    }
   };
 
   const handleCancel = () => {

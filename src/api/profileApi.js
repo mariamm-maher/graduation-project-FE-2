@@ -14,18 +14,7 @@ const profileService = {
     }
   },
 
-  // POST /api/profile/owner
-  // Create or update owner profile (onboarding)
-  createOrUpdateOwnerProfile: async (data) => {
-    try {
-      const response = await api.post('/profile/owner', data);
-      return response.data;
-    } catch (error) {
-      console.error('Create/update owner profile error:', error);
-      throw error.response?.data?.message || 'Failed to create/update owner profile';
-    }
-  },
-
+ 
   // PUT /api/profile/owner
   // Update owner profile
   updateOwnerProfile: async (data) => {
@@ -74,17 +63,6 @@ const profileService = {
     }
   },
 
-  // POST /api/profile/influencer
-  // Create or update influencer profile (onboarding)
-  createOrUpdateInfluencerProfile: async (data) => {
-    try {
-      const response = await api.post('/profile/influencer', data);
-      return response.data;
-    } catch (error) {
-      console.error('Create/update influencer profile error:', error);
-      throw error.response?.data?.message || 'Failed to create/update influencer profile';
-    }
-  },
 
   // PUT /api/profile/influencer
   // Update influencer profile

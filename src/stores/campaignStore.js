@@ -6,6 +6,7 @@ const useCampaignStore = create((set) => ({
   // State
   campaigns: [],
   currentCampaign: null,
+  campaignsOverview: null,
   pagination: { total: 0, page: 1, limit: 10, totalPages: 0 },
   isLoading: false,
   error: null,
@@ -145,6 +146,27 @@ const useCampaignStore = create((set) => ({
       throw new Error(response.message || 'Failed to fetch campaigns');
     } catch (error) {
       const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch campaigns';
+      set({ error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Fetch Campaigns Overview
+  fetchCampaignsOverview: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await campaignService.getCampaignsOverview();
+
+      // response shape: { status, message, data: { totalCampaigns, totalSaved, recentCampaigns } }
+      if (response.status === 'success' || response.success) {
+        const overview = response.data || null;
+        set({ campaignsOverview: overview, isLoading: false, error: null });
+        return { success: true, data: overview };
+      }
+
+      throw new Error(response.message || 'Failed to fetch campaigns overview');
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch campaigns overview';
       set({ error: errorMessage, isLoading: false });
       return { success: false, error: errorMessage };
     }

@@ -13,7 +13,7 @@ import uploadService from '../api/uploadApi';
 export default function OwnerOnboarding() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, completeCampaignOwnerOnboarding, isLoading } = useAuthStore();
+  const { user, completeCampaignOwnerOnboarding, isLoading, logout } = useAuthStore();
   const userId = location.state?.userId || user?.userId;
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -290,8 +290,15 @@ export default function OwnerOnboarding() {
           autoClose: 2000,
         });
 
+        // logout and redirect to login (match influencer flow)
+        try {
+          await logout();
+        } catch (e) {
+          // ignore logout errors
+        }
+
         setTimeout(() => {
-          navigate('/dashboard/owner');
+          navigate('/login');
         }, 1200);
       } else {
         toast.error(res?.error || res?.message || 'Failed to complete onboarding', {

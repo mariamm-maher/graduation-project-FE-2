@@ -214,8 +214,23 @@ export default function OwnerProfile() {
                 <div className="text-xs text-gray-400">Target Audience</div>
                 <div className="mt-2 text-sm text-gray-200">
                   {targetAudience ? (
-                    <pre className="whitespace-pre-wrap text-sm text-gray-200">{JSON.stringify(targetAudience, null, 2)}</pre>
-                  ) : <span className="text-gray-500">—</span>}
+                    <div className="space-y-2">
+                      <div>
+                        <div className="text-xs text-gray-400">Gender</div>
+                        <div className="text-sm text-gray-200">{targetAudience.gender || '—'}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-400">Age Range</div>
+                        <div className="text-sm text-gray-200">{targetAudience.ageRange || '—'}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-400">Location</div>
+                        <div className="text-sm text-gray-200">{targetAudience.location || '—'}</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-gray-500">—</span>
+                  )}
                 </div>
               </div>
             </div>

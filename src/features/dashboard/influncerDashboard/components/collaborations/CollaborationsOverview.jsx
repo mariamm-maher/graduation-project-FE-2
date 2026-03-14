@@ -1,5 +1,6 @@
 import { Users, MessageSquare, CheckCircle, Clock, Star, TrendingUp, Calendar, DollarSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import useInfluncerStore from '../../../../../stores/influncerStore';
 
 function CollaborationsOverview() {
   // Collaborations from influencer perspective (with brands)
@@ -73,6 +74,8 @@ function CollaborationsOverview() {
   const activeCollabs = collaborations.filter(c => c.status === 'active').length;
   const pendingReview = collaborations.filter(c => c.status === 'pending_review').length;
   const totalMessages = collaborations.reduce((sum, c) => sum + c.unreadMessages, 0);
+  const { receivedRequests = [] } = useInfluncerStore();
+  const requestsCount = Array.isArray(receivedRequests) ? receivedRequests.length : 0;
 
   return (
     <div className="space-y-6">
@@ -82,13 +85,13 @@ function CollaborationsOverview() {
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">My Collaborations</h1>
           <p className="text-sm sm:text-base text-gray-400">Active campaigns you're working on - accepted and in progress</p>
         </div>
-        <Link to="/dashboard/influencer/collaborations/messages" className="w-full sm:w-auto">
+        <Link to="/dashboard/influencer/collaborations/requests" className="w-full sm:w-auto">
           <button className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl text-sm sm:text-base font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300 relative w-full sm:w-auto">
             <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
-            Messages
-            {totalMessages > 0 && (
+            Requests
+            {requestsCount > 0 && (
               <span className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-red-500 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold">
-                {totalMessages}
+                {requestsCount}
               </span>
             )}
           </button>
@@ -137,12 +140,12 @@ function CollaborationsOverview() {
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 sm:p-5 hover:border-purple-400/30 transition-all">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
-              <Star className="w-5 h-5 sm:w-6 sm:h-6 text-[#C1B6FD]" />
+              <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-[#C1B6FD]" />
             </div>
-            <span className="text-xs text-[#C1B6FD] font-semibold">Avg</span>
+            <span className="text-xs text-[#C1B6FD] font-semibold">Requests</span>
           </div>
-          <p className="text-2xl sm:text-3xl font-bold text-white mb-1">4.6</p>
-          <p className="text-xs sm:text-sm text-gray-400">Average Rating</p>
+          <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{requestsCount}</p>
+          <p className="text-xs sm:text-sm text-gray-400">Collaboration Requests</p>
         </div>
       </div>
 

@@ -11,6 +11,16 @@ const ownerService = {
         }
     },
 
+    // Get single influencer profile
+    getInfluencerById: async (id) => {
+        try {
+            const response = await api.get(`/owner/influencers/${id}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data?.message || 'Failed to fetch influencer';
+        }
+    },
+
     // ─── Marketplace ────────────────────────────────────────────────────────
 
     // Get all influencer services (marketplace listing)

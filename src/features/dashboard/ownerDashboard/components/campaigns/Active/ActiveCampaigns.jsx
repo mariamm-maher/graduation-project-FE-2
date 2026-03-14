@@ -16,7 +16,7 @@ function ActiveCampaigns() {
   const totalItems = pagination?.total || 0;
 
   useEffect(() => {
-    fetchCampaigns({ page, limit: LIMIT, lifecycleStage: 'active' });
+    fetchCampaigns({ page, limit: LIMIT, lifecycleStage: 'saved' });
   }, [page, fetchCampaigns]);
 
   // Client-side search filter only

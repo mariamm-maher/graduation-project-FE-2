@@ -1,9 +1,21 @@
 import { Megaphone, Users, DollarSign, TrendingUp, ArrowRight, Target, Play, Clock, BarChart3, Sparkles, CheckCircle, FileEdit, Grid3x3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import useCampaignStore from '../../../../../stores/campaignStore';
 
 function CampaignsOverview() {
-  const totalCampaigns = 8;
-  const activeCampaigns = 5;
+  const fetchCampaignsOverview = useCampaignStore((s) => s.fetchCampaignsOverview);
+  const campaignsOverview = useCampaignStore((s) => s.campaignsOverview);
+  const isLoading = useCampaignStore((s) => s.isLoading);
+
+  useEffect(() => {
+    fetchCampaignsOverview().catch(() => {});
+  }, []);
+
+  const totalCampaigns = campaignsOverview?.totalCampaigns ?? 8;
+  const totalSaved = campaignsOverview?.totalSaved ?? 0;
+  const recentCampaigns = campaignsOverview?.recentCampaigns ?? [];
+  const activeCampaigns = recentCampaigns.filter((c) => c.isPublished).length || 5;
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -59,49 +71,77 @@ function CampaignsOverview() {
           </div>
           
           <div className="space-y-3 mb-4">
-            <div className="bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-all cursor-pointer group">
-              <div className="flex items-start justify-between mb-2">
-                <h4 className="text-sm font-semibold text-white group-hover:text-[#C1B6FD] transition-colors flex-1">
-                  Summer Fashion Launch
-                </h4>
-                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 animate-pulse">
-                  active
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs text-gray-400">
-                <span className="flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" />
-                  2.4M
-                </span>
-                <span className="flex items-center gap-1">
-                  <Users className="w-3 h-3" />
-                  24
-                </span>
-                <span className="text-[#C1B6FD] font-semibold">$85K</span>
-              </div>
-            </div>
+            {recentCampaigns.length > 0 ? (
+              recentCampaigns.slice(0, 5).map((c) => (
+                <div key={c.id} className="bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-all cursor-pointer group">
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="text-sm font-semibold text-white group-hover:text-[#C1B6FD] transition-colors flex-1">
+                      {c.campaignName || 'Untitled Campaign'}
+                    </h4>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-400">
+                      {c.isPublished ? (c.lifecycleStage || 'active') : (c.lifecycleStage || 'draft')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-gray-400">
+                    <span className="flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3" />
+                      {c.goals || '—'}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Users className="w-3 h-3" />
+                      {c.UserDescription ? c.UserDescription.length > 20 ? `${c.UserDescription.slice(0, 20)}...` : c.UserDescription : '—'}
+                    </span>
+                    <span className="text-[#C1B6FD] font-semibold">{c.isPublished ? '$' : ''}{c.duration ?? '—'}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <> 
+                <div className="bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-all cursor-pointer group">
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="text-sm font-semibold text-white group-hover:text-[#C1B6FD] transition-colors flex-1">
+                      Summer Fashion Launch
+                    </h4>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 animate-pulse">
+                      active
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-gray-400">
+                    <span className="flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3" />
+                      2.4M
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Users className="w-3 h-3" />
+                      24
+                    </span>
+                    <span className="text-[#C1B6FD] font-semibold">$85K</span>
+                  </div>
+                </div>
 
-            <div className="bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-all cursor-pointer group">
-              <div className="flex items-start justify-between mb-2">
-                <h4 className="text-sm font-semibold text-white group-hover:text-[#C1B6FD] transition-colors flex-1">
-                  Holiday Collection 2024
-                </h4>
-                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 animate-pulse">
-                  active
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs text-gray-400">
-                <span className="flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" />
-                  3.8M
-                </span>
-                <span className="flex items-center gap-1">
-                  <Users className="w-3 h-3" />
-                  32
-                </span>
-                <span className="text-[#C1B6FD] font-semibold">$120K</span>
-              </div>
-            </div>
+                <div className="bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-all cursor-pointer group">
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="text-sm font-semibold text-white group-hover:text-[#C1B6FD] transition-colors flex-1">
+                      Holiday Collection 2024
+                    </h4>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 animate-pulse">
+                      active
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-gray-400">
+                    <span className="flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3" />
+                      3.8M
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Users className="w-3 h-3" />
+                      32
+                    </span>
+                    <span className="text-[#C1B6FD] font-semibold">$120K</span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           <Link to="/dashboard/owner/campaigns/create">

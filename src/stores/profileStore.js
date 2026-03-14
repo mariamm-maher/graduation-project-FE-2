@@ -15,9 +15,21 @@ const useProfileStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const res = await profileService.getOwnerProfile();
-      // res is expected to be API response object; try to extract useful payload
+      // Response structure: { success, status, message, data: { profile: { firstName, lastName, email, status, ownerProfile: {...} } } }
       const payload = res?.data ?? res;
-      const profile = payload?.ownerProfile ?? payload?.profile ?? payload;
+      const userProfile = payload?.profile ?? {};
+      const ownerProfileData = userProfile?.ownerProfile ?? {};
+      
+      // Merge user info with owner profile
+      const profile = {
+        ...ownerProfileData,
+        firstName: userProfile.firstName,
+        lastName: userProfile.lastName,
+        email: userProfile.email,
+        status: userProfile.status,
+        userId: userProfile.id
+      };
+      
       set({ ownerProfile: profile, isLoading: false });
       return { success: true, profile };
     } catch (error) {
@@ -27,29 +39,27 @@ const useProfileStore = create((set, get) => ({
     }
   },
 
-  // Create or update owner profile (used by onboarding)
-  createOrUpdateOwnerProfile: async (data) => {
-    set({ isLoading: true, error: null });
-    try {
-      const res = await profileService.createOrUpdateOwnerProfile(data);
-      const payload = res?.data ?? res;
-      const profile = payload?.ownerProfile ?? payload;
-      set({ ownerProfile: profile, isLoading: false });
-      return { success: true, profile };
-    } catch (error) {
-      const message = typeof error === 'string' ? error : error?.message || 'Failed to create/update owner profile';
-      set({ error: message, isLoading: false });
-      return { success: false, error: message };
-    }
-  },
-
+ 
   // Update owner profile
   updateOwnerProfile: async (data) => {
     set({ isLoading: true, error: null });
     try {
       const res = await profileService.updateOwnerProfile(data);
+      // Response structure: { success, status, message, data: { profile: { ...user, ownerProfile: {...} } } }
       const payload = res?.data ?? res;
-      const profile = payload?.ownerProfile ?? payload;
+      const userProfile = payload?.profile ?? {};
+      const ownerProfileData = userProfile?.ownerProfile ?? {};
+      
+      // Merge user info with owner profile
+      const profile = {
+        ...ownerProfileData,
+        firstName: userProfile.firstName,
+        lastName: userProfile.lastName,
+        email: userProfile.email,
+        status: userProfile.status,
+        userId: userProfile.id
+      };
+      
       set({ ownerProfile: profile, isLoading: false });
       return { success: true, profile };
     } catch (error) {
@@ -93,8 +103,21 @@ const useProfileStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const res = await profileService.getInfluencerProfile();
+      // Response structure: { success, status, message, data: { profile: { ...user, influencerProfile: {...} } } }
       const payload = res?.data ?? res;
-      const profile = payload?.influencerProfile ?? payload;
+      const userProfile = payload?.profile ?? {};
+      const influencerProfileData = userProfile?.influencerProfile ?? {};
+      
+      // Merge user info with influencer profile
+      const profile = {
+        ...influencerProfileData,
+        firstName: userProfile.firstName,
+        lastName: userProfile.lastName,
+        email: userProfile.email,
+        status: userProfile.status,
+        userId: userProfile.id
+      };
+      
       set({ influencerProfile: profile, isLoading: false });
       return { success: true, profile };
     } catch (error) {
@@ -104,20 +127,35 @@ const useProfileStore = create((set, get) => ({
     }
   },
 
-  createOrUpdateInfluencerProfile: async (data) => {
-    set({ isLoading: true, error: null });
-    try {
-      const res = await profileService.createOrUpdateInfluencerProfile(data);
-      const payload = res?.data ?? res;
-      const profile = payload?.influencerProfile ?? payload;
-      set({ influencerProfile: profile, isLoading: false });
-      return { success: true, profile };
-    } catch (error) {
-      const message = typeof error === 'string' ? error : error?.message || 'Failed to create/update influencer profile';
-      set({ error: message, isLoading: false });
-      return { success: false, error: message };
-    }
-  },
+    // Update influencer profile
+    updateInfluencerProfile: async (data) => {
+      set({ isLoading: true, error: null });
+      try {
+        const res = await profileService.updateInfluencerProfile(data);
+        // Response structure: { success, status, message, data: { profile: { ...user, influencerProfile: {...} } } }
+        const payload = res?.data ?? res;
+        const userProfile = payload?.profile ?? {};
+        const influencerProfileData = userProfile?.influencerProfile ?? {};
+
+        // Merge user info with influencer profile
+        const profile = {
+          ...influencerProfileData,
+          firstName: userProfile.firstName,
+          lastName: userProfile.lastName,
+          email: userProfile.email,
+          status: userProfile.status,
+          userId: userProfile.id
+        };
+
+        set({ influencerProfile: profile, isLoading: false });
+        return { success: true, profile };
+      } catch (error) {
+        const message = typeof error === 'string' ? error : error?.message || 'Failed to update influencer profile';
+        set({ error: message, isLoading: false });
+        return { success: false, error: message };
+      }
+    },
+
 
   fetchInfluencerCompletion: async () => {
     set({ isLoading: true, error: null });

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, DollarSign, MessageSquare, Briefcase, X, Loader } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 import useCampaignStore from '../../../../../../stores/campaignStore';
 import useCollaborationStore from '../../../../../../stores/collaborationStore';
@@ -12,7 +13,7 @@ function SendCollabRequest() {
   // Campaign Store
   const { campaigns, fetchCampaigns, isLoading: isLoadingCampaigns } = useCampaignStore();
   // Collaboration Store
-  const { createCollaboration } = useCollaborationStore();
+  const sendCollaborationRequestAlt = useCollaborationStore((s) => s.sendCollaborationRequestAlt);
 
   const [formData, setFormData] = useState({
     campaignId: '',
@@ -73,21 +74,18 @@ function SendCollabRequest() {
         message: formData.message
       };
 
-      const result = await createCollaboration(payload);
+      const result = await sendCollaborationRequestAlt(payload);
 
       if (result.success) {
-        // Log the collaboration request data
         console.log('Collaboration Request Sent:', payload);
-
-        // Show success and navigate back
-        alert('Collaboration request sent successfully!');
+        toast.success('Collaboration request sent successfully!');
         navigate(-1);
       } else {
         throw new Error(result.error || 'Failed to send request');
       }
     } catch (error) {
       console.error('Error sending request:', error);
-      alert(error.message || 'Failed to send request. Please try again.');
+      toast.error(error.message || 'Failed to send request. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

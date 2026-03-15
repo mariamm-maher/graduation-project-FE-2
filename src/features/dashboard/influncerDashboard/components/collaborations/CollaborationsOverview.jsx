@@ -1,80 +1,50 @@
-import { Users, MessageSquare, CheckCircle, Clock, Star, TrendingUp, Calendar, DollarSign } from 'lucide-react';
+import { Users, MessageSquare, CheckCircle, Clock, Star, TrendingUp, Calendar, DollarSign, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
 import useInfluncerStore from '../../../../../stores/influncerStore';
 
 function CollaborationsOverview() {
-  // Collaborations from influencer perspective (with brands)
-  const collaborations = [
-    {
-      id: 1,
-      brand: 'Fashion Brand Co.',
-      brandContact: 'John Smith',
-      campaign: 'Summer Fashion Launch',
-      status: 'active',
-      progress: 75,
-      unreadMessages: 3,
-      deliverables: { completed: 3, total: 4 },
-      payment: 'pending',
+  const { 
+    receivedRequests = [],
+    influencerCollaborations = [],
+    isInfluencerCollaborationsLoading,
+    getMyInfluencerCollaborations 
+  } = useInfluncerStore();
+
+  useEffect(() => {
+    getMyInfluencerCollaborations();
+  }, [getMyInfluencerCollaborations]);
+
+  // Use real collaborations, mapping them to the format expected by the UI
+  const collaborations = influencerCollaborations.map(collab => {
+    const brandName = collab?.owner?.companyName || collab?.owner?.user?.firstName || 'Unknown Brand';
+    const campaignName = collab?.campaign?.campaignName || 'Unknown Campaign';
+    const deadline = collab?.endDate || collab?.updatedAt || new Date().toISOString();
+    const budget = collab?.agreedBudget || collab?.budget || collab?.proposedBudget || 0;
+    const isCompleted = collab?.status === 'completed';
+    const isActive = collab?.status === 'active';
+    
+    return {
+      id: collab._id || collab.id,
+      brand: brandName,
+      brandContact: collab?.owner?.user?.firstName ? `${collab.owner.user.firstName} ${collab.owner.user.lastName || ''}` : 'Brand Contact',
+      campaign: campaignName,
+      status: collab.status || 'pending_review',
+      progress: isCompleted ? 100 : isActive ? 50 : 0,
+      unreadMessages: 0, // Would need actual message counts from API
+      deliverables: { completed: isCompleted ? 5 : 0, total: 5 }, // Default mock for now
+      payment: isCompleted ? 'paid' : isActive ? 'processing' : 'pending',
       rating: null,
       avatar: '🏢',
-      deadline: '2025-12-15',
-      platforms: ['Instagram', 'TikTok'],
-      earnings: '$2,500'
-    },
-    {
-      id: 2,
-      brand: 'Tech Innovations',
-      brandContact: 'Sarah Williams',
-      campaign: 'Tech Product Review',
-      status: 'active',
-      progress: 45,
-      unreadMessages: 0,
-      deliverables: { completed: 2, total: 5 },
-      payment: 'approved',
-      rating: null,
-      avatar: '💻',
-      deadline: '2025-11-30',
-      platforms: ['YouTube'],
-      earnings: '$3,000'
-    },
-    {
-      id: 3,
-      brand: 'Luxury Fashion',
-      brandContact: 'Emma Davis',
-      campaign: 'Holiday Collection',
-      status: 'completed',
-      progress: 100,
-      unreadMessages: 0,
-      deliverables: { completed: 6, total: 6 },
-      payment: 'paid',
-      rating: 4.8,
-      avatar: '✨',
-      deadline: '2025-11-20',
-      platforms: ['Instagram', 'Pinterest'],
-      earnings: '$4,200'
-    },
-    {
-      id: 4,
-      brand: 'Fitness Pro',
-      brandContact: 'Mike Johnson',
-      campaign: 'Fitness Challenge',
-      status: 'pending_review',
-      progress: 90,
-      unreadMessages: 1,
-      deliverables: { completed: 5, total: 5 },
-      payment: 'processing',
-      rating: null,
-      avatar: '💪',
-      deadline: '2025-11-25',
-      platforms: ['TikTok', 'YouTube'],
-      earnings: '$2,800'
-    }
-  ];
+      deadline: new Date(deadline).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+      platforms: collab?.campaign?.platform ? [collab.campaign.platform] : [],
+      earnings: `$${Number(budget).toLocaleString()}`
+    };
+  });
 
   const activeCollabs = collaborations.filter(c => c.status === 'active').length;
-  const pendingReview = collaborations.filter(c => c.status === 'pending_review').length;
-  const totalMessages = collaborations.reduce((sum, c) => sum + c.unreadMessages, 0);
-  const { receivedRequests = [] } = useInfluncerStore();
+  const pendingReview = collaborations.filter(c => c.status === 'pending_review' || c.status === 'pending').length;
+  const totalMessages = collaborations.reduce((sum, c) => sum + (c.unreadMessages || 0), 0);
   const requestsCount = Array.isArray(receivedRequests) ? receivedRequests.length : 0;
 
   return (
@@ -151,11 +121,20 @@ function CollaborationsOverview() {
 
       {/* Collaborations List */}
       <div className="space-y-4">
-        {collaborations.map((collab) => (
-          <div 
-            key={collab.id} 
-            className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-purple-400/30 transition-all duration-300 group"
-          >
+        {isInfluencerCollaborationsLoading ? (
+          <div className="flex items-center justify-center p-12">
+            <Loader2 className="w-8 h-8 text-[#C1B6FD] animate-spin" />
+          </div>
+        ) : collaborations.length === 0 ? (
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-12 text-center text-gray-400">
+            No active collaborations found.
+          </div>
+        ) : (
+          collaborations.map((collab) => (
+            <div 
+              key={collab.id} 
+              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-purple-400/30 transition-all duration-300 group"
+            >
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
               <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
@@ -290,7 +269,7 @@ function CollaborationsOverview() {
               )}
             </div>
           </div>
-        ))}
+        )))}
       </div>
     </div>
   );

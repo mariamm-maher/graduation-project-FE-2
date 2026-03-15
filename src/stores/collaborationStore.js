@@ -13,6 +13,41 @@ const useCollaborationStore = create((set) => ({
     isSentRequestsLoading: false,
     sentRequestsError: null,
 
+    // Owner collaborations state
+    ownerCollaborations: [],
+    ownerCollaborationsPagination: null,
+    isOwnerCollaborationsLoading: false,
+    ownerCollaborationsError: null,
+
+    // Fetch my owner collaborations
+    getMyOwnerCollaborations: async (params = {}) => {
+        set({ isOwnerCollaborationsLoading: true, ownerCollaborationsError: null });
+        try {
+            const response = await collaborationService.getMyOwnerCollaborations(params);
+            
+            const payload = response?.data ?? response ?? {};
+            const ok = response?.success === true || payload?.status === 'success' || payload?.success === true || Array.isArray(payload);
+
+            if (!ok && !payload?.collaborations) {
+                throw new Error(payload?.message || response?.message || 'Failed to fetch owner collaborations');
+            }
+
+            const collaborations = payload?.collaborations || payload?.data || (Array.isArray(payload) ? payload : []);
+            const pagination = payload?.pagination || null;
+
+            set({
+                ownerCollaborations: collaborations,
+                ownerCollaborationsPagination: pagination,
+                isOwnerCollaborationsLoading: false
+            });
+            return { success: true, data: collaborations };
+        } catch (error) {
+            const errorMessage = typeof error === 'string' ? error : error?.response?.data?.message || error?.message || 'Failed to fetch owner collaborations';
+            set({ ownerCollaborationsError: errorMessage, isOwnerCollaborationsLoading: false });
+            return { success: false, error: errorMessage };
+        }
+    },
+
     // Fetch sent collaboration requests
     getSentRequests: async (params = {}) => {
         set({ isSentRequestsLoading: true, sentRequestsError: null });
@@ -75,10 +110,10 @@ const useCollaborationStore = create((set) => ({
     },
 
     // Send alternative collaboration request
-    sendCollaborationRequestAlt: async (payload) => {
+    sendCollaborationRequest: async (payload) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await collaborationService.sendCollaborationRequestAlt(payload);
+            const response = await collaborationService.sendCollaborationRequest(payload);
 
             if (response && response.success) {
                 set((state) => ({
@@ -92,6 +127,24 @@ const useCollaborationStore = create((set) => ({
             }
         } catch (error) {
             const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to send collaboration request';
+            set({ error: errorMessage, isLoading: false });
+            return { success: false, error: errorMessage };
+        }
+    },
+
+    // Create a contract for a collaboration
+    createContract: async (collaborationId, payload) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await collaborationService.createContract(collaborationId, payload);
+            if (response && (response.success || response.status === 'success' || response.data)) {
+                set({ isLoading: false });
+                return { success: true, data: response.data || response };
+            } else {
+                throw new Error(response?.message || 'Failed to create contract');
+            }
+        } catch (error) {
+            const errorMessage = typeof error === 'string' ? error : error?.response?.data?.message || error?.message || 'Failed to create contract';
             set({ error: errorMessage, isLoading: false });
             return { success: false, error: errorMessage };
         }

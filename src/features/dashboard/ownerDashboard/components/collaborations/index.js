@@ -7,6 +7,7 @@ import ActiveCollaborations from './ActiveCollaborations/ActiveCollaborations';
 import CompletedCollaborations from './Completed/CompletedCollaborations';
 import PastCollaborations from './PastCollaborations/pastCollboration';
 import Contracts from './Contracts/Contracts';
+import CreateContract from './Contracts/CreateContract';
 import Requests from './Requests/Requests';
 import Analytics from './Analytics/Analytics';
 import ChatRooms from './ChatRooms/ChatRooms';
@@ -20,6 +21,7 @@ export {
   CompletedCollaborations,
   PastCollaborations,
   Contracts,
+  CreateContract,
   Requests,
   Analytics,
   ChatRooms,

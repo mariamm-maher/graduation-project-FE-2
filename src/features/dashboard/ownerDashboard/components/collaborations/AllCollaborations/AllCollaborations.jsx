@@ -1,90 +1,59 @@
-import { Search, Filter, Eye, Calendar, DollarSign, User } from 'lucide-react';
-import { useState } from 'react';
+import { Search, Filter, Eye, Calendar, DollarSign, User, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useCollaborationStore from '../../../../../../stores/collaborationStore';
 
 function AllCollaborations() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const navigate = useNavigate();
 
-  // Mock data - in production, fetch from API matching ERD structure
-  const collaborations = [
-    {
-      id: 1,
-      campaignId: 1,
-      campaignName: 'Summer Fashion Launch',
-      ownerId: 1,
-      ownerName: 'Fashion Brand Co.',
-      influencerId: 2,
-      influencerName: 'Sarah Johnson',
-      contractId: 1,
-      status: 'active',
-      budget: 5000,
-      startDate: '2026-01-15',
-      endDate: '2026-03-15',
-      createdAt: '2026-01-10',
-      updatedAt: '2026-01-28'
-    },
-    {
-      id: 2,
-      campaignId: 2,
-      campaignName: 'Holiday Collection 2024',
-      ownerId: 1,
-      ownerName: 'Fashion Brand Co.',
-      influencerId: 3,
-      influencerName: 'Mike Chen',
-      contractId: 2,
-      status: 'completed',
-      budget: 8000,
-      startDate: '2025-11-01',
-      endDate: '2025-12-31',
-      createdAt: '2025-10-25',
-      updatedAt: '2026-01-05'
-    },
-    {
-      id: 3,
-      campaignId: 1,
-      campaignName: 'Summer Fashion Launch',
-      ownerId: 1,
-      ownerName: 'Fashion Brand Co.',
-      influencerId: 4,
-      influencerName: 'Emma Davis',
-      contractId: 3,
-      status: 'pending',
-      budget: 4500,
-      startDate: '2026-02-01',
-      endDate: '2026-04-01',
-      createdAt: '2026-01-25',
-      updatedAt: '2026-01-25'
-    },
-    {
-      id: 4,
-      campaignId: 3,
-      campaignName: 'Spring Wellness Campaign',
-      ownerId: 1,
-      ownerName: 'Wellness Inc.',
-      influencerId: 5,
-      influencerName: 'Lisa Anderson',
-      contractId: null,
-      status: 'cancelled',
-      budget: 3000,
-      startDate: '2026-03-01',
-      endDate: '2026-05-01',
-      createdAt: '2026-02-10',
-      updatedAt: '2026-02-15'
-    }
-  ];
+  const {
+    ownerCollaborations,
+    isOwnerCollaborationsLoading,
+    getMyOwnerCollaborations
+  } = useCollaborationStore();
 
+  useEffect(() => {
+    getMyOwnerCollaborations();
+  }, [getMyOwnerCollaborations]);
+
+  // Use the fetched collaborations instead of mock data
+  const collaborations = ownerCollaborations || [];
+console.log('Fetched collaborations:', collaborations);
   // Filter collaborations
   const filteredCollaborations = collaborations.filter(collab => {
+    const campaignName = collab?.campaign?.campaignName || collab?.campaignName || '';
+    const influencerFirstName = collab?.influencer?.firstName || collab?.influencer?.user?.firstName || collab?.influencerId?.user?.firstName || '';
+    const influencerLastName = collab?.influencer?.lastName || collab?.influencer?.user?.lastName || collab?.influencerId?.user?.lastName || '';
+    const influencerName = collab?.influencerName || `${influencerFirstName} ${influencerLastName}`.trim();
+    
     const matchesSearch = searchQuery === '' || 
-      collab.campaignName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      collab.influencerName?.toLowerCase().includes(searchQuery.toLowerCase());
+      campaignName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      influencerName.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesStatus = filterStatus === 'all' || collab.status === filterStatus;
     
     return matchesSearch && matchesStatus;
   });
+
+  const getCollabData = (collab) => {
+    const id = collab._id || collab.id;
+    const campaignName = collab?.campaign?.campaignName || collab?.campaignName || 'Unknown Campaign';
+    const campaignId = collab?.campaign?._id || collab?.campaign?.id || collab?.campaignId || 'Unknown ID';
+    
+    const influencerFirstName = collab?.influencer?.firstName || collab?.influencer?.user?.firstName || collab?.influencerId?.user?.firstName || '';
+    const influencerLastName = collab?.influencer?.lastName || collab?.influencer?.user?.lastName || collab?.influencerId?.user?.lastName || '';
+    const influencerName = collab?.influencerName || `${influencerFirstName} ${influencerLastName}`.trim() || 'Unknown Influencer';
+    const influencerUserId = collab?.influencer?._id || collab?.influencer?.id || collab?.influencerId || 'N/A';
+    
+    const budget = collab?.agreedBudget || collab?.budget || collab?.proposedBudget || collab?.campaign?.totalBudget || 0;
+    const status = collab?.status || 'pending';
+    const startDate = collab?.startDate || collab?.campaign?.startDate || collab?.createdAt || new Date().toISOString();
+    const endDate = collab?.endDate || collab?.campaign?.endDate || collab?.updatedAt || new Date().toISOString();
+    
+    return { id, campaignName, campaignId, influencerName, influencerUserId, budget, status, startDate, endDate };
+  };
 
   const getStatusBadge = (status) => {
     const styles = {
@@ -172,6 +141,12 @@ function AllCollaborations() {
         </select>
       </div>
 
+      {isOwnerCollaborationsLoading ? (
+        <div className="flex items-center justify-center p-12">
+          <Loader2 className="w-8 h-8 text-[#C1B6FD] animate-spin" />
+        </div>
+      ) : (
+      <>
       {/* Table */}
       <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden">
         {/* Desktop Table */}
@@ -188,7 +163,9 @@ function AllCollaborations() {
               </tr>
             </thead>
             <tbody>
-              {filteredCollaborations.map((collab, index) => (
+              {filteredCollaborations.map((collabRaw, index) => {
+                const collab = getCollabData(collabRaw);
+                return (
                 <tr 
                   key={collab.id}
                   className={`border-b border-white/5 hover:bg-white/5 transition-colors ${
@@ -197,23 +174,23 @@ function AllCollaborations() {
                 >
                   <td className="py-4 px-6">
                     <p className="font-semibold text-white">{collab.campaignName}</p>
-                    <p className="text-xs text-gray-400">Campaign #{collab.campaignId}</p>
+                    <p className="text-xs text-gray-400">Campaign #{collab.campaignId ? String(collab.campaignId).slice(-4) : '...'}</p>
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 bg-linear-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center">
                         <User className="w-4 h-4 text-white" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-white">{collab.influencerName}</p>
-                        <p className="text-xs text-gray-400">ID: {collab.influencerId}</p>
+                        <p className="text-xs text-gray-400">ID: {collab.influencerUserId ? String(collab.influencerUserId).slice(-4) : '...'}</p>
                       </div>
                     </div>
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-1">
                       <DollarSign className="w-4 h-4 text-gray-400" />
-                      <span className="font-semibold text-white">{collab.budget.toLocaleString()}</span>
+                      <span className="font-semibold text-white">{(collab.budget || 0).toLocaleString()}</span>
                     </div>
                   </td>
                   <td className="py-4 px-6">
@@ -227,23 +204,35 @@ function AllCollaborations() {
                     {getStatusBadge(collab.status)}
                   </td>
                   <td className="py-4 px-6 text-right">
-                    <button
-                      onClick={() => navigate(`/dashboard/owner/collaborations/${collab.id}/workspace`)}
-                      className="px-4 py-2 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] hover:shadow-lg hover:shadow-purple-500/30 text-white rounded-lg font-medium transition-all inline-flex items-center gap-2"
-                    >
-                      <Eye className="w-4 h-4" />
-                      View
-                    </button>
+                    {collab.status === 'pending_contract_sign' || collab.status === 'Pending_contract_sign' ? (
+                      <button
+                        onClick={() => navigate(`/dashboard/owner/collaborations/${collab.id}/contract`)}
+                        className="px-4 py-2 bg-linear-to-r from-blue-500 to-cyan-500 hover:shadow-lg hover:shadow-cyan-500/30 text-white rounded-lg font-medium transition-all inline-flex items-center gap-2"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Make a Contract
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => navigate(`/dashboard/owner/collaborations/${collab.id}/workspace`)}
+                        className="px-4 py-2 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] hover:shadow-lg hover:shadow-purple-500/30 text-white rounded-lg font-medium transition-all inline-flex items-center gap-2"
+                      >
+                        <Eye className="w-4 h-4" />
+                        View
+                      </button>
+                    )}
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>
 
         {/* Mobile Card View */}
         <div className="lg:hidden divide-y divide-white/10">
-          {filteredCollaborations.map((collab) => (
+          {filteredCollaborations.map((collabRaw) => {
+            const collab = getCollabData(collabRaw);
+            return (
             <div key={collab.id} className="p-5 hover:bg-white/5 transition-colors">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
@@ -256,25 +245,35 @@ function AllCollaborations() {
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Budget</p>
-                  <p className="text-sm font-semibold text-white">${collab.budget.toLocaleString()}</p>
+                  <p className="text-sm font-semibold text-white">${(collab.budget || 0).toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Duration</p>
                   <p className="text-sm font-semibold text-white">
-                    {Math.ceil((new Date(collab.endDate) - new Date(collab.startDate)) / (1000 * 60 * 60 * 24))} days
+                    {Math.ceil((new Date(collab.endDate) - new Date(collab.startDate)) / (1000 * 60 * 60 * 24)) || 0} days
                   </p>
                 </div>
               </div>
 
-              <button
-                onClick={() => navigate(`/dashboard/owner/collaborations/${collab.id}/workspace`)}
-                className="w-full px-4 py-2.5 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2"
-              >
-                <Eye className="w-4 h-4" />
-                View Workspace
-              </button>
+              {collab.status === 'pending_contract_sign' || collab.status === 'Pending_contract_sign' ? (
+                <button
+                  onClick={() => navigate(`/dashboard/owner/collaborations/${collab.id}/contract`)}
+                  className="w-full px-4 py-2.5 bg-linear-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  Make a Contract
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate(`/dashboard/owner/collaborations/${collab.id}/workspace`)}
+                  className="w-full px-4 py-2.5 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  View Workspace
+                </button>
+              )}
             </div>
-          ))}
+          )})}
         </div>
       </div>
 
@@ -286,6 +285,8 @@ function AllCollaborations() {
           <h3 className="text-xl font-bold text-white mb-2">No Collaborations Found</h3>
           <p className="text-gray-400">Try adjusting your search or filters</p>
         </div>
+      )}
+      </>
       )}
     </div>
   );

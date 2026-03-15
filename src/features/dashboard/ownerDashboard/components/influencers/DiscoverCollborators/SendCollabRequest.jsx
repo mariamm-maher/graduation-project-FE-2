@@ -13,7 +13,7 @@ function SendCollabRequest() {
   // Campaign Store
   const { campaigns, fetchCampaigns, isLoading: isLoadingCampaigns } = useCampaignStore();
   // Collaboration Store
-  const sendCollaborationRequestAlt = useCollaborationStore((s) => s.sendCollaborationRequestAlt);
+  const sendCollaborationRequest = useCollaborationStore((s) => s.sendCollaborationRequestAlt);
 
   const [formData, setFormData] = useState({
     campaignId: '',
@@ -74,7 +74,7 @@ function SendCollabRequest() {
         message: formData.message
       };
 
-      const result = await sendCollaborationRequestAlt(payload);
+      const result = await sendCollaborationRequest(payload);
 
       if (result.success) {
         console.log('Collaboration Request Sent:', payload);

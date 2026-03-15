@@ -2,23 +2,12 @@ import api from '../config/axios';
 
 const collaborationService = {
 
-  // POST /api/collaborations
-  // Owner sends a collaboration request to an influencer
-  sendCollaborationRequest: async (data) => {
-    try {
-      const response = await api.post('/collaborations', data);
-      return response.data;
-    } catch (error) {
-      console.error('Send collaboration request error:', error);
-      throw error.response?.data?.message || 'Failed to send collaboration request';
-    }
-  },
-
+  
   // POST /api/collaborations/requests
   // Owner sends a collaboration request to an influencer (alternative endpoint)
-  sendCollaborationRequestAlt: async (data) => {
+  sendCollaborationRequest: async (data) => {
     try {
-      const response = await api.post('/collaborations/requests', data);
+      const response = await api.post('/collaboration-requests', data);
       return response.data;
     } catch (error) {
       console.error('Send collaboration request error:', error);

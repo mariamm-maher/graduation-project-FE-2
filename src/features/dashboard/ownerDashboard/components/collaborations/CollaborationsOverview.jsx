@@ -61,6 +61,7 @@ function CollaborationsOverview() {
     }
   ];
 
+  
   const activeCollabs = collaborations.filter(c => c.status === 'active').length;
   const completedCollabs = collaborations.filter(c => c.status === 'completed').length;
   const pendingReview = collaborations.filter(c => c.status === 'pending_review').length;

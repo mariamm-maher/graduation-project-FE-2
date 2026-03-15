@@ -15,6 +15,51 @@ const useInfluncerStore = create((set) => ({
   respondingId: null,
   respondError: null,
 
+  // General influencer collaborations
+  influencerCollaborations: [],
+  influencerCollaborationsPagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10
+  },
+  influencerCollaborationsLoading: false,
+  influencerCollaborationsError: null,
+
+  // Fetch my influencer collaborations
+  getMyInfluencerCollaborations: async (params = {}) => {
+    set({ influencerCollaborationsLoading: true, influencerCollaborationsError: null });
+    try {
+      const response = await collaborationService.getMyInfluencerCollaborations(params);
+      
+      const payload = response?.data ?? response ?? {};
+      const ok = response?.success === true || payload?.status === 'success' || payload?.success === true || Array.isArray(payload);
+
+      if (!ok && !payload?.collaborations) {
+        throw new Error(payload?.message || response?.message || 'Failed to fetch influencer collaborations');
+      }
+
+      const collaborations = payload?.collaborations || payload?.data || (Array.isArray(payload) ? payload : []);
+      const paginationSource = payload?.pagination || payload?.data?.pagination || {};
+
+      set({
+        influencerCollaborations: collaborations,
+        influencerCollaborationsPagination: {
+          currentPage: paginationSource.currentPage ?? paginationSource.page ?? params.page ?? 1,
+          totalPages: paginationSource.totalPages ?? 1,
+          totalItems: paginationSource.totalItems ?? paginationSource.total ?? collaborations.length,
+          itemsPerPage: paginationSource.itemsPerPage ?? params.limit ?? 10
+        },
+        influencerCollaborationsLoading: false
+      });
+      return { success: true, data: collaborations };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error?.response?.data?.message || error?.message || 'Failed to fetch influencer collaborations';
+      set({ influencerCollaborationsError: errorMessage, influencerCollaborationsLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
   // Fetch received collaboration requests (robust to multiple response shapes)
   getReceivedRequests: async (page = 1, limit = 10) => {
     set({ receivedRequestsLoading: true, receivedRequestsError: null });

@@ -6,6 +6,7 @@ import {
   CompletedCollaborations,
   PastCollaborations,
   Contracts,
+  CreateContract,
   Requests,
   Analytics,
   ChatRooms,
@@ -23,6 +24,7 @@ function CollaborationsLayout() {
         <Route path="completed" element={<CompletedCollaborations />} />
         <Route path="past" element={<PastCollaborations />} />
         <Route path="contracts" element={<Contracts />} />
+        <Route path=":id/contract" element={<CreateContract />} />
         <Route path="requests" element={<Requests />} />
         <Route path="analytics" element={<Analytics />} />
    

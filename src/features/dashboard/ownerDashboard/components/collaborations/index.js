@@ -8,9 +8,11 @@ import CompletedCollaborations from './Completed/CompletedCollaborations';
 import PastCollaborations from './PastCollaborations/pastCollboration';
 import Contracts from './Contracts/Contracts';
 import CreateContract from './Contracts/CreateContract';
+import ContractDetail from './Contracts/contractDetails';
 import Requests from './Requests/Requests';
 import Analytics from './Analytics/Analytics';
 import ChatRooms from './ChatRooms/ChatRooms';
+import Messages from './messages/Messages';
 import CollaborationBoard from './CollaborationBoard/CollaborationBoard';
 
 export {
@@ -21,8 +23,10 @@ export {
   CompletedCollaborations,
   PastCollaborations,
   Contracts,
+  ContractDetail,
   CreateContract,
   Requests,
+  Messages,
   Analytics,
   ChatRooms,
   CollaborationBoard

@@ -15,6 +15,7 @@ import InfluencerOnboarding from './pages/influncerOnboarding.jsx';
 import ProtectedRoute, { AuthorizedRoute } from './pages/protectRoute.jsx';
 import NotFound from './pages/NotFound.jsx';
 import useAuthStore from './stores/authStore.js';
+import ScrollToTop from './components/ui/ScrollToTop.jsx';
 
 function App() {
   const initialize = useAuthStore((state) => state.initialize);
@@ -26,6 +27,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <ToastContainer />
       <Routes>
         <Route path="/" element={<Landing />} />

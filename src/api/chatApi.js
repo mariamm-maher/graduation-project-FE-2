@@ -2,11 +2,11 @@ import api from '../config/axios';
 
 const chatService = {
 
-  // GET /api/chat/collaboration/{collaborationId}
+  // GET /api/chat/collaborations/{collaborationId}/room
   // Get or create a collaboration chat room
   getOrCreateCollaborationChat: async (collaborationId) => {
     try {
-      const response = await api.get(`/chat/collaboration/${collaborationId}`);
+      const response = await api.get(`/chat/collaborations/${collaborationId}/room`);
       return response.data;
     } catch (error) {
       console.error('Get/create chat room error:', error);
@@ -26,6 +26,10 @@ const chatService = {
     }
   },
 
+  getChatRooms: async () => {
+    return chatService.getMyChatRooms();
+  },
+
   // GET /api/chat/rooms/{chatRoomId}
   // Get chat room details
   getChatRoomById: async (chatRoomId) => {
@@ -36,6 +40,10 @@ const chatService = {
       console.error('Get chat room details error:', error);
       throw error.response?.data?.message || 'Failed to fetch chat room details';
     }
+  },
+
+  getChatRoom: async (chatRoomId) => {
+    return chatService.getChatRoomById(chatRoomId);
   },
 
   // GET /api/chat/rooms/{chatRoomId}/messages
@@ -52,6 +60,10 @@ const chatService = {
     }
   },
 
+  getMessages: async (chatRoomId, params = {}) => {
+    return chatService.getChatMessages(chatRoomId, params);
+  },
+
   // POST /api/chat/rooms/{chatRoomId}/messages
   // Send a message in a chat room
   sendMessage: async (chatRoomId, data) => {
@@ -64,16 +76,20 @@ const chatService = {
     }
   },
 
-  // PUT /api/chat/messages/{messageId}
+  // PATCH /api/chat/messages/{messageId}
   // Edit a message
   editMessage: async (messageId, data) => {
     try {
-      const response = await api.put(`/chat/messages/${messageId}`, data);
+      const response = await api.patch(`/chat/messages/${messageId}`, data);
       return response.data;
     } catch (error) {
       console.error('Edit message error:', error);
       throw error.response?.data?.message || 'Failed to edit message';
     }
+  },
+
+  updateMessage: async (messageId, data) => {
+    return chatService.editMessage(messageId, data);
   },
 
   // DELETE /api/chat/messages/{messageId}
@@ -88,11 +104,11 @@ const chatService = {
     }
   },
 
-  // POST /api/chat/rooms/{chatRoomId}/read
+  // PATCH /api/chat/rooms/{chatRoomId}/read
   // Mark all messages in a chat room as read
   markRoomAsRead: async (chatRoomId) => {
     try {
-      const response = await api.post(`/chat/rooms/${chatRoomId}/read`);
+      const response = await api.patch(`/chat/rooms/${chatRoomId}/read`);
       return response.data;
     } catch (error) {
       console.error('Mark room as read error:', error);

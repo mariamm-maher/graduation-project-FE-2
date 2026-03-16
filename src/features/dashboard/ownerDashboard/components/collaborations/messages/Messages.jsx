@@ -3,8 +3,8 @@ import { toast } from 'react-toastify';
 import { useLocation } from 'react-router-dom';
 import ChatSidebar from './ChatSidebar';
 import ChatWindow from './ChatWindow';
-import useChatStore from '../../../../../stores/ChatStore';
-import useAuthStore from '../../../../../stores/authStore';
+import useChatStore from '../../../../../../stores/ChatStore';
+import useAuthStore from '../../../../../../stores/authStore';
 
 export default function Messages() {
   const [selectedChat, setSelectedChat] = useState(null);

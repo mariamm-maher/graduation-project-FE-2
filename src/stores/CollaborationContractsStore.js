@@ -55,83 +55,106 @@ const useCollaborationContractsStore = create((set) => ({
     }
   },
 
-  // Update a contract
-  updateContract: async (id, data) => {
+  // Get contracts for current owner
+  getMyOwnerContracts: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await collaborationContractsService.updateContract(id, data);
+      const response = await collaborationContractsService.getMyOwnerContracts();
       const payload = response?.data ?? response ?? {};
-      const ok = response?.success === true || payload?.status === 'success';
+      const ok = response?.success === true || payload?.status === 'success' || payload?.contracts || payload?.data;
 
       if (!ok) {
-        throw new Error(payload?.message || 'Failed to update contract');
+        throw new Error(payload?.message || 'Failed to fetch owner contracts');
       }
 
-      const contract = payload?.contract || payload?.data || payload;
-      set((state) => ({
-        contracts: state.contracts.map((c) => (c.id === id || c._id === id ? { ...c, ...contract } : c)),
-        currentContract: contract,
-        isLoading: false
-      }));
-      return { success: true, data: contract };
+      const contracts = payload?.contracts || payload?.data?.contracts || payload?.data || (Array.isArray(payload) ? payload : []);
+      set({ contracts: Array.isArray(contracts) ? contracts : [contracts], isLoading: false });
+      return { success: true, data: contracts };
     } catch (error) {
-      const errorMessage = typeof error === 'string' ? error : error?.message || 'Failed to update contract';
+      const errorMessage = typeof error === 'string' ? error : error?.message || 'Failed to fetch owner contracts';
       set({ error: errorMessage, isLoading: false });
       return { success: false, error: errorMessage };
     }
   },
 
-  // Send contract for signature
-  sendContract: async (id) => {
+  // Get contracts for current influencer
+  getMyInfluencerContracts: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await collaborationContractsService.sendContract(id);
+      const response = await collaborationContractsService.getMyInfluencerContracts();
       const payload = response?.data ?? response ?? {};
-      const ok = response?.success === true || payload?.status === 'success';
+      const ok = response?.success === true || payload?.status === 'success' || payload?.contracts || payload?.data;
 
       if (!ok) {
-        throw new Error(payload?.message || 'Failed to send contract');
+        throw new Error(payload?.message || 'Failed to fetch influencer contracts');
       }
 
-      const contract = payload?.contract || payload?.data || payload;
-      set((state) => ({
-        contracts: state.contracts.map((c) => (c.id === id || c._id === id ? { ...c, ...contract } : c)),
-        currentContract: contract,
-        isLoading: false
-      }));
-      return { success: true, data: contract };
+      const contracts = payload?.contracts || payload?.data?.contracts || payload?.data || (Array.isArray(payload) ? payload : []);
+      set({ contracts: Array.isArray(contracts) ? contracts : [contracts], isLoading: false });
+      return { success: true, data: contracts };
     } catch (error) {
-      const errorMessage = typeof error === 'string' ? error : error?.message || 'Failed to send contract';
+      const errorMessage = typeof error === 'string' ? error : error?.message || 'Failed to fetch influencer contracts';
       set({ error: errorMessage, isLoading: false });
       return { success: false, error: errorMessage };
     }
   },
 
-  // Sign a contract
-  signContract: async (id) => {
+  // Sign contract as owner
+  signContractAsOwner: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await collaborationContractsService.signContract(id);
+      const response = await collaborationContractsService.signContractAsOwner(id);
       const payload = response?.data ?? response ?? {};
       const ok = response?.success === true || payload?.status === 'success';
 
       if (!ok) {
-        throw new Error(payload?.message || 'Failed to sign contract');
+        throw new Error(payload?.message || 'Failed to sign contract as owner');
       }
 
-      const contract = payload?.contract || payload?.data || payload;
+      const updated = payload?.contract || payload?.data || payload;
       set((state) => ({
-        contracts: state.contracts.map((c) => (c.id === id || c._id === id ? { ...c, ...contract } : c)),
-        currentContract: contract,
-        isLoading: false
+        contracts: state.contracts.map((c) => (c.id === id || c._id === id ? { ...c, ...updated } : c)),
+        currentContract: state.currentContract && (state.currentContract.id === id || state.currentContract._id === id)
+          ? { ...state.currentContract, ...updated }
+          : state.currentContract,
+        isLoading: false,
       }));
-      return { success: true, data: contract };
+      return { success: true, data: updated };
     } catch (error) {
-      const errorMessage = typeof error === 'string' ? error : error?.message || 'Failed to sign contract';
+      const errorMessage = typeof error === 'string' ? error : error?.message || 'Failed to sign contract as owner';
       set({ error: errorMessage, isLoading: false });
       return { success: false, error: errorMessage };
     }
   },
+
+  // Sign contract as influencer
+  signContractAsInfluencer: async (id) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await collaborationContractsService.signContractAsInfluencer(id);
+      const payload = response?.data ?? response ?? {};
+      const ok = response?.success === true || payload?.status === 'success';
+
+      if (!ok) {
+        throw new Error(payload?.message || 'Failed to sign contract as influencer');
+      }
+
+      const updated = payload?.contract || payload?.data || payload;
+      set((state) => ({
+        contracts: state.contracts.map((c) => (c.id === id || c._id === id ? { ...c, ...updated } : c)),
+        currentContract: state.currentContract && (state.currentContract.id === id || state.currentContract._id === id)
+          ? { ...state.currentContract, ...updated }
+          : state.currentContract,
+        isLoading: false,
+      }));
+      return { success: true, data: updated };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error?.message || 'Failed to sign contract as influencer';
+      set({ error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
 
   clearError: () => set({ error: null })
 }));

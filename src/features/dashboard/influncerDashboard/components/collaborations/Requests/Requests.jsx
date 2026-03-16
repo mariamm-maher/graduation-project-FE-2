@@ -11,6 +11,7 @@ function Requests() {
   const [negotiationOpenId, setNegotiationOpenId] = useState(null);
   const [negotiationBudget, setNegotiationBudget] = useState('');
   const [negotiationMessage, setNegotiationMessage] = useState('');
+  const [respondingId, setRespondingId] = useState(null);
 
   const { receivedRequests, isLoading, error, respondToRequest, getMyReceivedRequests } = useCollaborationRequestsStore();
 
@@ -63,21 +64,25 @@ function Requests() {
   if (isLoading) return <div>Loading requests...</div>;
 
   const handleAccept = async (requestId) => {
+    setRespondingId(requestId);
     const res = await respondToRequest(requestId, { action: 'accept' });
     if (res?.success) {
       toast.success('Request accepted');
     } else {
       toast.error(res?.error || 'Failed to accept request');
     }
+    setRespondingId(null);
   };
 
   const handleReject = async (requestId) => {
+    setRespondingId(requestId);
     const res = await respondToRequest(requestId, { action: 'reject' });
     if (res?.success) {
       toast.success('Request rejected');
     } else {
       toast.error(res?.error || 'Failed to reject request');
     }
+    setRespondingId(null);
   };
 
   const openNegotiate = (request) => {
@@ -105,6 +110,7 @@ function Requests() {
       newBudget: budget
     };
 
+    setRespondingId(requestId);
     const res = await respondToRequest(requestId, payload);
     if (res?.success) {
       toast.success('Counter offer sent');
@@ -112,6 +118,7 @@ function Requests() {
     } else {
       toast.error(res?.error || 'Failed to send counter offer');
     }
+    setRespondingId(null);
   };
 
   return (

@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import { CollaborationsOverview, MessagingSystem, CollaborationWorkspace, RatingFeedback, Requests } from './index';
+import { CollaborationsOverview, MessagingSystem, CollaborationWorkspace, RatingFeedback, Requests, ContractsList, ContractDetail } from './index';
 
 function CollaborationsLayout() {
   return (
@@ -7,6 +7,8 @@ function CollaborationsLayout() {
       <Routes>
         <Route index element={<CollaborationsOverview />} />
         <Route path="requests" element={<Requests />} />
+        <Route path="contracts" element={<ContractsList />} />
+        <Route path="contracts/:id" element={<ContractDetail />} />
         <Route path="messages" element={<MessagingSystem />} />
         <Route path=":id/workspace" element={<CollaborationWorkspace />} />
         <Route path=":id/review" element={<RatingFeedback />} />

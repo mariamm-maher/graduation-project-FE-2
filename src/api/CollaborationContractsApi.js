@@ -25,41 +25,57 @@ const collaborationContractsService = {
     }
   },
 
-  // PATCH /api/collaboration-contracts/{id}
-  // Update a contract
-  updateContract: async (id, data) => {
+  // GET /api/collaboration-contracts/mine/owner
+  // Get contracts for current owner
+  getMyOwnerContracts: async () => {
     try {
-      const response = await api.patch(`/collaboration-contracts/${id}`, data);
+      const response = await api.get('/collaboration-contracts/mine/owner');
       return response.data;
     } catch (error) {
-      console.error('Update contract error:', error);
-      throw error.response?.data?.message || 'Failed to update contract';
+      console.error('Get my owner contracts error:', error);
+      throw error.response?.data?.message || 'Failed to fetch owner contracts';
     }
   },
 
-  // PATCH /api/collaboration-contracts/{id}/send
-  // Send contract for signature
-  sendContract: async (id) => {
+  // GET /api/collaboration-contracts/mine/influencer
+  // Get contracts for current influencer
+  getMyInfluencerContracts: async () => {
     try {
-      const response = await api.patch(`/collaboration-contracts/${id}/send`);
+      const response = await api.get('/collaboration-contracts/mine/influencer');
       return response.data;
     } catch (error) {
-      console.error('Send contract error:', error);
-      throw error.response?.data?.message || 'Failed to send contract';
+      console.error('Get my influencer contracts error:', error);
+      throw error.response?.data?.message || 'Failed to fetch influencer contracts';
     }
   },
 
-  // PATCH /api/collaboration-contracts/{id}/sign
-  // Sign a contract
-  signContract: async (id) => {
+  // PATCH /api/collaboration-contracts/{id}/sign/owner
+  // Owner signs contract
+  signContractAsOwner: async (id) => {
     try {
-      const response = await api.patch(`/collaboration-contracts/${id}/sign`);
+      const response = await api.patch(`/collaboration-contracts/${id}/sign/owner`);
       return response.data;
     } catch (error) {
-      console.error('Sign contract error:', error);
-      throw error.response?.data?.message || 'Failed to sign contract';
+      console.error('Sign contract as owner error:', error);
+      throw error.response?.data?.message || 'Failed to sign contract as owner';
     }
-  }
+  },
+
+  // PATCH /api/collaboration-contracts/{id}/sign/influencer
+  // Influencer signs contract
+  signContractAsInfluencer: async (id) => {
+    try {
+      const response = await api.patch(`/collaboration-contracts/${id}/sign/influencer`);
+      return response.data;
+    } catch (error) {
+      console.error('Sign contract as influencer error:', error);
+      throw error.response?.data?.message || 'Failed to sign contract as influencer';
+    }
+  },
+
+
+
+
 };
 
 export default collaborationContractsService;

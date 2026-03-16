@@ -1,4 +1,4 @@
-import { Users, MessageSquare, CheckCircle, Clock, Star, TrendingUp, Calendar, DollarSign, Loader2 } from 'lucide-react';
+import { Users, MessageSquare, CheckCircle, Clock, Star, TrendingUp, Calendar, DollarSign, Loader2, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import useInfluncerStore from '../../../../../stores/influncerStore';
@@ -15,25 +15,33 @@ function CollaborationsOverview() {
     getMyInfluencerCollaborations();
   }, [getMyInfluencerCollaborations]);
 
+console.log('collaborations overview render',  influencerCollaborations  );
+
   // Use real collaborations, mapping them to the format expected by the UI
   const collaborations = influencerCollaborations.map(collab => {
-    const brandName = collab?.owner?.companyName || collab?.owner?.user?.firstName || 'Unknown Brand';
+    const brandName = collab?.owner?.ownerProfile?.businessName  || 'Unknown Brand';
     const campaignName = collab?.campaign?.campaignName || 'Unknown Campaign';
     const deadline = collab?.endDate || collab?.updatedAt || new Date().toISOString();
     const budget = collab?.agreedBudget || collab?.budget || collab?.proposedBudget || 0;
-    const isCompleted = collab?.status === 'completed';
-    const isActive = collab?.status === 'active';
+    const status = collab?.status || 'pending_contract_sign';
+    const progressMap = {
+      pending_contract_sign: 10,
+      live: 25,
+      in_progress: 60,
+      completed: 100,
+      cancelled: 0,
+    };
     
     return {
       id: collab._id || collab.id,
       brand: brandName,
       brandContact: collab?.owner?.user?.firstName ? `${collab.owner.user.firstName} ${collab.owner.user.lastName || ''}` : 'Brand Contact',
       campaign: campaignName,
-      status: collab.status || 'pending_review',
-      progress: isCompleted ? 100 : isActive ? 50 : 0,
+      status,
+      progress: progressMap[status] ?? 0,
       unreadMessages: 0, // Would need actual message counts from API
-      deliverables: { completed: isCompleted ? 5 : 0, total: 5 }, // Default mock for now
-      payment: isCompleted ? 'paid' : isActive ? 'processing' : 'pending',
+      deliverables: { completed: status === 'completed' ? 5 : status === 'in_progress' ? 2 : 0, total: 5 },
+      payment: status === 'completed' ? 'paid' : status === 'in_progress' ? 'processing' : 'pending',
       rating: null,
       avatar: '🏢',
       deadline: new Date(deadline).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
@@ -42,8 +50,8 @@ function CollaborationsOverview() {
     };
   });
 
-  const activeCollabs = collaborations.filter(c => c.status === 'active').length;
-  const pendingReview = collaborations.filter(c => c.status === 'pending_review' || c.status === 'pending').length;
+  const activeCollabs = collaborations.filter(c => c.status === 'live' || c.status === 'in_progress').length;
+  const pendingContractSign = collaborations.filter(c => c.status === 'pending_contract_sign').length;
   const totalMessages = collaborations.reduce((sum, c) => sum + (c.unreadMessages || 0), 0);
   const requestsCount = Array.isArray(receivedRequests) ? receivedRequests.length : 0;
 
@@ -55,17 +63,26 @@ function CollaborationsOverview() {
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">My Collaborations</h1>
           <p className="text-sm sm:text-base text-gray-400">Active campaigns you're working on - accepted and in progress</p>
         </div>
-        <Link to="/dashboard/influencer/collaborations/requests" className="w-full sm:w-auto">
-          <button className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl text-sm sm:text-base font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300 relative w-full sm:w-auto">
-            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
-            Requests
-            {requestsCount > 0 && (
-              <span className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-red-500 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold">
-                {requestsCount}
-              </span>
-            )}
-          </button>
-        </Link>
+        <div className="flex w-full sm:w-auto gap-2">
+          <Link to="/dashboard/influencer/collaborations/contracts" className="w-full sm:w-auto">
+            <button className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-3 bg-white/10 border border-white/10 text-white rounded-xl text-sm sm:text-base font-semibold hover:bg-white/20 transition-all duration-300 w-full sm:w-auto">
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+              Contracts
+            </button>
+          </Link>
+
+          <Link to="/dashboard/influencer/collaborations/requests" className="w-full sm:w-auto">
+            <button className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl text-sm sm:text-base font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300 relative w-full sm:w-auto">
+              <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+              Requests
+              {requestsCount > 0 && (
+                <span className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-red-500 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold">
+                  {requestsCount}
+                </span>
+              )}
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats Overview */}
@@ -86,10 +103,10 @@ function CollaborationsOverview() {
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center">
               <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
             </div>
-            <span className="text-xs text-yellow-400 font-semibold">Review</span>
+            <span className="text-xs text-yellow-400 font-semibold">Pending</span>
           </div>
-          <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{pendingReview}</p>
-          <p className="text-xs sm:text-sm text-gray-400">Pending Review</p>
+          <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{pendingContractSign}</p>
+          <p className="text-xs sm:text-sm text-gray-400">Pending Contract Sign</p>
         </div>
 
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 sm:p-5 hover:border-blue-400/30 transition-all">
@@ -159,11 +176,15 @@ function CollaborationsOverview() {
 
               <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                 <span className={`px-4 py-2 rounded-lg text-sm font-semibold ${
-                  collab.status === 'active' 
-                    ? 'bg-green-500/20 text-green-400' 
-                    : collab.status === 'completed'
+                  collab.status === 'pending_contract_sign'
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : collab.status === 'live'
                     ? 'bg-blue-500/20 text-blue-400'
-                    : 'bg-yellow-500/20 text-yellow-400'
+                    : collab.status === 'in_progress'
+                    ? 'bg-green-500/20 text-green-400'
+                    : collab.status === 'completed'
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : 'bg-red-500/20 text-red-400'
                 }`}>
                   {collab.status.replace('_', ' ').toUpperCase()}
                 </span>
@@ -181,50 +202,9 @@ function CollaborationsOverview() {
               </div>
             </div>
 
-            {/* Progress and Stats */}
+           
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-4">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-gray-400">Progress</span>
-                  <span className="text-xs font-semibold text-white">{collab.progress}%</span>
-                </div>
-                <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-linear-to-r from-[#745CB4] to-[#C1B6FD]"
-                    style={{ width: `${collab.progress}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-400 mb-2">Deliverables</p>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-400" />
-                  <span className="text-sm font-bold text-white">
-                    {collab.deliverables.completed}/{collab.deliverables.total}
-                  </span>
-                  <span className="text-xs text-gray-400">completed</span>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-400 mb-2">Payment Status</p>
-                <div className="space-y-1">
-                  <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold ${
-                    collab.payment === 'paid' 
-                      ? 'bg-green-500/20 text-green-400'
-                      : collab.payment === 'approved'
-                      ? 'bg-blue-500/20 text-blue-400'
-                      : collab.payment === 'processing'
-                      ? 'bg-yellow-500/20 text-yellow-400'
-                      : 'bg-gray-500/20 text-gray-400'
-                  }`}>
-                    <DollarSign className="w-3 h-3" />
-                    {collab.payment}
-                  </span>
-                  <p className="text-xs text-[#C1B6FD] font-semibold">{collab.earnings}</p>
-                </div>
-              </div>
+             
 
               <div>
                 <p className="text-xs text-gray-400 mb-2">Deadline</p>
@@ -252,15 +232,15 @@ function CollaborationsOverview() {
                 </button>
               </Link>
               
-              {collab.status === 'pending_review' && (
-                <Link to={`/dashboard/influencer/collaborations/${collab.id}/review`} className="flex-1">
+              {collab.status === 'pending_contract_sign' && (
+                <Link to={`/dashboard/influencer/collaborations/contracts/${collab.id}`} className="flex-1">
                   <button className="w-full px-3 sm:px-4 py-2 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] rounded-lg text-xs sm:text-sm font-semibold text-white hover:shadow-lg hover:shadow-purple-500/30 transition-all">
-                    View Review
+                    Review Contract
                   </button>
                 </Link>
               )}
               
-              {collab.status === 'active' && (
+              {(collab.status === 'live' || collab.status === 'in_progress') && (
                 <Link to={`/dashboard/influencer/collaborations/${collab.id}/messages`} className="flex-1">
                   <button className="w-full px-3 sm:px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg text-xs sm:text-sm font-semibold text-blue-400 transition-all">
                     Send Message

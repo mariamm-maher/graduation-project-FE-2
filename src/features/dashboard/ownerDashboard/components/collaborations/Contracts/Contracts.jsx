@@ -8,7 +8,11 @@ function Contracts() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const navigate = useNavigate();
-  const { contracts = [], getContractByCollaboration, updateContract, isLoading } = useCollaborationContractsStore();
+  const { contracts = [], getMyOwnerContracts, updateContract, isLoading } = useCollaborationContractsStore();
+
+  useEffect(() => {
+    getMyOwnerContracts();
+  }, [getMyOwnerContracts]);
 
   const handleEditContract = (contract) => {
     navigate(`/dashboard/owner/contracts/${contract._id || contract.id}/edit`, { state: { contract } });
@@ -110,7 +114,7 @@ function Contracts() {
         <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
           <p className="text-gray-400 text-sm mb-1">Total Value</p>
           <p className="text-2xl font-bold text-blue-400">
-            ${contracts.reduce((sum, c) => sum + c.budget, 0).toLocaleString()}
+            ${contracts.reduce((sum, c) => sum + (Number(c?.budget) || 0), 0).toLocaleString()}
           </p>
         </div>
       </div>
@@ -171,7 +175,7 @@ function Contracts() {
                   
                   return (
                     <tr
-                      key={contract.id}
+                      key={contract._id || contract.id || index}
                       className={`border-b border-white/5 hover:bg-white/5 transition-colors ${
                         index === filteredContracts.length - 1 ? 'border-b-0' : ''
                       }`}
@@ -179,7 +183,7 @@ function Contracts() {
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
                           <FileText className="w-4 h-4 text-gray-400" />
-                          <span className="font-mono text-sm text-white">#{contract.id.toString().padStart(4, '0')}</span>
+                          <span className="font-mono text-sm text-white">#{String(contract._id || contract.id || '').padStart(4, '0')}</span>
                         </div>
                       </td>
                       <td className="py-4 px-6">
@@ -194,7 +198,7 @@ function Contracts() {
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-1">
                           <DollarSign className="w-4 h-4 text-gray-400" />
-                          <span className="font-semibold text-white">{contract.budget.toLocaleString()}</span>
+                          <span className="font-semibold text-white">{(Number(contract?.budget) || 0).toLocaleString()}</span>
                         </div>
                       </td>
                       <td className="py-4 px-6">
@@ -217,17 +221,20 @@ function Contracts() {
                       <td className="py-4 px-6 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => {
-                              if (contract.collaborationId) {
-                                navigate(`/dashboard/owner/collaborations/${contract.collaborationId}/workspace`);
-                              }
-                            }}
+                            onClick={() => navigate(`/dashboard/owner/collaborations/contracts/${contract._id || contract.id}`)}
                             className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-medium transition-all inline-flex items-center gap-2"
-                            disabled={!contract.collaborationId}
                           >
                             <Eye className="w-4 h-4" />
-                            View
+                            View Contract
                           </button>
+                          {contract.collaborationId && (
+                            <button
+                              onClick={() => navigate(`/dashboard/owner/collaborations/${contract.collaborationId}/workspace`)}
+                              className="px-3 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg font-medium transition-all inline-flex items-center gap-2"
+                            >
+                              Open Collaboration
+                            </button>
+                          )}
                           {contract.status === 'draft' && (
                             <>
                               <button
@@ -255,15 +262,15 @@ function Contracts() {
 
           {/* Mobile Card View */}
           <div className="lg:hidden divide-y divide-white/10">
-            {filteredContracts.map((contract) => {
+            {filteredContracts.map((contract, idx) => {
               const daysRemaining = getDaysRemaining(contract.endDate, contract.status);
               
               return (
-                <div key={contract.id} className="p-5 hover:bg-white/5 transition-colors">
+                <div key={contract._id || contract.id || idx} className="p-5 hover:bg-white/5 transition-colors">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-sm text-gray-400">#{contract.id.toString().padStart(4, '0')}</span>
+                        <span className="font-mono text-sm text-gray-400">#{String(contract._id || contract.id || '').padStart(4, '0')}</span>
                         {getStatusBadge(contract.status)}
                       </div>
                       <h3 className="font-semibold text-white mb-1">{contract.campaignName}</h3>
@@ -274,7 +281,7 @@ function Contracts() {
                   <div className="grid grid-cols-2 gap-3 mb-4">
                     <div>
                       <p className="text-xs text-gray-400 mb-1">Budget</p>
-                      <p className="text-sm font-semibold text-white">${contract.budget.toLocaleString()}</p>
+                      <p className="text-sm font-semibold text-white">${(Number(contract?.budget) || 0).toLocaleString()}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-400 mb-1">Duration</p>
@@ -289,15 +296,24 @@ function Contracts() {
                     </div>
                   )}
 
-                  {contract.collaborationId && (
+                  <div className="flex gap-2">
                     <button
-                      onClick={() => navigate(`/dashboard/owner/collaborations/${contract.collaborationId}/workspace`)}
+                      onClick={() => navigate(`/dashboard/owner/collaborations/contracts/${contract._id || contract.id}`)}
                       className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2"
                     >
                       <Eye className="w-4 h-4" />
-                      View Collaboration
+                      View Contract
                     </button>
-                  )}
+                    {contract.collaborationId && (
+                      <button
+                        onClick={() => navigate(`/dashboard/owner/collaborations/${contract.collaborationId}/workspace`)}
+                        className="px-4 py-2.5 bg-white/5 hover:bg-white/10 rounded-lg text-white font-medium transition-all flex items-center justify-center gap-2"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Open Collaboration
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}

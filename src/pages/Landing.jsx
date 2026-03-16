@@ -11,8 +11,8 @@ import ScrollProgress from '../components/ui/ScrollProgress'
 function Landing() {
   return (
     <div className="App bg-[#1a1a1a]">
-      <ScrollProgress />
       <Navbar />
+      <ScrollProgress />
       <Hero />
       <Features />
       <CampaignPlanner />

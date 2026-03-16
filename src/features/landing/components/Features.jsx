@@ -74,7 +74,7 @@ const Features = () => {
   return (
     <section id="features" className="relative bg-linear-to-b from-[#1a1a1a] to-[#252525] overflow-hidden">
       {/* Section Header */}
-      <div className="relative z-10 pt-32 pb-20">
+      <div className="relative z-10 pt-20 pb-12">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -82,10 +82,10 @@ const Features = () => {
           transition={{ duration: 0.8 }}
           className="text-center max-w-4xl mx-auto px-6"
         >
-          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-[0_2px_30px_rgba(116,92,180,0.5)]">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6 drop-shadow-[0_2px_30px_rgba(116,92,180,0.5)]\">
             Powerful Features
           </h2>
-          <p className="text-xl sm:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg text-gray-400 max-w-3xl mx-auto leading-relaxed\">
             Experience the future of social media marketing
           </p>
         </motion.div>
@@ -126,14 +126,14 @@ const ParallaxScene = ({ feature, index }) => {
   return (
     <div 
       ref={containerRef}
-      className="relative min-h-screen flex items-center justify-center py-32 px-6"
+      className="relative min-h-[70vh] flex items-center justify-center py-20 px-6"
     >
       <div className="max-w-[1400px] mx-auto w-full">
         <div className={`grid lg:grid-cols-2 gap-16 items-center ${!isEven ? 'lg:grid-flow-dense' : ''}`}>
           {/* Image Side */}
           <motion.div
             style={{ y: imageY, scale: imageScale, opacity }}
-            className={`relative ${!isEven ? 'lg:col-start-2' : ''}`}
+            className={`relative max-w-[520px] ${!isEven ? 'lg:col-start-2' : ''}`}
           >
               <div className="relative aspect-4/3 rounded-3xl overflow-hidden backdrop-blur-md bg-white/5 border border-white/10">
               {/* Feature image */}
@@ -148,16 +148,16 @@ const ParallaxScene = ({ feature, index }) => {
               initial={{ opacity: 0, scale: 0 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, duration: 0.5 }}
-              className="absolute -bottom-6 -right-6 w-24 h-24 rounded-2xl bg-linear-to-br from-[#745CB4] to-[#5D459D] flex items-center justify-center shadow-[0_0_60px_rgba(116,92,180,0.6)]"
+              className="absolute -bottom-4 -right-4 w-20 h-20 rounded-2xl bg-linear-to-br from-[#745CB4] to-[#5D459D] flex items-center justify-center shadow-[0_0_40px_rgba(116,92,180,0.5)]"
             >
-              <Icon className="w-12 h-12 text-white" />
+              <Icon className="w-10 h-10 text-white" />
             </motion.div>
           </motion.div>
 
           {/* Content Side */}
           <motion.div
             style={{ y: textY, opacity }}
-            className={`space-y-8 ${!isEven ? 'lg:col-start-1 lg:row-start-1' : ''}`}
+            className={`space-y-6 ${!isEven ? 'lg:col-start-1 lg:row-start-1' : ''}`}
           >
             <motion.div
               initial={{ opacity: 0, x: isEven ? -50 : 50 }}
@@ -167,22 +167,22 @@ const ParallaxScene = ({ feature, index }) => {
               className="space-y-6"
             >
               {/* Number badge */}
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#745CB4]/10 border border-[#745CB4]/30">
-                <span className="text-2xl font-bold text-[#745CB4]">0{index + 1}</span>
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#745CB4]/10 border border-[#745CB4]/30">
+                <span className="text-xl font-bold text-[#745CB4]">0{index + 1}</span>
               </div>
 
               {/* Title */}
-              <h3 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
+              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
                 {feature.title}
               </h3>
 
               {/* Description */}
-              <p className="text-lg sm:text-xl text-gray-400 leading-relaxed max-w-xl">
+              <p className="text-base sm:text-lg text-gray-400 leading-relaxed max-w-xl">
                 {feature.description}
               </p>
 
               {/* Feature List */}
-              <ul className="space-y-4 pt-4">
+              <ul className="space-y-3 pt-3">
                 {feature.features.map((item, i) => (
                   <motion.li
                     key={i}
@@ -193,7 +193,7 @@ const ParallaxScene = ({ feature, index }) => {
                     className="flex items-start gap-4 text-gray-300"
                   >
                     <span className="mt-2 w-2 h-2 rounded-full bg-linear-to-r from-[#745CB4] to-[#C1B6FD] shrink-0" />
-                    <span className="text-lg">{item}</span>
+                    <span className="text-base">{item}</span>
                   </motion.li>
                 ))}
               </ul>
@@ -216,19 +216,19 @@ const ScrollytellingScenes = ({ features }) => {
         return (
           <div 
             key={feature.id}
-            className="relative min-h-screen flex items-center justify-center py-32 px-6"
+            className="relative min-h-[70vh] flex items-center justify-center py-20 px-6"
           >
             <div className="max-w-[1400px] mx-auto w-full">
               <div className={`grid lg:grid-cols-2 gap-16 items-center ${!isEven ? 'lg:grid-flow-dense' : ''}`}>
                 {/* Image Side */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: 0.8 }}
-                  className={`relative ${!isEven ? 'lg:col-start-2' : ''}`}
-                >
-                  <div className="relative aspect-4/3 rounded-3xl overflow-hidden backdrop-blur-md bg-white/5 border border-white/10">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true, amount: 0.3 }}
+                    transition={{ duration: 0.8 }}
+                    className={`relative max-w-[520px] ${!isEven ? 'lg:col-start-2' : ''}`}
+                  >
+                    <div className="relative aspect-4/3 rounded-3xl overflow-hidden backdrop-blur-md bg-white/5 border border-white/10">
                     {/* Feature image */}
                     <img src={feature.image} alt={feature.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover z-10" />
                     
@@ -242,9 +242,9 @@ const ScrollytellingScenes = ({ features }) => {
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.3, duration: 0.5 }}
-                    className="absolute -bottom-6 -right-6 w-24 h-24 rounded-2xl bg-linear-to-br from-[#745CB4] to-[#5D459D] flex items-center justify-center shadow-[0_0_60px_rgba(116,92,180,0.6)] z-30"
+                    className="absolute -bottom-4 -right-4 w-20 h-20 rounded-2xl bg-linear-to-br from-[#745CB4] to-[#5D459D] flex items-center justify-center shadow-[0_0_40px_rgba(116,92,180,0.5)] z-30"
                   >
-                    <Icon className="w-12 h-12 text-white" />
+                    <Icon className="w-10 h-10 text-white" />
                   </motion.div>
                 </motion.div>
 
@@ -258,22 +258,22 @@ const ScrollytellingScenes = ({ features }) => {
                 >
                   <div className="space-y-6">
                     {/* Number badge */}
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#745CB4]/10 border border-[#745CB4]/30">
-                      <span className="text-2xl font-bold text-[#745CB4]">0{index + 3}</span>
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#745CB4]/10 border border-[#745CB4]/30">
+                      <span className="text-xl font-bold text-[#745CB4]">0{index + 3}</span>
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
+                    <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
                       {feature.title}
                     </h3>
 
                     {/* Description */}
-                    <p className="text-lg sm:text-xl text-gray-400 leading-relaxed max-w-xl">
+                    <p className="text-base sm:text-lg text-gray-400 leading-relaxed max-w-xl">
                       {feature.description}
                     </p>
 
                     {/* Feature List */}
-                    <ul className="space-y-4 pt-4">
+                    <ul className="space-y-3 pt-3">
                       {feature.features && feature.features.map((item, i) => (
                         <motion.li
                           key={i}

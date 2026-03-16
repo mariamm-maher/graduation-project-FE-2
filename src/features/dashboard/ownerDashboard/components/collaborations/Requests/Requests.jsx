@@ -1,7 +1,7 @@
 import { Search, Send, X, Check, Clock, User, MessageSquare } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useCollaborationStore from '../../../../../../stores/collaborationStore';
+import useCollaborationRequestsStore from '../../../../../../stores/CollaborationRequestsStore';
 import { toast } from 'react-toastify';
 
 function Requests() {
@@ -13,17 +13,17 @@ function Requests() {
   
   const navigate = useNavigate();
 
-  const { sentRequests, getSentRequests, isSentRequestsLoading, sentRequestsError, respondToRequest } = useCollaborationStore();
+  const { sentRequests, getMySentRequests, isLoading, error, respondToRequest, cancelRequest } = useCollaborationRequestsStore();
 
   useEffect(() => {
-    getSentRequests({ page: 1, limit: 10 });
-  }, [getSentRequests]);
+    getMySentRequests({ page: 1, limit: 10 });
+  }, [getMySentRequests]);
 
   useEffect(() => {
-    if (sentRequestsError) {
-      toast.error(sentRequestsError);
+    if (error) {
+      toast.error(error);
     }
-  }, [sentRequestsError]);
+  }, [error]);
 
   const filteredRequests = (sentRequests || []).filter(request => {
     const matchesSearch = searchQuery === '' ||
@@ -84,6 +84,11 @@ function Requests() {
     if (res?.success) toast.success('Request rejected');
   };
 
+  const handleCancel = async (requestId) => {
+    const res = await cancelRequest(requestId);
+    if (res?.success) toast.success('Request cancelled successfully');
+  };
+
   const openNegotiate = (request) => {
     setNegotiationOpenId(request.id);
     setNegotiationBudget(request.counterPrice?.toString() || request.proposedBudget?.toString() || '');
@@ -108,7 +113,7 @@ function Requests() {
     }
   };
 
-  if (isSentRequestsLoading) {
+  if (isLoading) {
     return <div>Loading sent requests...</div>;
   }
 
@@ -263,11 +268,17 @@ function Requests() {
               {/* Actions */}
               {(request.status === 'pending' || request.status === 'negotiating') ? (
                 request.lastCounteredByRole === 'owner' || (!request.lastCounteredByRole && request.status === 'pending') ? (
-                  <div className="p-4 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center">
+                  <div className="p-4 bg-white/5 rounded-xl border border-white/10 flex items-center justify-between">
                     <p className="text-gray-400 text-sm font-medium flex items-center gap-2">
                       <Clock className="w-4 h-4" />
                       Waiting for Influencer's response...
                     </p>
+                    <button
+                      onClick={() => handleCancel(request.id)}
+                      className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 rounded-lg font-medium transition-all"
+                    >
+                      Cancel Request
+                    </button>
                   </div>
                 ) : (
                   <div className="space-y-3">

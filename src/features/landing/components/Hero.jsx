@@ -6,7 +6,7 @@ const Hero = () => {
 
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-linear-to-b from-[#1a1a1a] via-[#252525]/50 to-[#1a1a1a] pt-20">
+    <section className="relative min-h-screen overflow-hidden bg-linear-to-b from-[#1a1a1a] via-[#252525]/50 to-[#1a1a1a] pt-12">
       {/* Animated Background Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -46,13 +46,13 @@ const Hero = () => {
       </div>
 
       <div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 relative z-10">
-        <div className="grid lg:grid-cols-[1.3fr_0.7fr] gap-12 items-center min-h-[90vh] py-12">
+        <div className="grid lg:grid-cols-[1.3fr_0.7fr] gap-8 items-center min-h-[70vh] py-8">
           {/* Left Content */}
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="space-y-8"
+            className="space-y-5"
           >
          
 
@@ -62,7 +62,7 @@ const Hero = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
-                className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold leading-tight"
+                className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-tight"
               >
                 <span className="block text-white">Transform Your</span>
                 <span className="block text-transparent bg-clip-text bg-linear-to-r from-[#745CB4] via-[#5D459D] to-[#C1B6FD]">
@@ -75,10 +75,52 @@ const Hero = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
-                className="text-lg sm:text-xl text-gray-400 max-w-2xl leading-relaxed"
+                className="text-sm sm:text-base text-gray-400 max-w-2xl leading-relaxed"
               >
                  automate your social marketing. Focus on growing your brand.
               </motion.p>
+              {/* Catchy feature badges */}
+              <div className="mt-6 flex flex-wrap gap-3">
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7, duration: 0.5 }}
+                  className="inline-flex items-center gap-3 bg-white/5 border border-white/10 rounded-full px-3 py-2 text-sm"
+                >
+                  <BarChart3 className="w-4 h-4 text-[#C1B6FD]" />
+                  <span className="text-gray-200">Collaboration with influencers</span>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.85, duration: 0.5 }}
+                  className="inline-flex items-center gap-3 bg-white/5 border border-white/10 rounded-full px-3 py-2 text-sm"
+                >
+                  <Target className="w-4 h-4 text-[#C1B6FD]" />
+                  <span className="text-gray-200">Real-time communication</span>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.0, duration: 0.5 }}
+                  className="inline-flex items-center gap-3 bg-white/5 border border-white/10 rounded-full px-3 py-2 text-sm"
+                >
+                  <Smartphone className="w-4 h-4 text-[#C1B6FD]" />
+                  <span className="text-gray-200">Campaign planner & scheduling</span>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.15, duration: 0.5 }}
+                  className="inline-flex items-center gap-3 bg-white/5 border border-white/10 rounded-full px-3 py-2 text-sm"
+                >
+                  <Zap className="w-4 h-4 text-[#C1B6FD]" />
+                  <span className="text-gray-200">Analytics & ROI insights</span>
+                </motion.div>
+              </div>
             </div>
 
          

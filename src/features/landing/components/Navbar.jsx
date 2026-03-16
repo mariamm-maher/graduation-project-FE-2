@@ -43,7 +43,7 @@ function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -55,7 +55,7 @@ function Navbar() {
               <motion.div
                 whileHover={{ scale: 1.1 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
-                className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center shadow-lg shadow-purple-500/30"
+                className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center shadow-lg shadow-purple-500/30"
               >
                 <img 
                   src={logoGif} 
@@ -75,7 +75,7 @@ function Navbar() {
                 }}
               />
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-purple-300 via-purple-200 to-indigo-300 bg-clip-text text-transparent">
+            <span className="text-lg font-bold bg-gradient-to-r from-purple-300 via-purple-200 to-indigo-300 bg-clip-text text-transparent">
               AdSphere
             </span>
           </motion.div>
@@ -98,7 +98,7 @@ function Navbar() {
             </motion.button>
 
             {/* Create Campaign with AI */}
-            <motion.button
+            {/* <motion.button
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
@@ -114,7 +114,7 @@ function Navbar() {
                 </svg>
                 <span>Create Campaign with AI</span>
               </span>
-            </motion.button>
+            </motion.button> */}
 
             {/* Sign In Button */}
             <motion.button

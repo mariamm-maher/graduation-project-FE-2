@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, DollarSign, MessageSquare, Briefcase, Calendar, Loader, Send } from 'lucide-react';
 import { toast } from 'react-toastify';
-import useOwnerStore from '../../../../../stores/ownerStore';
+import useServiceListingsStore from '../../../../../stores/ServiceListingsStore';
+import useOffersStore from '../../../../../stores/OffersStore';
 import useCampaignStore from '../../../../../stores/campaignStore';
 
 const inputClass =
@@ -14,7 +15,8 @@ function SendOffer() {
   const { serviceId } = useParams();
   const navigate = useNavigate();
 
-  const { serviceDetail, fetchServiceDetail, sendOffer, marketplaceLoading } = useOwnerStore();
+  const { currentListing: serviceDetail, getListingById, isLoading: serviceLoading } = useServiceListingsStore();
+  const { createOffer, isLoading: offerLoading } = useOffersStore();
   const { campaigns, fetchCampaigns } = useCampaignStore();
 
   const [form, setForm] = useState({
@@ -28,9 +30,9 @@ function SendOffer() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (serviceId) fetchServiceDetail(serviceId);
+    if (serviceId) getListingById(serviceId);
     fetchCampaigns({ limit: 100 });
-  }, [serviceId, fetchServiceDetail, fetchCampaigns]);
+  }, [serviceId, getListingById, fetchCampaigns]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,7 +59,6 @@ function SendOffer() {
     setSubmitting(true);
     try {
       const payload = {
-        serviceId: Number(serviceId),
         campaignId: form.campaignId ? Number(form.campaignId) : undefined,
         offerBudget: parseFloat(form.offerBudget),
         message: form.message.trim(),
@@ -65,7 +66,7 @@ function SendOffer() {
         endDate: form.endDate || undefined,
       };
 
-      const result = await sendOffer(payload);
+      const result = await createOffer(serviceId, payload);
       if (result.success) {
         toast.success('Offer sent successfully!');
         navigate('/dashboard/owner/marketplace');

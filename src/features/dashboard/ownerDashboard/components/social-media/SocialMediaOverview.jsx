@@ -1,8 +1,16 @@
 import { Share2, Calendar, Image, TrendingUp, ArrowRight, Target, Clock, BarChart3, Users, Megaphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import useSocialMediaStore from '../../../../../stores/SocialMediaStore';
 
 function SocialMediaOverview() {
-  const connectedAccounts = 5;
+  const { accounts, getAccounts, isLoading } = useSocialMediaStore();
+  
+  useEffect(() => {
+    getAccounts();
+  }, [getAccounts]);
+
+  const connectedAccounts = accounts?.length || 0;
   const scheduledPosts = 24;
 
   return (

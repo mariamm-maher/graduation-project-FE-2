@@ -1,8 +1,10 @@
-import { Search, Bell, MessageSquare, ChevronDown, X } from 'lucide-react';
+import { Search, Bell, MessageSquare, ChevronDown, X, Trash2, Check } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-toastify';
 import useAuthStore from '../../../../stores/authStore';
+import useNotificationsStore from '../../../../stores/NotificationsStore';
 import CreateInfluencerProfile from './createInfluncerProfile';
 
 function Header() {
@@ -11,10 +13,40 @@ function Header() {
   const [activeRole, setActiveRole] = useState('Owner');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
   const searchRef = useRef(null);
   const [showInfluencerModal, setShowInfluencerModal] = useState(false);
 
   const user = useAuthStore((s) => s.user);
+  const { notifications, unreadCount, getUnreadNotifications, getNotifications, markAsRead, markAllAsRead, deleteNotification } = useNotificationsStore();
+
+  // Fetch notifications on mount
+  useEffect(() => {
+    getNotifications();
+    getUnreadNotifications();
+  }, [getNotifications, getUnreadNotifications]);
+
+  const handleMarkAsRead = async (notificationId) => {
+    const res = await markAsRead(notificationId);
+    if (res?.success) {
+      toast.success('Marked as read');
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    const res = await markAllAsRead();
+    if (res?.success) {
+      toast.success('All notifications marked as read');
+    }
+  };
+
+  const handleDeleteNotification = async (notificationId) => {
+    const res = await deleteNotification(notificationId);
+    if (res?.success) {
+      toast.success('Notification deleted');
+    }
+  };
+
   const hasInfluencerRole = Boolean(
     user && (
       (Array.isArray(user.roles) && user.roles.some(r => String(r).toUpperCase().includes('INFLUENCER'))) ||
@@ -233,7 +265,8 @@ function Header() {
           </motion.div>
 
           {/* Notifications */}
-          <motion.button 
+          <motion.button
+            onClick={() => setShowNotificationsPanel(!showNotificationsPanel)}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.25 }}
@@ -243,8 +276,78 @@ function Header() {
           >
             <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-white" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-[#C1B6FD] rounded-full shadow-lg shadow-[#C1B6FD]/50"></span>
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold text-[10px] sm:text-xs">3</span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold text-[10px] sm:text-xs">
+                {unreadCount}
+              </span>
+            )}
           </motion.button>
+
+          {/* Notifications Panel */}
+          <AnimatePresence>
+            {showNotificationsPanel && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-16 right-0 w-96 bg-gradient-to-br from-[#1a0933] to-[#2d1b4e] border border-white/20 rounded-xl shadow-2xl z-50"
+              >
+                <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                  <h3 className="text-white font-bold">Notifications</h3>
+                  <div className="flex gap-2">
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={handleMarkAllAsRead}
+                        className="text-xs text-[#C1B6FD] hover:text-white transition"
+                      >
+                        Mark all as read
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {notifications?.length === 0 ? (
+                    <div className="p-4 text-center text-gray-400 text-sm">No notifications</div>
+                  ) : (
+                    notifications.map((notif) => (
+                      <div
+                        key={notif._id || notif.id}
+                        className={`p-4 border-b border-white/5 hover:bg-white/5 transition ${
+                          !notif.isRead ? 'bg-white/10' : ''
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <p className="text-sm text-white font-medium">{notif.title || notif.message}</p>
+                            <p className="text-xs text-gray-400 mt-1">{notif.description || notif.message}</p>
+                            <p className="text-xs text-gray-500 mt-2">{new Date(notif.createdAt).toLocaleString()}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            {!notif.isRead && (
+                              <button
+                                onClick={() => handleMarkAsRead(notif._id || notif.id)}
+                                title="Mark as read"
+                                className="p-1 rounded hover:bg-white/10 text-[#C1B6FD]"
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDeleteNotification(notif._id || notif.id)}
+                              title="Delete"
+                              className="p-1 rounded hover:bg-red-500/20 text-red-400"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Messages/Chat */}
           <motion.button 

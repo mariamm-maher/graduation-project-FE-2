@@ -1,82 +1,30 @@
-import { Search, FileText, Calendar, DollarSign, AlertCircle, Eye } from 'lucide-react';
-import { useState } from 'react';
+import { Search, FileText, Calendar, DollarSign, AlertCircle, Eye, Edit2, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import useCollaborationContractsStore from '../../../../../../stores/CollaborationContractsStore';
 
 function Contracts() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const navigate = useNavigate();
+  const { contracts = [], getContractByCollaboration, updateContract, isLoading } = useCollaborationContractsStore();
 
-  // Mock data - CollaborationContract entity from ERD
-  const contracts = [
-    {
-      id: 1,
-      collaborationRequestId: 3,
-      collaborationId: 1,
-      campaignName: 'Summer Fashion Launch',
-      influencerName: 'Sarah Johnson',
-      budget: 5000,
-      startDate: '2026-01-15',
-      endDate: '2026-03-15',
-      status: 'active',
-      createdAt: '2026-01-12T14:30:00',
-      updatedAt: '2026-01-15T09:00:00'
-    },
-    {
-      id: 2,
-      collaborationRequestId: 4,
-      collaborationId: 2,
-      campaignName: 'Holiday Collection 2024',
-      influencerName: 'Mike Chen',
-      budget: 8000,
-      startDate: '2025-11-01',
-      endDate: '2025-12-31',
-      status: 'completed',
-      createdAt: '2025-10-28T10:15:00',
-      updatedAt: '2026-01-05T16:20:00'
-    },
-    {
-      id: 3,
-      collaborationRequestId: 5,
-      collaborationId: null,
-      campaignName: 'Tech Product Launch Q1',
-      influencerName: 'Rachel Green',
-      budget: 8500,
-      startDate: '2026-02-01',
-      endDate: '2026-04-01',
-      status: 'draft',
-      createdAt: '2026-01-26T11:00:00',
-      updatedAt: '2026-01-26T11:00:00'
-    },
-    {
-      id: 4,
-      collaborationRequestId: 6,
-      collaborationId: 4,
-      campaignName: 'Spring Wellness Campaign',
-      influencerName: 'Lisa Anderson',
-      budget: 3000,
-      startDate: '2026-03-01',
-      endDate: '2026-05-01',
-      status: 'terminated',
-      createdAt: '2026-02-10T09:30:00',
-      updatedAt: '2026-02-15T14:45:00'
-    },
-    {
-      id: 5,
-      collaborationRequestId: 7,
-      collaborationId: 5,
-      campaignName: 'Tech Product Launch Q1',
-      influencerName: 'Alex Rivera',
-      budget: 7500,
-      startDate: '2026-01-20',
-      endDate: '2026-04-20',
-      status: 'active',
-      createdAt: '2026-01-17T13:15:00',
-      updatedAt: '2026-01-20T08:30:00'
+  const handleEditContract = (contract) => {
+    navigate(`/dashboard/owner/contracts/${contract._id || contract.id}/edit`, { state: { contract } });
+  };
+
+  const handleDeleteContract = async (contractId) => {
+    if (!window.confirm('Are you sure you want to delete this contract?')) return;
+    const res = await updateContract(contractId, { status: 'terminated' });
+    if (res?.success) {
+      toast.success('Contract terminated successfully');
+    } else {
+      toast.error(res?.error || 'Failed to terminate contract');
     }
-  ];
+  };
 
-  const filteredContracts = contracts.filter(contract => {
+  const filteredContracts = (contracts || []).filter(contract => {
     const matchesSearch = searchQuery === '' ||
       contract.campaignName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contract.influencerName?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -267,18 +215,36 @@ function Contracts() {
                         {getStatusBadge(contract.status)}
                       </td>
                       <td className="py-4 px-6 text-right">
-                        <button
-                          onClick={() => {
-                            if (contract.collaborationId) {
-                              navigate(`/dashboard/owner/collaborations/${contract.collaborationId}/workspace`);
-                            }
-                          }}
-                          className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-medium transition-all inline-flex items-center gap-2"
-                          disabled={!contract.collaborationId}
-                        >
-                          <Eye className="w-4 h-4" />
-                          View
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => {
+                              if (contract.collaborationId) {
+                                navigate(`/dashboard/owner/collaborations/${contract.collaborationId}/workspace`);
+                              }
+                            }}
+                            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-medium transition-all inline-flex items-center gap-2"
+                            disabled={!contract.collaborationId}
+                          >
+                            <Eye className="w-4 h-4" />
+                            View
+                          </button>
+                          {contract.status === 'draft' && (
+                            <>
+                              <button
+                                onClick={() => handleEditContract(contract)}
+                                className="px-3 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg font-medium transition-all inline-flex items-center gap-2"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteContract(contract._id || contract.id)}
+                                className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg font-medium transition-all inline-flex items-center gap-2"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

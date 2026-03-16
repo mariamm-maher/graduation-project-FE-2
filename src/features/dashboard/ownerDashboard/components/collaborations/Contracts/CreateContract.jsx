@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FileText, Save, Send, Calendar, DollarSign, List, ArrowLeft, Loader2, Info } from 'lucide-react';
 import useCollaborationStore from '../../../../../../stores/collaborationStore';
+import useCollaborationContractsStore from '../../../../../../stores/CollaborationContractsStore';
 import { toast } from 'react-toastify';
 
 function CreateContract() {
@@ -9,7 +10,8 @@ function CreateContract() {
   const navigate = useNavigate();
   
   // Replace with real getter from store
-  const { ownerCollaborations, isOwnerCollaborationsLoading, getMyOwnerCollaborations, createContract } = useCollaborationStore();
+  const { ownerCollaborations, isOwnerCollaborationsLoading, getMyOwnerCollaborations } = useCollaborationStore();
+  const { createContract, isLoading: contractLoading } = useCollaborationContractsStore();
 
   const [isLoading, setIsLoading] = useState(false);
   

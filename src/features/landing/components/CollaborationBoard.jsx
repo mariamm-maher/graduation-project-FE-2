@@ -65,28 +65,11 @@ const kanbanColumns = [
 
 const CollaborationBoard = () => {
   return (
-    <section id="collaboration" className="py-32 bg-linear-to-b from-[#1a1a1a] via-[#252525] to-black relative overflow-hidden">
+    <section id="collaboration" className="py-20 bg-linear-to-b from-[#1a1a1a] via-[#252525] to-black relative overflow-hidden">
       {/* Animated background orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          className="absolute w-96 h-96 rounded-full blur-[120px] opacity-20"
-          style={{
-            background: 'radial-gradient(circle, rgba(116,92,180,0.4) 0%, transparent 70%)',
-            top: '10%',
-            right: '10%',
-          }}
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.2, 0.3, 0.2],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-        />
-        <motion.div
-          className="absolute w-96 h-96 rounded-full blur-[120px] opacity-20"
+          className="absolute w-64 h-64 rounded-full blur-[120px] opacity-20"
           style={{
             background: 'radial-gradient(circle, rgba(193,182,253,0.4) 0%, transparent 70%)',
             bottom: '10%',
@@ -110,7 +93,7 @@ const CollaborationBoard = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="text-center mb-20"
+          className="text-center mb-12"
         >
           <motion.div
             initial={{ scale: 0 }}
@@ -123,16 +106,16 @@ const CollaborationBoard = () => {
             <span className="text-[#745CB4] font-semibold">Collaboration Hub</span>
           </motion.div>
           
-          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-[0_2px_30px_rgba(116,92,180,0.5)]">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-4 drop-shadow-[0_2px_30px_rgba(116,92,180,0.5)]">
             Influencer Collaboration Board
           </h2>
-          <p className="text-xl sm:text-2xl text-gray-400 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-400 max-w-3xl mx-auto">
             Seamlessly manage partnerships, contracts, and campaigns
           </p>
         </motion.div>
 
         {/* Kanban Board */}
-        <div className="grid md:grid-cols-3 gap-6 mb-16">
+        <div className="grid md:grid-cols-3 gap-4 mb-12">
           {kanbanColumns.map((column, index) => (
             <KanbanColumn key={column.id} column={column} index={index} />
           ))}
@@ -149,18 +132,18 @@ const KanbanColumn = ({ column, index }) => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.2, duration: 0.6 }}
-      className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 space-y-5 hover:border-purple-400/40 transition-colors duration-300"
+      className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 space-y-4 hover:border-purple-400/40 transition-colors duration-300"
     >
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-linear-to-br from-purple-400/20 to-purple-300/20 flex items-center justify-center">
-            {column.title.includes('Pending') && <Clock className="w-5 h-5 text-purple-300" />}
-            {column.title.includes('Active') && <TrendingUp className="w-5 h-5 text-purple-300" />}
-            {column.title.includes('Completed') && <CheckCircle2 className="w-5 h-5 text-purple-300" />}
+          <div className="w-8 h-8 rounded-lg bg-linear-to-br from-purple-400/20 to-purple-300/20 flex items-center justify-center">
+            {column.title.includes('Pending') && <Clock className="w-4 h-4 text-purple-300" />}
+            {column.title.includes('Active') && <TrendingUp className="w-4 h-4 text-purple-300" />}
+            {column.title.includes('Completed') && <CheckCircle2 className="w-4 h-4 text-purple-300" />}
           </div>
-          <h4 className="font-bold text-white text-lg">{column.title}</h4>
+          <h4 className="font-bold text-white text-base">{column.title}</h4>
         </div>
-        <span className="px-3 py-1.5 rounded-full bg-linear-to-r from-purple-400/20 to-purple-300/20 text-purple-300 text-sm font-semibold">
+        <span className="px-2.5 py-1 rounded-full bg-linear-to-r from-purple-400/20 to-purple-300/20 text-purple-300 text-xs font-semibold">
           {column.count}
         </span>
       </div>
@@ -173,7 +156,7 @@ const KanbanColumn = ({ column, index }) => {
           viewport={{ once: true }}
           transition={{ delay: index * 0.2 + i * 0.1 }}
           whileHover={{ y: -8, scale: 1.02 }}
-          className="group relative bg-linear-to-br from-gray-800/50 to-gray-900/50 rounded-xl p-5 border border-white/5 hover:border-purple-400/40 transition-all duration-300 cursor-pointer min-h-[180px] flex flex-col"
+          className="group relative bg-linear-to-br from-gray-800/50 to-gray-900/50 rounded-xl p-4 border border-white/5 hover:border-purple-400/40 transition-all duration-300 cursor-pointer min-h-40 flex flex-col"
         >
           {/* Gradient overlay on hover */}
           <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-linear-to-br from-purple-400/5 to-purple-300/5" />
@@ -204,7 +187,7 @@ const KanbanColumn = ({ column, index }) => {
             </div>
 
             {/* Title */}
-            <h5 className="text-base font-bold text-white mb-3 group-hover:text-purple-300 transition-colors duration-300 line-clamp-2">
+            <h5 className="text-sm font-bold text-white mb-2 group-hover:text-purple-300 transition-colors duration-300 line-clamp-2">
               {card.title}
             </h5>
 

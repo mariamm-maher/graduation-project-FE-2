@@ -29,11 +29,11 @@ const plannerFeatures = [
 
 const CampaignPlanner = () => {
   return (
-    <section id="campaign-planner" className="py-24 bg-[#1a1a1a] relative overflow-hidden">
+    <section id="campaign-planner" className="py-16 bg-[#1a1a1a] relative overflow-hidden">
       {/* Animated Background Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          className="absolute w-96 h-96 rounded-full blur-[120px] opacity-30"
+          className="absolute w-64 h-64 rounded-full blur-[120px] opacity-30"
           style={{
             background: 'radial-gradient(circle, rgba(116,92,180,0.4) 0%, transparent 70%)',
             top: '20%',
@@ -50,7 +50,7 @@ const CampaignPlanner = () => {
           }}
         />
         <motion.div
-          className="absolute w-96 h-96 rounded-full blur-[120px] opacity-30"
+          className="absolute w-64 h-64 rounded-full blur-[120px] opacity-30"
           style={{
             background: 'radial-gradient(circle, rgba(193,182,253,0.35) 0%, transparent 70%)',
             bottom: '10%',
@@ -70,7 +70,7 @@ const CampaignPlanner = () => {
 
       {/* Decorative Waves */}
       <div className="absolute top-0 left-0 right-0 pointer-events-none opacity-30 z-10">
-        <svg viewBox="0 0 1200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-32">
+        <svg viewBox="0 0 1200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-20">
           <motion.path
             d="M0,100 Q300,50 600,100 T1200,100 L1200,0 L0,0 Z"
             fill="rgba(116,92,180,0.25)"
@@ -87,7 +87,7 @@ const CampaignPlanner = () => {
       </div>
 
       <div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-10 items-center">
           {/* Visual */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -97,7 +97,7 @@ const CampaignPlanner = () => {
             className="order-2 lg:order-1"
           >
             <PlannerGraphic />
-          </motion.div>
+            </motion.div>
 
           {/* Content */}
           <motion.div
@@ -105,7 +105,7 @@ const CampaignPlanner = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="order-1 lg:order-2 space-y-8"
+            className="order-1 lg:order-2 space-y-6"
           >
            
 
@@ -118,7 +118,7 @@ const CampaignPlanner = () => {
               posting schedules, and budget plans tailored to your goals.
             </p>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               {plannerFeatures.map((feature, index) => {
                 const Icon = iconMap[feature.icon]
                 return (
@@ -129,10 +129,10 @@ const CampaignPlanner = () => {
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.1, duration: 0.6 }}
                     whileHover={{ x: 8, transition: { duration: 0.3 } }}
-                    className="flex gap-4 p-5 rounded-xl backdrop-blur-sm bg-white/5 border border-white/10 hover:bg-[#745CB4]/5 transition-all duration-300 group"
+                    className="flex gap-6 p-6 rounded-xl backdrop-blur-sm bg-white/5 border border-white/10 hover:bg-[#745CB4]/5 transition-all duration-300 group"
                   >
                     <motion.div
-                      className="shrink-0 w-12 h-12 rounded-lg bg-linear-to-r from-[#745CB4] to-[#5D459D] flex items-center justify-center shadow-lg"
+                      className="shrink-0 w-14 h-14 rounded-lg bg-linear-to-r from-[#745CB4] to-[#5D459D] flex items-center justify-center shadow-lg"
                       whileHover={{ rotate: 360, scale: 1.1 }}
                       transition={{ duration: 0.6 }}
                     >
@@ -149,14 +149,7 @@ const CampaignPlanner = () => {
               })}
             </div>
 
-            <motion.button
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-8 py-4 rounded-xl bg-linear-to-r from-[#745CB4] to-[#5D459D] text-white font-semibold shadow-[0_4px_16px_rgba(116,92,180,0.5)] hover:shadow-[0_8px_28px_rgba(116,92,180,0.7)] transition-all duration-300 flex items-center gap-2"
-            >
-              <Sparkles className="w-5 h-5" />
-              Generate Campaign Plan
-            </motion.button>
+      
           </motion.div>
         </div>
       </div>
@@ -166,10 +159,10 @@ const CampaignPlanner = () => {
 
 const PlannerGraphic = () => {
   return (
-    <div className="relative">
+        <div className="relative">
       <motion.svg
         viewBox="0 0 400 500"
-        className="w-full h-auto max-w-md mx-auto text-[#745CB4] drop-shadow-[0_0_30px_rgba(116,92,180,0.3)]"
+        className="w-full h-auto max-w-sm mx-auto text-[#745CB4] drop-shadow-[0_0_30px_rgba(116,92,180,0.3)]"
         animate={{ y: [0, -15, 0] }}
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
       >

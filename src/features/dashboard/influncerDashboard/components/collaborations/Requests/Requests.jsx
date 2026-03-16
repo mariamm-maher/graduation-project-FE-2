@@ -1,6 +1,6 @@
 import { Search, X, Check, Clock, User, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import useInfluncerStore from '../../../../../../stores/influncerStore';
+import useCollaborationRequestsStore from '../../../../../../stores/CollaborationRequestsStore';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -12,23 +12,18 @@ function Requests() {
   const [negotiationBudget, setNegotiationBudget] = useState('');
   const [negotiationMessage, setNegotiationMessage] = useState('');
 
-  const receivedRequests = useInfluncerStore((s) => s.receivedRequests);
-  const receivedRequestsLoading = useInfluncerStore((s) => s.receivedRequestsLoading);
-  const receivedRequestsError = useInfluncerStore((s) => s.receivedRequestsError);
-  const respondToRequest = useInfluncerStore((s) => s.respondToRequest);
-  const respondingId = useInfluncerStore((s) => s.respondingId);
-  const getReceivedRequests = useInfluncerStore((s) => s.getReceivedRequests);
+  const { receivedRequests, isLoading, error, respondToRequest, getMyReceivedRequests } = useCollaborationRequestsStore();
 
   useEffect(() => {
-    getReceivedRequests(1, 10);
-  }, [getReceivedRequests]);
+    getMyReceivedRequests({ page: 1, limit: 10 });
+  }, [getMyReceivedRequests]);
 
   useEffect(() => {
-    if (receivedRequestsError) {
-      toast.error(receivedRequestsError === 'Unauthorized' ? 'Not authenticated — please log in.' : receivedRequestsError);
+    if (error) {
+      toast.error(error === 'Unauthorized' ? 'Not authenticated — please log in.' : error);
     }
-  }, [receivedRequestsError]);
-console.log('Received requests:', receivedRequests);
+  }, [error]);
+
   const filteredRequests = (receivedRequests || []).filter(request => {
     const matchesSearch = searchQuery === '' ||
       request.campaignName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -65,7 +60,7 @@ console.log('Received requests:', receivedRequests);
     return new Date(dateString).toLocaleString();
   };
 
-  if (receivedRequestsLoading) return <div>Loading requests...</div>;
+  if (isLoading) return <div>Loading requests...</div>;
 
   const handleAccept = async (requestId) => {
     const res = await respondToRequest(requestId, { action: 'accept' });

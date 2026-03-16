@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Search, SlidersHorizontal, X, Loader, ShoppingBag, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ServiceCard from './ServiceCard';
-import useOwnerStore from '../../../../../stores/ownerStore';
+import useServiceListingsStore from '../../../../../stores/ServiceListingsStore';
 
 const CATEGORIES = ['All', 'Fashion', 'Tech', 'Beauty', 'Gaming', 'Food', 'Travel', 'Fitness', 'Lifestyle', 'Business'];
 const PLATFORMS  = ['All', 'Instagram', 'YouTube', 'TikTok', 'Twitter', 'LinkedIn'];
@@ -17,8 +17,8 @@ const SORT_OPTIONS = [
 const LIMIT = 12;
 
 function MarketplaceOverview() {
-  const { services, marketplacePagination, marketplaceLoading, marketplaceError, fetchServices } = useOwnerStore();
-  const { totalPages, totalItems } = marketplacePagination;
+  const { listings, pagination, isLoading, browseListings, searchListings, getCategories, categories, error } = useServiceListingsStore();
+  const { totalPages = 0, totalItems = 0 } = pagination || {};
 
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
@@ -41,13 +41,18 @@ function MarketplaceOverview() {
   }), [page, search, category, platform, minPrice, maxPrice, sort]);
 
   useEffect(() => {
-    fetchServices(buildParams());
-  }, [fetchServices, buildParams]);
+    getCategories();
+    browseListings(buildParams());
+  }, [browseListings, buildParams, getCategories]);
 
   const handleSearch = (e) => {
     e.preventDefault();
     setPage(1);
-    fetchServices({ ...buildParams(), page: 1 });
+    if (search.trim()) {
+      searchListings(search, { ...buildParams(), page: 1 });
+    } else {
+      browseListings({ ...buildParams(), page: 1 });
+    }
   };
 
   const clearFilters = () => {
@@ -115,16 +120,19 @@ function MarketplaceOverview() {
               <div>
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Category</p>
                 <div className="flex flex-wrap gap-2">
-                  {CATEGORIES.map(c => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => { setCategory(c); setPage(1); }}
-                      className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${category === c ? 'bg-linear-to-r from-[#C1B6FD] to-[#745CB4] text-white' : 'bg-white/5 border border-white/10 text-gray-300 hover:border-white/20 hover:text-white'}`}
-                    >
-                      {c}
-                    </button>
-                  ))}
+                  {((categories && Array.isArray(categories) ? categories : []) || CATEGORIES).map(c => {
+                    const catName = typeof c === 'string' ? c : c.name || c;
+                    return (
+                      <button
+                        key={catName}
+                        type="button"
+                        onClick={() => { setCategory(catName); setPage(1); }}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${category === catName ? 'bg-gradient-to-r from-[#C1B6FD] to-[#745CB4] text-white' : 'bg-white/5 border border-white/10 text-gray-300 hover:border-white/20 hover:text-white'}`}
+                      >
+                        {catName}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -198,22 +206,22 @@ function MarketplaceOverview() {
       </AnimatePresence>
 
       {/* Content */}
-      {marketplaceLoading ? (
+      {isLoading ? (
         <div className="flex items-center justify-center min-h-[300px]">
           <Loader className="w-10 h-10 text-[#C1B6FD] animate-spin" />
         </div>
-      ) : marketplaceError ? (
+      ) : error ? (
         <div className="flex flex-col items-center justify-center min-h-[300px] gap-4">
           <ShoppingBag className="w-12 h-12 text-gray-600" />
-          <p className="text-gray-400 text-center">{marketplaceError}</p>
+          <p className="text-gray-400 text-center">{error}</p>
           <button
-            onClick={() => fetchServices(buildParams())}
+            onClick={() => browseListings(buildParams())}
             className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm text-gray-300 hover:text-white transition-all"
           >
             <RefreshCw className="w-4 h-4" /> Retry
           </button>
         </div>
-      ) : services.length === 0 ? (
+      ) : listings.length === 0 ? (
         <div className="flex flex-col items-center justify-center min-h-[300px] gap-4">
           <ShoppingBag className="w-14 h-14 text-gray-600" />
           <p className="text-white font-semibold text-lg">No services found</p>
@@ -229,7 +237,7 @@ function MarketplaceOverview() {
           animate="visible"
           variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
         >
-          {services.map(service => (
+          {listings.map(service => (
             <motion.div
               key={service.id}
               variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}

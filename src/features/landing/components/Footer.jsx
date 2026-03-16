@@ -60,7 +60,7 @@ const Footer = () => {
       {/* Animated background orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          className="absolute w-96 h-96 rounded-full blur-[120px] opacity-10"
+          className="absolute w-64 h-64 rounded-full blur-[120px] opacity-10"
           style={{
             background: 'radial-gradient(circle, rgba(116,92,180,0.5) 0%, transparent 70%)',
             top: '-10%',
@@ -77,7 +77,7 @@ const Footer = () => {
           }}
         />
         <motion.div
-          className="absolute w-96 h-96 rounded-full blur-[120px] opacity-10"
+          className="absolute w-64 h-64 rounded-full blur-[120px] opacity-10"
           style={{
             background: 'radial-gradient(circle, rgba(193,182,253,0.5) 0%, transparent 70%)',
             bottom: '-10%',
@@ -97,7 +97,7 @@ const Footer = () => {
 
       <div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 relative z-10">
         {/* Main Footer Content */}
-        <div className="py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12">
+        <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
           {/* Brand Column */}
           <div className="lg:col-span-2">
             <motion.div

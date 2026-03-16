@@ -1,12 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import ChatSidebar from './ChatSidebar';
 import ChatWindow from './ChatWindow';
+import useChatStore from '../../../../../stores/ChatStore';
 
 export default function Messages() {
   const [selectedChat, setSelectedChat] = useState(null);
-  
-  // Mock Data
-  const conversations = [
+  const { chatRooms, getChatRooms, getMessages, sendMessage, updateMessage, deleteMessage, markRoomAsRead, messages, isLoading, isMessagesLoading } = useChatStore();
+
+  // Fetch chat rooms on mount
+  useEffect(() => {
+    getChatRooms();
+  }, [getChatRooms]);
+
+  // Fetch messages when chat is selected
+  useEffect(() => {
+    if (selectedChat) {
+      getMessages(selectedChat.id || selectedChat._id);
+      markRoomAsRead(selectedChat.id || selectedChat._id);
+    }
+  }, [selectedChat, getMessages, markRoomAsRead]);
+
+  // Use fetched chat rooms, fallback to mock data
+  const conversations = chatRooms?.length > 0 ? chatRooms : [
     {
       id: 1,
       name: 'Nike Sportswear',
@@ -45,55 +61,20 @@ export default function Messages() {
     }
   ];
 
-  // Mock messages for currently selected chat
-  const [currentMessages, setCurrentMessages] = useState([
-    {
-      id: 1,
-      sender: 'brand',
-      text: 'Hi James, welcome to the campaign! We are excited to work with you.',
-      timestamp: '2:30 PM',
-      status: 'read'
-    },
-    {
-      id: 2,
-      sender: 'me',
-      text: 'Thanks! I am really excited about this opportunity too. I have some ideas for the content.',
-      timestamp: '2:35 PM',
-      status: 'read'
-    },
-    {
-      id: 3,
-      sender: 'brand',
-      text: 'That sounds great. Would you be able to share a rough concept by Friday?',
-      timestamp: '2:40 PM',
-      status: 'read'
-    },
-    {
-      id: 4,
-      sender: 'me',
-      text: 'Absolutely! I will put together a mood board and some script ideas.',
-      timestamp: '3:00 PM',
-      status: 'read',
-      attachment: { name: 'moodboard_v1.pdf', size: '2.4 MB' }
-    },
-    {
-      id: 5,
-      sender: 'brand',
-      text: 'Great! looking forward to the draft.',
-      timestamp: '10:00 AM',
-      status: 'read'
-    }
-  ]);
+  // Use fetched messages with fallback to empty array
+  const currentMessages = messages && messages.length > 0 ? messages : [];
 
-  const handleSendMessage = (text) => {
-    const newMessage = {
-      id: Date.now(),
-      sender: 'me',
-      text,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      status: 'sent'
-    };
-    setCurrentMessages([...currentMessages, newMessage]);
+  const handleSendMessage = async (text) => {
+    if (!selectedChat) {
+      toast.error('Please select a chat first');
+      return;
+    }
+    const res = await sendMessage(selectedChat.id || selectedChat._id, { text });
+    if (res?.success) {
+      toast.success('Message sent');
+    } else {
+      toast.error(res?.error || 'Failed to send message');
+    }
   };
 
   const activeConversation = conversations.find(c => c.id === selectedChat);

@@ -4,7 +4,7 @@ import { ArrowLeft, Send, DollarSign, MessageSquare, Briefcase, X, Loader } from
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 import useCampaignStore from '../../../../../../stores/campaignStore';
-import useCollaborationStore from '../../../../../../stores/collaborationStore';
+import useCollaborationRequestsStore from '../../../../../../stores/CollaborationRequestsStore';
 
 function SendCollabRequest() {
   const { influencerId } = useParams();
@@ -12,8 +12,8 @@ function SendCollabRequest() {
 
   // Campaign Store
   const { campaigns, fetchCampaigns, isLoading: isLoadingCampaigns } = useCampaignStore();
-  // Collaboration Store
-  const sendCollaborationRequest = useCollaborationStore((s) => s.sendCollaborationRequestAlt);
+  // Collaboration Requests Store
+  const { createRequest, isLoading } = useCollaborationRequestsStore();
 
   const [formData, setFormData] = useState({
     campaignId: '',
@@ -74,10 +74,9 @@ function SendCollabRequest() {
         message: formData.message
       };
 
-      const result = await sendCollaborationRequest(payload);
+      const result = await createRequest(payload);
 
       if (result.success) {
-        console.log('Collaboration Request Sent:', payload);
         toast.success('Collaboration request sent successfully!');
         navigate(-1);
       } else {

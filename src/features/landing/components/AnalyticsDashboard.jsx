@@ -58,11 +58,11 @@ const particles = [...Array(15)].map(() => ({
 
 const AnalyticsDashboard = () => {
   return (
-    <section id="analytics" className="py-32 bg-linear-to-b from-[#252525] via-[#1a1a1a] to-black relative overflow-hidden">
+    <section id="analytics" className="py-14 bg-linear-to-b from-[#252525] via-[#1a1a1a] to-black relative overflow-hidden">
       {/* Animated Background Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          className="absolute w-[500px] h-[500px] rounded-full blur-[120px] opacity-30"
+          className="absolute w-[260px] h-[260px] rounded-full blur-[100px] opacity-30"
           style={{
             background: 'radial-gradient(circle, rgba(167,139,250,0.4) 0%, transparent 70%)',
             top: '20%',
@@ -80,7 +80,7 @@ const AnalyticsDashboard = () => {
           }}
         />
         <motion.div
-          className="absolute w-[400px] h-[400px] rounded-full blur-[100px] opacity-25"
+          className="absolute w-[220px] h-[220px] rounded-full blur-[90px] opacity-25"
           style={{
             background: 'radial-gradient(circle, rgba(196,181,253,0.35) 0%, transparent 70%)',
             top: '50%',
@@ -98,7 +98,7 @@ const AnalyticsDashboard = () => {
           }}
         />
         <motion.div
-          className="absolute w-[350px] h-[350px] rounded-full blur-[90px] opacity-20"
+          className="absolute w-[260px] h-[260px] rounded-full blur-[80px] opacity-20"
           style={{
             background: 'radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)',
             bottom: '10%',
@@ -122,7 +122,7 @@ const AnalyticsDashboard = () => {
         {particles.map((particle, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-purple-400/40 rounded-full"
+            className="absolute w-0.5 h-0.5 bg-purple-400/40 rounded-full"
             style={{
               left: `${particle.left}%`,
               top: `${particle.top}%`,
@@ -148,31 +148,31 @@ const AnalyticsDashboard = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="text-center mb-16"
+          className="text-center mb-10"
         >
           <motion.div
             initial={{ scale: 0 }}
             whileInView={{ scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r from-purple-400/10 to-purple-300/10 border border-purple-400/30 mb-6"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-linear-to-r from-purple-400/10 to-purple-300/10 border border-purple-400/30 mb-4"
           >
             <span className="relative flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-300"></span>
             </span>
-            <span className="text-purple-300 font-semibold">Real-Time Analytics</span>
+            <span className="text-purple-300 text-sm font-semibold">Real-Time Analytics</span>
           </motion.div>
 
-          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-[0_2px_30px_rgba(167,139,250,0.5)]">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-4 drop-shadow-[0_2px_30px_rgba(167,139,250,0.5)]">
             Powerful Analytics Dashboard
           </h2>
-          <p className="text-xl sm:text-2xl text-gray-400 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-400 max-w-3xl mx-auto">
             Track every metric that matters to your business
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {dashboardCards.map((card, index) => (
             <DashboardCard key={card.id} card={card} index={index} />
           ))}
@@ -189,8 +189,8 @@ const DashboardCard = ({ card, index }) => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.1, duration: 0.6 }}
-      whileHover={{ y: -8, scale: 1.02 }}
-      className="group relative p-6 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl space-y-4 hover:border-purple-400/40 hover:bg-white/8 transition-all duration-300 overflow-hidden"
+      whileHover={{ y: -6, scale: 1.01 }}
+      className="group relative p-4 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl space-y-3 hover:border-purple-400/40 hover:bg-white/8 transition-all duration-300 overflow-hidden"
     >
       {/* Animated gradient overlay */}
       <motion.div
@@ -206,8 +206,8 @@ const DashboardCard = ({ card, index }) => {
       />
 
       <div className="relative z-10 flex justify-between items-start">
-        <h4 className="font-semibold text-white group-hover:text-purple-300 transition-colors duration-300">{card.title}</h4>
-        <span className="text-2xl font-bold text-purple-300">{card.value}</span>
+        <h4 className="text-sm font-semibold text-white group-hover:text-purple-300 transition-colors duration-300">{card.title}</h4>
+        <span className="text-xl font-bold text-purple-300">{card.value}</span>
       </div>
 
       {card.type === 'line' && <LineChart />}
@@ -218,8 +218,8 @@ const DashboardCard = ({ card, index }) => {
 
       {card.trend && (
         <div className="relative z-10">
-          <p className="text-sm text-gray-400 flex items-center gap-2">
-            <span className="inline-block w-2 h-2 bg-purple-400 rounded-full animate-pulse"></span>
+          <p className="text-xs text-gray-400 flex items-center gap-1.5">
+            <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse"></span>
             {card.trend}
           </p>
         </div>
@@ -229,7 +229,7 @@ const DashboardCard = ({ card, index }) => {
 }
 
 const LineChart = () => (
-  <svg viewBox="0 0 200 80" className="w-full h-16 relative z-10">
+  <svg viewBox="0 0 200 80" className="w-full h-12 relative z-10">
     <motion.polyline
       points="10,60 40,40 70,50 100,20 130,30 160,10 190,15"
       fill="none"
@@ -248,7 +248,7 @@ const LineChart = () => (
 )
 
 const BarChart = () => (
-  <svg viewBox="0 0 200 80" className="w-full h-16 relative z-10">
+  <svg viewBox="0 0 200 80" className="w-full h-12 relative z-10">
     {[10, 40, 70, 100, 130, 160].map((x, i) => {
       const heights = [30, 50, 60, 70, 55, 40]
       return (
@@ -270,7 +270,7 @@ const BarChart = () => (
 )
 
 const BubbleChart = () => (
-  <svg viewBox="0 0 200 80" className="w-full h-16 relative z-10">
+  <svg viewBox="0 0 200 80" className="w-full h-12 relative z-10">
     {[[30, 50, 8], [60, 40, 10], [90, 30, 12], [120, 25, 14], [150, 35, 12], [180, 45, 10]].map(([cx, cy, r], i) => (
       <motion.circle
         key={i}
@@ -288,14 +288,14 @@ const BubbleChart = () => (
 )
 
 const HorizontalBars = ({ bars }) => (
-  <div className="space-y-3 relative z-10">
+  <div className="space-y-2 relative z-10">
     {bars.map((bar, i) => (
       <div key={i}>
         <div className="flex justify-between text-xs mb-1">
           <span className="text-gray-400">{bar.label}</span>
           <span className="text-purple-300 font-semibold">{bar.value}%</span>
         </div>
-        <div className="h-2 bg-gray-800/50 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-gray-800/50 rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-linear-to-r from-purple-400 to-purple-300 shadow-[0_0_8px_rgba(167,139,250,0.5)]"
             initial={{ width: 0 }}
@@ -310,7 +310,7 @@ const HorizontalBars = ({ bars }) => (
 )
 
 const GaugeChart = () => (
-  <svg viewBox="0 0 180 100" className="w-full h-20 relative z-10">
+  <svg viewBox="0 0 180 100" className="w-full h-16 relative z-10">
     <path
       d="M 20 80 A 60 60 0 0 1 160 80"
       fill="none"

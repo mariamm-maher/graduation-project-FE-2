@@ -1,7 +1,26 @@
+import { useEffect, useState } from 'react';
 import { BarChart3, TrendingUp, Users, Eye, ArrowRight, DollarSign, Target, Zap, Download, Calendar, TrendingDown, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import useAnalyticsStore from '../../../../../stores/AnalyticsStore';
 
 function AnalyticsOverview() {
+  const { getAnalytics, getCampaignAnalytics, getEarningsAnalytics, getCollaborationAnalytics, getROIAnalytics, analytics, campaignAnalytics, earningsAnalytics, collaborationAnalytics, roiAnalytics, isLoading } = useAnalyticsStore();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAllAnalytics = async () => {
+      setLoading(true);
+      await Promise.all([
+        getAnalytics(),
+        getCampaignAnalytics('all'),
+        getEarningsAnalytics(),
+        getCollaborationAnalytics(),
+        getROIAnalytics()
+      ]);
+      setLoading(false);
+    };
+    fetchAllAnalytics();
+  }, [getAnalytics, getCampaignAnalytics, getEarningsAnalytics, getCollaborationAnalytics, getROIAnalytics]);
   return (
     <div className="space-y-6 lg:space-y-8">
       {/* Header */}

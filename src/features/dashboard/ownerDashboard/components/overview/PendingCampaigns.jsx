@@ -1,30 +1,19 @@
 import { Sparkles, Clock, Zap } from 'lucide-react';
 
-const pendingCampaigns = [
-  { 
-    name: 'Holiday Gift Guide Campaign', 
-    brand: 'LuxeGoods',
-    status: 'AI Generating',
-    estimatedTime: '2 min',
-    icon: <Sparkles className="w-5 h-5" />
-  },
-  { 
-    name: 'Eco-Friendly Product Launch', 
-    brand: 'GreenEarth',
-    status: 'Approval Pending',
-    estimatedTime: '1 day',
-    icon: <Clock className="w-5 h-5" />
-  },
-  { 
-    name: 'Gaming Tournament Sponsorship', 
-    brand: 'GamersHub',
-    status: 'Ready to Launch',
-    estimatedTime: 'Now',
-    icon: <Zap className="w-5 h-5" />
-  }
-];
+function getStatusIcon(status = '') {
+  const normalized = status.toLowerCase();
 
-function PendingCampaigns() {
+  if (normalized.includes('approval') || normalized.includes('pending')) {
+    return <Clock className="w-5 h-5" />;
+  }
+  if (normalized.includes('ready') || normalized.includes('launch')) {
+    return <Zap className="w-5 h-5" />;
+  }
+
+  return <Sparkles className="w-5 h-5" />;
+}
+
+function PendingCampaigns({ campaigns = [], loading }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -35,14 +24,26 @@ function PendingCampaigns() {
       </div>
       
       <div className="space-y-3">
-        {pendingCampaigns.map((campaign, idx) => (
+        {loading && (
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 text-xs text-gray-400">
+            Loading pending campaigns...
+          </div>
+        )}
+
+        {!loading && campaigns.length === 0 && (
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 text-sm text-gray-300">
+            No pending campaigns right now.
+          </div>
+        )}
+
+        {campaigns.map((campaign) => (
           <div 
-            key={idx} 
+            key={campaign.id} 
             className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:border-purple-400/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 group cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-lg bg-linear-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                {campaign.icon}
+                {getStatusIcon(campaign.status)}
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-white text-sm mb-0.5 truncate group-hover:text-[#C1B6FD] transition-colors">
@@ -53,10 +54,10 @@ function PendingCampaigns() {
             </div>
             
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
-              <span className="text-xs text-gray-400">{campaign.status}</span>
+              <span className="text-xs text-gray-400">{campaign.status || 'Pending'}</span>
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#C1B6FD] animate-pulse"></div>
-                <span className="text-xs font-semibold text-[#C1B6FD]">{campaign.estimatedTime}</span>
+                <span className="text-xs font-semibold text-[#C1B6FD]">{campaign.estimatedTime || 'TBD'}</span>
               </div>
             </div>
           </div>

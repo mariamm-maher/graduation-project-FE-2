@@ -1,15 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { 
-  Megaphone, 
-  Users, 
-  DollarSign, 
-  TrendingUp, 
-  ArrowRight, 
-  Target, 
-  Play, 
-  Clock,
   Search,
-  Filter,
   MessageSquare,
   Bookmark,
   BookmarkCheck,
@@ -17,113 +8,61 @@ import {
   Send
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import useInfluncerStore from '../../../../../stores/influncerStore';
 
 function CampaignsOverview() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [savedCampaigns, setSavedCampaigns] = useState([2, 4]); // IDs of saved campaigns
+  const [savedCampaigns, setSavedCampaigns] = useState([]);
   const [filter, setFilter] = useState('all'); // all, fashion, tech, beauty
 
-  // Available campaigns to explore (from owners)
-  const availableCampaigns = [
-    {
-      id: 1,
-      name: 'Spring Fashion Collection 2025',
-      brand: 'Fashion Brand Co.',
-      owner: 'John Smith',
-      ownerEmail: 'john@fashionbrand.com',
-      category: 'Fashion',
-      budget: '$15,000',
-      paymentPerPost: '$2,500',
-      deadline: '2025-03-15',
-      platforms: ['Instagram', 'TikTok'],
-      requirements: '10K+ followers, Fashion niche',
-      description: 'Looking for fashion influencers to promote our new spring collection. Content should be lifestyle-focused with high-quality visuals.',
-      deliverables: 4,
-      expectedReach: '500K+',
-      status: 'open', // open, saved, requested
-      postedDate: '2025-01-20'
-    },
-    {
-      id: 2,
-      name: 'Tech Product Launch',
-      brand: 'Tech Innovations',
-      owner: 'Sarah Williams',
-      ownerEmail: 'sarah@techinnovations.com',
-      category: 'Tech',
-      budget: '$25,000',
-      paymentPerPost: '$5,000',
-      deadline: '2025-02-28',
-      platforms: ['YouTube', 'Instagram'],
-      requirements: '50K+ subscribers, Tech reviews',
-      description: 'We need tech reviewers to create detailed reviews of our new product. Video content preferred with unboxing and testing.',
-      deliverables: 3,
-      expectedReach: '1M+',
-      status: 'saved',
-      postedDate: '2025-01-18'
-    },
-    {
-      id: 3,
-      name: 'Beauty Product Campaign',
-      brand: 'Beauty Essentials',
-      owner: 'Emma Davis',
-      ownerEmail: 'emma@beautyessentials.com',
-      category: 'Beauty',
-      budget: '$12,000',
-      paymentPerPost: '$1,800',
-      deadline: '2025-03-01',
-      platforms: ['Instagram', 'TikTok', 'YouTube Shorts'],
-      requirements: '20K+ followers, Beauty/Makeup niche',
-      description: 'Promote our new skincare line with authentic reviews and tutorials. Before/after content highly valued.',
-      deliverables: 5,
-      expectedReach: '800K+',
-      status: 'open',
-      postedDate: '2025-01-22'
-    },
-    {
-      id: 4,
-      name: 'Fitness Challenge 2025',
-      brand: 'Fitness Pro',
-      owner: 'Mike Johnson',
-      ownerEmail: 'mike@fitnesspro.com',
-      category: 'Fitness',
-      budget: '$18,000',
-      paymentPerPost: '$3,000',
-      deadline: '2025-02-20',
-      platforms: ['Instagram', 'TikTok'],
-      requirements: '30K+ followers, Fitness/Lifestyle',
-      description: 'Join our 30-day fitness challenge! Create engaging workout content and transformation stories.',
-      deliverables: 6,
-      expectedReach: '600K+',
-      status: 'saved',
-      postedDate: '2025-01-15'
-    },
-    {
-      id: 5,
-      name: 'Luxury Watch Collection',
-      brand: 'Luxury Timepieces',
-      owner: 'David Chen',
-      ownerEmail: 'david@luxurytime.com',
-      category: 'Luxury',
-      budget: '$35,000',
-      paymentPerPost: '$7,000',
-      deadline: '2025-04-01',
-      platforms: ['Instagram', 'YouTube'],
-      requirements: '100K+ followers, Luxury lifestyle',
-      description: 'Showcase our premium watch collection. High-end lifestyle content with emphasis on elegance and sophistication.',
-      deliverables: 3,
-      expectedReach: '2M+',
-      status: 'open',
-      postedDate: '2025-01-25'
-    }
-  ];
+  const {
+    exploreCampaigns,
+    exploreCampaignsPagination,
+    exploreCampaignsLoading,
+    exploreCampaignsError,
+    fetchExploreCampaigns,
+    applyToCampaign,
+    applyingCampaignId,
+  } = useInfluncerStore();
 
-  const filteredCampaigns = availableCampaigns.filter(campaign => {
-    const matchesSearch = campaign.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         campaign.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         campaign.category.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filter === 'all' || campaign.category.toLowerCase() === filter.toLowerCase();
+  useEffect(() => {
+    fetchExploreCampaigns({ page: 1, limit: 20 });
+  }, [fetchExploreCampaigns]);
+
+  const normalizedCampaigns = useMemo(
+    () => (Array.isArray(exploreCampaigns) ? exploreCampaigns : []),
+    [exploreCampaigns]
+  );
+
+  const filteredCampaigns = normalizedCampaigns.filter((campaign) => {
+    const campaignName = campaign?.name?.toLowerCase?.() || '';
+    const brandName = campaign?.brand?.name?.toLowerCase?.() || '';
+    const stage = campaign?.lifecycleStage?.toLowerCase?.() || '';
+
+    const matchesSearch = campaignName.includes(searchQuery.toLowerCase()) ||
+                         brandName.includes(searchQuery.toLowerCase()) ||
+                         stage.includes(searchQuery.toLowerCase());
+    const platforms = Array.isArray(campaign?.platforms) ? campaign.platforms.join(' ').toLowerCase() : '';
+    const matchesFilter = filter === 'all' || campaignName.includes(filter.toLowerCase()) || brandName.includes(filter.toLowerCase()) || platforms.includes(filter.toLowerCase());
     return matchesSearch && matchesFilter;
   });
+
+  const totalBudget = normalizedCampaigns.reduce((sum, campaign) => {
+    const campaignBudget = Number(campaign?.budget?.total) || 0;
+    return sum + campaignBudget;
+  }, 0);
+
+  const activeApplied = normalizedCampaigns.filter((campaign) => campaign.applied).length;
+
+  const formatMoney = (value, currency) => {
+    if (!value) return '-';
+    return `${value.toLocaleString()} ${currency || ''}`.trim();
+  };
+
+  const formatDate = (value) => {
+    if (!value) return 'TBD';
+    return new Date(value).toLocaleDateString();
+  };
 
   const handleSaveCampaign = (campaignId) => {
     if (savedCampaigns.includes(campaignId)) {
@@ -133,16 +72,12 @@ function CampaignsOverview() {
     }
   };
 
-  const handleRequestCampaign = (campaignId) => {
-    // Here you would typically make an API call
-    console.log('Requesting campaign:', campaignId);
-    alert('Request sent! The campaign owner will review your application.');
+  const handleRequestCampaign = async (campaignId) => {
+    await applyToCampaign(campaignId, {});
   };
 
-  const handleContactOwner = (ownerEmail, campaignName) => {
-    // Here you would typically open a messaging interface
-    console.log('Contacting owner:', ownerEmail, 'for campaign:', campaignName);
-    // Navigate to messages or open chat
+  const handleContactOwner = (campaignName) => {
+    console.log('Contact owner for campaign:', campaignName);
   };
 
   return (
@@ -172,7 +107,7 @@ function CampaignsOverview() {
                   onClick={() => setFilter(cat)}
                   className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                     filter === cat
-                      ? 'bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white'
+                      ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white'
                       : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
                   }`}
                 >
@@ -188,24 +123,42 @@ function CampaignsOverview() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
           <p className="text-xs text-gray-400 mb-1">Available</p>
-          <p className="text-2xl font-bold text-white">{availableCampaigns.length}</p>
+          <p className="text-2xl font-bold text-white">{exploreCampaignsPagination?.totalItems ?? normalizedCampaigns.length}</p>
         </div>
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
-          <p className="text-xs text-gray-400 mb-1">Saved</p>
+          <p className="text-xs text-gray-400 mb-1">Saved Local</p>
           <p className="text-2xl font-bold text-[#C1B6FD]">{savedCampaigns.length}</p>
         </div>
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
           <p className="text-xs text-gray-400 mb-1">Total Budget</p>
-          <p className="text-2xl font-bold text-green-400">$105K</p>
+          <p className="text-2xl font-bold text-green-400">{formatMoney(totalBudget, normalizedCampaigns[0]?.budget?.currency)}</p>
         </div>
         <Link to="/dashboard/influencer/collaborations" className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all">
-          <p className="text-xs text-gray-400 mb-1">My Collaborations</p>
-          <p className="text-2xl font-bold text-white">4</p>
+          <p className="text-xs text-gray-400 mb-1">Applied</p>
+          <p className="text-2xl font-bold text-white">{activeApplied}</p>
         </Link>
       </div>
 
       {/* Available Campaigns List */}
       <div className="space-y-4">
+        {exploreCampaignsError && (
+          <div className="bg-red-500/10 border border-red-500/30 text-red-300 rounded-xl px-4 py-3 text-sm">
+            {exploreCampaignsError}
+          </div>
+        )}
+
+        {exploreCampaignsLoading && (
+          <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-300">
+            Loading campaigns...
+          </div>
+        )}
+
+        {!exploreCampaignsLoading && !exploreCampaignsError && filteredCampaigns.length === 0 && (
+          <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-300">
+            No campaigns found for current filters.
+          </div>
+        )}
+
         {filteredCampaigns.map((campaign) => (
           <div
             key={campaign.id}
@@ -220,12 +173,12 @@ function CampaignsOverview() {
                       <h3 className="text-xl font-bold text-white group-hover:text-[#C1B6FD] transition-colors">
                         {campaign.name}
                       </h3>
-                      <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
-                        {campaign.status === 'saved' ? 'Saved' : 'Open'}
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${campaign.applied ? 'bg-[#745CB4]/20 text-[#C1B6FD]' : 'bg-green-500/20 text-green-400'}`}>
+                        {campaign.applied ? 'Applied' : campaign.isPublished ? 'Open' : 'Draft'}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-400 mb-1">Brand: {campaign.brand}</p>
-                    <p className="text-xs text-gray-500">Posted: {campaign.postedDate} • Deadline: {campaign.deadline}</p>
+                    <p className="text-sm text-gray-400 mb-1">Brand: {campaign.brand?.name || 'Unknown brand'}</p>
+                    <p className="text-xs text-gray-500">Start: {formatDate(campaign.startDate)} • End: {formatDate(campaign.endDate)}</p>
                   </div>
                   <button
                     onClick={() => handleSaveCampaign(campaign.id)}
@@ -248,25 +201,25 @@ function CampaignsOverview() {
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                   <div>
-                    <p className="text-xs text-gray-400 mb-1">Payment</p>
-                    <p className="text-sm font-bold text-[#C1B6FD]">{campaign.paymentPerPost}</p>
+                    <p className="text-xs text-gray-400 mb-1">Budget</p>
+                    <p className="text-sm font-bold text-[#C1B6FD]">{formatMoney(campaign.budget?.total, campaign.budget?.currency)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400 mb-1">Deliverables</p>
-                    <p className="text-sm font-bold text-white">{campaign.deliverables} posts</p>
+                    <p className="text-xs text-gray-400 mb-1">Stage</p>
+                    <p className="text-sm font-bold text-white">{campaign.lifecycleStage || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400 mb-1">Expected Reach</p>
-                    <p className="text-sm font-bold text-white">{campaign.expectedReach}</p>
+                    <p className="text-xs text-gray-400 mb-1">Published</p>
+                    <p className="text-sm font-bold text-white">{campaign.isPublished ? 'Yes' : 'No'}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400 mb-1">Category</p>
-                    <p className="text-sm font-bold text-white">{campaign.category}</p>
+                    <p className="text-xs text-gray-400 mb-1">Status</p>
+                    <p className="text-sm font-bold text-white">{campaign.applied ? 'Applied' : 'Not Applied'}</p>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {campaign.platforms.map((platform, idx) => (
+                  {(campaign.platforms || []).map((platform, idx) => (
                     <span key={idx} className="px-3 py-1 bg-white/5 rounded-lg text-xs text-gray-300">
                       {platform}
                     </span>
@@ -274,8 +227,8 @@ function CampaignsOverview() {
                 </div>
 
                 <div className="bg-white/5 rounded-lg p-3 mb-4">
-                  <p className="text-xs text-gray-400 mb-1">Requirements</p>
-                  <p className="text-sm text-white">{campaign.requirements}</p>
+                  <p className="text-xs text-gray-400 mb-1">Campaign Overview</p>
+                  <p className="text-sm text-white line-clamp-3">{campaign.description || 'No additional details provided.'}</p>
                 </div>
               </div>
 
@@ -283,13 +236,17 @@ function CampaignsOverview() {
               <div className="lg:w-48 flex flex-col gap-3">
                 <button
                   onClick={() => handleRequestCampaign(campaign.id)}
-                  className="w-full px-4 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all flex items-center justify-center gap-2"
+                  disabled={campaign.applied || applyingCampaignId === campaign.id}
+                  className={`w-full px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${campaign.applied || applyingCampaignId === campaign.id
+                    ? 'bg-white/10 text-gray-400 cursor-not-allowed'
+                    : 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white hover:shadow-lg hover:shadow-purple-500/50'
+                  }`}
                 >
                   <Send className="w-4 h-4" />
-                  Send Request
+                  {campaign.applied ? 'Applied' : applyingCampaignId === campaign.id ? 'Applying...' : 'Send Request'}
                 </button>
                 <button
-                  onClick={() => handleContactOwner(campaign.ownerEmail, campaign.name)}
+                  onClick={() => handleContactOwner(campaign.name)}
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 text-white rounded-lg font-medium hover:bg-white/10 transition-all flex items-center justify-center gap-2"
                 >
                   <MessageSquare className="w-4 h-4" />
@@ -304,8 +261,8 @@ function CampaignsOverview() {
                 </Link>
                 <div className="bg-white/5 rounded-lg p-3 mt-auto">
                   <p className="text-xs text-gray-400 mb-1">Campaign Owner</p>
-                  <p className="text-sm font-semibold text-white">{campaign.owner}</p>
-                  <p className="text-xs text-gray-400">{campaign.ownerEmail}</p>
+                  <p className="text-sm font-semibold text-white">{campaign.brand?.name || 'Brand Owner'}</p>
+                  <p className="text-xs text-gray-400">Brand profile</p>
                 </div>
               </div>
             </div>

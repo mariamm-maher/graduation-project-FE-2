@@ -1,37 +1,12 @@
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import useAuthStore from '../../../../../stores/authStore';
 
-const ProfileCompletionWidget = () => {
-    const { getProfile } = useAuthStore();
-    const [completionPercentage, setCompletionPercentage] = useState(0);
-    const [loading, setLoading] = useState(true);
-    const [isVisible, setIsVisible] = useState(false);
+const ProfileCompletionWidget = ({ profileCompletion, loading }) => {
+    const completionPercentage = profileCompletion?.completionPercentage ?? 0;
+    const missingFields = profileCompletion?.missingFields || [];
 
-    useEffect(() => {
-        const checkCompletion = async () => {
-            try {
-                const response = await getProfile();
-                if (response?.success && response?.data) {
-                    const percentage = response.data.completionPercentage || 0;
-                    setCompletionPercentage(percentage);
-                    if (percentage < 100) {
-                        setIsVisible(true);
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to fetch profile completion:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        checkCompletion();
-    }, [getProfile]);
-
-    if (loading || !isVisible) return null;
+    if (loading || completionPercentage >= 100) return null;
 
     return (
         <motion.div
@@ -41,7 +16,7 @@ const ProfileCompletionWidget = () => {
         >
             <div className="flex items-center gap-5 w-full sm:w-auto">
                 {/* Circular Progress Indicator */}
-                <div className="relative w-14 h-14 flex-shrink-0">
+                <div className="relative w-14 h-14 shrink-0">
                     <svg className="w-full h-full -rotate-90">
                         {/* Background Circle */}
                         <circle
@@ -77,9 +52,7 @@ const ProfileCompletionWidget = () => {
 
                 <div>
                     <h3 className="text-lg font-bold text-white mb-1">Complete your profile</h3>
-                    <p className="text-sm text-gray-400">
-                        Add missing details
-                    </p>
+                  
                 </div>
             </div>
 

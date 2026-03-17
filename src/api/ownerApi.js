@@ -1,6 +1,27 @@
 import api from '../config/axios';
 
 const ownerService = {
+    // Get owner overview dashboard data
+    getOverview: async (params = {}) => {
+        try {
+            const query = new URLSearchParams();
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    query.set(key, value);
+                }
+            });
+
+            const endpoint = query.toString()
+                ? `/owner/overview?${query.toString()}`
+                : '/owner/overview';
+
+            const response = await api.get(endpoint);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data?.message || 'Failed to fetch owner overview';
+        }
+    },
+
     // Get influencers
     getInfluencers: async (page = 1, limit = 10) => {
         try {

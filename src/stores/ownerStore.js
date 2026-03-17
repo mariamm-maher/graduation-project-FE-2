@@ -2,6 +2,33 @@ import { create } from 'zustand';
 import ownerService from '../api/ownerApi';
 
 const useOwnerStore = create((set) => ({
+    // ─── Owner Overview ─────────────────────────────────────────────────────
+    ownerOverview: null,
+    overviewLoading: false,
+    overviewError: null,
+
+    // Fetch owner overview
+    fetchOverview: async (params = {}) => {
+        set({ overviewLoading: true, overviewError: null });
+        try {
+            const response = await ownerService.getOverview(params);
+            const payload = response?.data ?? response ?? {};
+            const ok = response?.success === true || payload?.status === 'success' || payload?.success === true;
+
+            if (!ok && !payload?.overview && !payload?.data) {
+                throw new Error(payload?.message || response?.message || 'Failed to fetch owner overview');
+            }
+
+            const overview = payload?.overview ?? payload?.data ?? payload;
+            set({ ownerOverview: overview, overviewLoading: false });
+            return { success: true, data: overview };
+        } catch (error) {
+            const msg = typeof error === 'string' ? error : error.message || 'Failed to fetch owner overview';
+            set({ overviewError: msg, overviewLoading: false });
+            return { success: false, error: msg };
+        }
+    },
+
     // ─── Influencers ────────────────────────────────────────────────────────
     influencers: [],
     currentInfluencer: null,
@@ -154,7 +181,7 @@ const useOwnerStore = create((set) => ({
     },
 
     // Clear errors
-    clearError: () => set({ error: null, marketplaceError: null })
+    clearError: () => set({ error: null, marketplaceError: null, overviewError: null })
 }));
 
 export default useOwnerStore;

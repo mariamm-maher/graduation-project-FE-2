@@ -1,24 +1,5 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const chartData = [
-  { time: '7 am', engagement: 4200, reach: 4800 },
-  { time: '8 am', engagement: 3800, reach: 4200 },
-  { time: '9 am', engagement: 5200, reach: 5800 },
-  { time: '10 am', engagement: 6800, reach: 7200 },
-  { time: '11 am', engagement: 8200, reach: 8800 },
-  { time: '12 pm', engagement: 7600, reach: 8200 },
-  { time: '1 pm', engagement: 6400, reach: 7000 },
-  { time: '2 pm', engagement: 5800, reach: 6400 },
-  { time: '3 pm', engagement: 9200, reach: 9800 },
-  { time: '4 pm', engagement: 8800, reach: 9400 },
-  { time: '5 pm', engagement: 7400, reach: 8000 },
-  { time: '6 pm', engagement: 6200, reach: 6800 },
-  { time: '7 pm', engagement: 5600, reach: 6200 },
-  { time: '8 pm', engagement: 4800, reach: 5400 },
-  { time: '9 pm', engagement: 4200, reach: 4800 },
-  { time: '10 pm', engagement: 3600, reach: 4200 },
-];
-
 const dates = [
   { date: '01', day: 'Sat' },
   { date: '02', day: 'Sun' },
@@ -35,7 +16,35 @@ const dates = [
   { date: '13', day: 'Thu' },
 ];
 
-function StatisticsChart() {
+function formatCompactNumber(value = 0) {
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1)}M`;
+  }
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(1)}K`;
+  }
+  return `${value}`;
+}
+
+function StatisticsChart({ kpis, performanceSeries, loading }) {
+  const chartData = Array.isArray(performanceSeries)
+    ? performanceSeries.map((item) => ({
+        time: new Date(item.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+        engagement: item.engagement ?? 0,
+        reach: item.reach ?? 0,
+      }))
+    : [];
+
+  const normalizedChartData = chartData.length ? chartData : [{ time: '-', engagement: 0, reach: 0 }];
+  const engagementNow = kpis?.totalEngagement ?? normalizedChartData[normalizedChartData.length - 1].engagement;
+  const previousEngagement = normalizedChartData.length > 1
+    ? normalizedChartData[normalizedChartData.length - 2].engagement
+    : 0;
+
+  const engagementDelta = previousEngagement > 0
+    ? ((engagementNow - previousEngagement) / previousEngagement) * 100
+    : 0;
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -88,16 +97,22 @@ function StatisticsChart() {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold text-white group-hover:text-[#C1B6FD] transition-colors">8.2K</div>
-            <div className="text-xs text-green-400 flex items-center gap-1 justify-end">
-              <span className="inline-block animate-bounce">↑</span>
-              <span>12.5% from yesterday</span>
+              <div className="text-2xl font-bold text-white group-hover:text-[#C1B6FD] transition-colors">
+                {formatCompactNumber(engagementNow)}
+              </div>
+              <div className={`text-xs flex items-center gap-1 justify-end ${engagementDelta >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <span>{engagementDelta >= 0 ? '↑' : '↓'}</span>
+                <span>{Math.abs(engagementDelta).toFixed(1)}% from last point</span>
             </div>
           </div>
         </div>
-        
+
+          {loading && (
+            <div className="text-xs text-gray-400 mb-2">Loading performance overview...</div>
+          )}
+
         <ResponsiveContainer width="100%" height={280}>
-          <AreaChart data={chartData}>
+            <AreaChart data={normalizedChartData}>
             <defs>
               <linearGradient id="colorEngagement" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#C1B6FD" stopOpacity={0.8}/>

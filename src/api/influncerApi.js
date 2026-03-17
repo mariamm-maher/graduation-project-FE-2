@@ -1,6 +1,26 @@
 import api from '../config/axios';
 
 const influncerService = {
+	getOverviewStats: async (params = {}) => {
+		try {
+			const query = new URLSearchParams();
+			Object.entries(params).forEach(([key, value]) => {
+				if (value !== undefined && value !== null && value !== '') {
+					query.set(key, value);
+				}
+			});
+
+			const endpoint = query.toString()
+				? `/influencer/overview/stats?${query.toString()}`
+				: '/influencer/overview/stats';
+
+			const response = await api.get(endpoint);
+			return response.data;
+		} catch (error) {
+			throw error.response?.data?.message || 'Failed to fetch influencer overview stats';
+		}
+	},
+
 	getOverview: async (params = {}) => {
 		try {
 			const query = new URLSearchParams();

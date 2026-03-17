@@ -78,6 +78,30 @@ const useInfluncerStore = create((set) => ({
     }
   },
 
+  fetchInfluencerOverviewStats: async (params = {}) => {
+    set({ overviewLoading: true, overviewError: null });
+    try {
+      const response = await influncerService.getOverviewStats(params);
+      const payload = response?.data ?? response ?? {};
+      const ok = response?.success === true || payload?.success === true || payload?.status === 'success' || response?.status === 200;
+
+      if (!ok && !payload?.overview && !payload?.stats && !payload?.data) {
+        throw new Error(response?.message || payload?.message || 'Failed to fetch influencer overview stats');
+      }
+
+      const overview = payload?.overview ?? payload?.stats ?? payload?.data ?? payload;
+
+      set({ overview, overviewLoading: false });
+      return { success: true, data: overview };
+    } catch (error) {
+      const errorMessage = typeof error === 'string'
+        ? error
+        : error?.response?.data?.message || error?.message || 'Failed to fetch influencer overview stats';
+      set({ overviewError: errorMessage, overviewLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
   fetchExploreCampaigns: async (params = {}) => {
     set({ exploreCampaignsLoading: true, exploreCampaignsError: null });
     try {

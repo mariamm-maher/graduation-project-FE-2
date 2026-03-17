@@ -1,4 +1,4 @@
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Activity, MessageSquare, DollarSign, TrendingUp } from 'lucide-react';
 
 const dates = [
   { date: '01', day: 'Sat' },
@@ -16,34 +16,37 @@ const dates = [
   { date: '13', day: 'Thu' },
 ];
 
-function formatCompactNumber(value = 0) {
-  if (value >= 1_000_000) {
-    return `${(value / 1_000_000).toFixed(1)}M`;
-  }
-  if (value >= 1_000) {
-    return `${(value / 1_000).toFixed(1)}K`;
-  }
-  return `${value}`;
-}
+export default function StatisticsChart({ kpis, performanceSeries, communicationsFeed, activeCampaigns, loading }) {
 
-function StatisticsChart({ kpis, performanceSeries, loading }) {
-  const chartData = Array.isArray(performanceSeries)
-    ? performanceSeries.map((item) => ({
-        time: new Date(item.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
-        engagement: item.engagement ?? 0,
-        reach: item.reach ?? 0,
-      }))
-    : [];
+  // Derive Alternative Analytics from communicationsFeed
+  const feed = Array.isArray(communicationsFeed) ? communicationsFeed : [];
+  
+  const platformCounts = feed.reduce((acc, item) => {
+    const platform = item.platform || 'System';
+    acc[platform] = (acc[platform] || 0) + 1;
+    return acc;
+  }, {});
 
-  const normalizedChartData = chartData.length ? chartData : [{ time: '-', engagement: 0, reach: 0 }];
-  const engagementNow = kpis?.totalEngagement ?? normalizedChartData[normalizedChartData.length - 1].engagement;
-  const previousEngagement = normalizedChartData.length > 1
-    ? normalizedChartData[normalizedChartData.length - 2].engagement
-    : 0;
+  const statusCounts = feed.reduce((acc, item) => {
+    let status = (item.status || 'Update').toLowerCase();
+    if (status.includes('pending')) status = 'pending';
+    if (status.includes('deliver')) status = 'delivered';
+    if (status.includes('complete')) status = 'completed';
+    acc[status] = (acc[status] || 0) + 1;
+    return acc;
+  }, {});
 
-  const engagementDelta = previousEngagement > 0
-    ? ((engagementNow - previousEngagement) / previousEngagement) * 100
-    : 0;
+  const actionTypes = feed.reduce((acc, item) => {
+    const type = item.type || 'message';
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Derived metrics from Active Campaigns
+  const campaigns = Array.isArray(activeCampaigns) ? activeCampaigns : [];
+  const totalCampaignBudget = campaigns.reduce((acc, c) => acc + (c.budget || 0), 0);
+  const totalCampaignReach = campaigns.reduce((acc, c) => acc + (c.targetReach || c.projectedReach || 0), 0);
+  const costPerReach = totalCampaignReach > 0 ? (totalCampaignBudget / totalCampaignReach) : 0;
 
   return (
     <div>
@@ -65,7 +68,7 @@ function StatisticsChart({ kpis, performanceSeries, loading }) {
       </div>
 
       {/* Date Selector */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-linear-to-r [&::-webkit-scrollbar-thumb]:from-[#C1B6FD] [&::-webkit-scrollbar-thumb]:to-[#745CB4] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:from-[#745CB4] [&::-webkit-scrollbar-thumb]:hover:to-[#C1B6FD]">
+      {/* <div className="flex gap-2 mb-6 overflow-x-auto pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-linear-to-r [&::-webkit-scrollbar-thumb]:from-[#C1B6FD] [&::-webkit-scrollbar-thumb]:to-[#745CB4] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:from-[#745CB4] [&::-webkit-scrollbar-thumb]:hover:to-[#C1B6FD]">
         {dates.map((item, idx) => (
           <button
             key={idx}
@@ -81,88 +84,133 @@ function StatisticsChart({ kpis, performanceSeries, loading }) {
             </div>
           </button>
         ))}
-      </div>
+      </div> */}
 
-      {/* Chart */}
-      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-xl hover:border-purple-400/30 transition-all duration-300 group">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex gap-6">
-            <div className="flex items-center gap-2 group/legend hover:scale-110 transition-transform cursor-pointer">
-              <div className="w-3 h-3 rounded-full bg-[#C1B6FD] shadow-lg shadow-purple-500/50"></div>
-              <span className="text-sm text-gray-300 group-hover/legend:text-white transition-colors">Engagement</span>
-            </div>
-            <div className="flex items-center gap-2 group/legend hover:scale-110 transition-transform cursor-pointer">
-              <div className="w-3 h-3 rounded-full bg-[#745CB4] opacity-50 shadow-lg shadow-purple-500/30"></div>
-              <span className="text-sm text-gray-300 group-hover/legend:text-white transition-colors">Projected Reach</span>
-            </div>
+      {/* Main Container */}
+      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-xl hover:border-purple-400/30 transition-all duration-300 group min-h-[360px]">
+        
+        {loading && (
+          <div className="text-xs text-gray-400 mb-2">Loading performance overview...</div>
+        )}
+
+        <div className="flex flex-col h-full animate-in fade-in duration-500">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-white">Activity & ROI Insights</h3>
+            <p className="text-xs text-gray-400 font-medium px-3 py-1 bg-white/5 rounded-full border border-white/5">
+              Activity trends based on current tasks
+            </p>
           </div>
-          <div className="text-right">
-              <div className="text-2xl font-bold text-white group-hover:text-[#C1B6FD] transition-colors">
-                {formatCompactNumber(engagementNow)}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
+            
+            {/* Left Side - Campaign ROI & Status distribution */}
+            <div className="space-y-6">
+              
+              {/* Micro-Stat Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5 hover:bg-white/[0.05] transition-colors hover:scale-105 transform">
+                  <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center mb-3">
+                    <DollarSign className="w-4 h-4" />
+                  </div>
+                  <div className="text-2xl font-bold text-white mb-1">${totalCampaignBudget.toLocaleString()}</div>
+                  <div className="text-xs text-gray-400 font-medium">Allocated Budget</div>
+                </div>
+                
+                <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5 hover:bg-white/[0.05] transition-colors hover:scale-105 transform">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-3">
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                  <div className="text-2xl font-bold text-white mb-1">
+                    {costPerReach > 0 ? `$${costPerReach.toFixed(3)}` : '-'}
+                  </div>
+                  <div className="text-xs text-gray-400 font-medium">Est. Cost Per Reach</div>
+                </div>
               </div>
-              <div className={`text-xs flex items-center gap-1 justify-end ${engagementDelta >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                <span>{engagementDelta >= 0 ? '↑' : '↓'}</span>
-                <span>{Math.abs(engagementDelta).toFixed(1)}% from last point</span>
+
+              {/* Status Distribution */}
+              <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5">
+                <h4 className="text-sm text-gray-300 font-semibold mb-4">Task Status</h4>
+                <div className="space-y-3">
+                  {Object.entries(statusCounts).length > 0 ? (
+                    Object.entries(statusCounts).map(([status, count]) => (
+                      <div key={status} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${
+                              status === 'completed' || status === 'delivered' ? 'bg-emerald-400' :
+                              status === 'pending' ? 'bg-yellow-400' : 'bg-blue-400'
+                            }`} />
+                            <span className="text-sm text-gray-300 capitalize">{status}</span>
+                        </div>
+                        <span className="text-sm font-bold text-white bg-white/10 px-2 py-0.5 rounded-md">{count}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-xs text-gray-500">No active tasks tracked</div>
+                  )}
+                </div>
+              </div>
+
             </div>
+
+
+            {/* Right Side - Platform & Interactions */}
+            <div className="space-y-6 flex flex-col h-full">
+              
+              {/* Platform Distribution Bar */}
+              <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5 flex-1">
+                  <h4 className="text-sm text-gray-300 font-semibold mb-4">Platform Engagement Share</h4>
+                  <div className="space-y-4">
+                    {Object.entries(platformCounts).length > 0 ? (
+                      Object.entries(platformCounts).map(([platform, count], i, arr) => {
+                        const total = arr.reduce((sum, [, c]) => sum + c, 0);
+                        const percentage = Math.round((count / total) * 100);
+                        return (
+                          <div key={platform}>
+                            <div className="flex justify-between text-xs mb-1.5">
+                              <span className="text-gray-300 font-medium capitalize">{platform}</span>
+                              <span className="text-[#C1B6FD] font-bold">{percentage}%</span>
+                            </div>
+                            <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] rounded-full"
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        )
+                      })
+                    ) : (
+                      <div className="text-xs text-gray-500 flex flex-col items-center justify-center py-4">
+                        <Activity className="w-6 h-6 text-gray-600 mb-2" />
+                        <span>No platform data. Engage to see insights.</span>
+                      </div>
+                    )}
+                  </div>
+              </div>
+
+              {/* Actions Chips */}
+              <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5">
+                <h4 className="text-sm text-gray-300 font-semibold mb-3">Activity Types</h4>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(actionTypes).length > 0 ? (
+                    Object.entries(actionTypes).map(([type, count]) => (
+                      <div key={type} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-br from-[#745CB4]/20 to-[#C1B6FD]/10 border border-[#745CB4]/30">
+                        <MessageSquare className="w-3.5 h-3.5 text-[#C1B6FD]" />
+                        <span className="text-xs font-semibold text-[#C1B6FD] capitalize">{type.replace('_', ' ')}</span>
+                        <span className="text-[10px] bg-black/30 px-1.5 rounded text-gray-300">{count}</span>
+                      </div>
+                    ))
+                  ) : (
+                      <span className="text-xs text-gray-500">No actions recorded.</span>
+                  )}
+                </div>
+              </div>
+
+            </div>
+            
           </div>
         </div>
-
-          {loading && (
-            <div className="text-xs text-gray-400 mb-2">Loading performance overview...</div>
-          )}
-
-        <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={normalizedChartData}>
-            <defs>
-              <linearGradient id="colorEngagement" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#C1B6FD" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#5D459D" stopOpacity={0.1}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-            <XAxis 
-              dataKey="time" 
-              stroke="#6b7280" 
-              tick={{fill: '#9ca3af', fontSize: 12}} 
-              axisLine={{ stroke: '#374151' }}
-            />
-            <YAxis 
-              stroke="#6b7280" 
-              tick={{fill: '#9ca3af', fontSize: 12}}
-              axisLine={{ stroke: '#374151' }}
-              tickFormatter={(value) => `${(value / 1000).toFixed(1)}K`}
-            />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: '#1f2937', 
-                border: '1px solid rgba(139, 92, 246, 0.3)', 
-                borderRadius: '12px',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-              }}
-              labelStyle={{ color: '#fff', fontWeight: 'bold' }}
-              itemStyle={{ color: '#C1B6FD' }}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="reach" 
-              stroke="#745CB4" 
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              fill="none"
-            />
-            <Area 
-              type="monotone" 
-              dataKey="engagement" 
-              stroke="#C1B6FD" 
-              strokeWidth={3}
-              fillOpacity={1} 
-              fill="url(#colorEngagement)" 
-            />
-          </AreaChart>
-        </ResponsiveContainer>
       </div>
     </div>
   );
 }
-
-export default StatisticsChart;

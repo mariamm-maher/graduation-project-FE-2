@@ -239,7 +239,7 @@ function Header() {
     
 
           {/* Join as Influencer Promotion Button (shows when user is not an influencer) */}
-          {!hasInfluencerRole && (
+          {/* {!hasInfluencerRole && (
             <>
             <Motion.button
               initial={{ opacity: 0, y: -10 }}
@@ -257,7 +257,7 @@ function Header() {
               </span>
             </Motion.button>
             </>
-          )}
+          )} */}
 
           {/* Team Status */}
           <Motion.div 

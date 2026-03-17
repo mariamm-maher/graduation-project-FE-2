@@ -38,12 +38,12 @@ function Navbar() {
   return (
     <motion.nav
       style={{ backgroundColor, backdropFilter: backdropBlur }}
-      className={` top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`py-3 top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled ? 'shadow-2xl border-b border-white/5' : ''
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -53,9 +53,9 @@ function Navbar() {
           >
             <div className="relative">
               <motion.div
-                whileHover={{ scale: 1.1 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center shadow-lg shadow-[#745CB4]/30"
+                whileHover={{ scale: 1.06 }}
+                transition={{ duration: 0.28, ease: "easeOut" }}
+                className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center shadow-2xl shadow-[#745CB4]/25"
               >
                 <img 
                   src={logoGif} 
@@ -75,7 +75,7 @@ function Navbar() {
                 }}
               />
             </div>
-            <span className="text-lg font-bold bg-gradient-to-b from-[#D3CBFC] via-purple-200 to-indigo-300 bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-gradient-to-b from-[#D3CBFC] via-purple-200 to-indigo-300 bg-clip-text text-transparent">
               AdSphere
             </span>
           </motion.div>
@@ -83,7 +83,7 @@ function Navbar() {
        
 
           {/* CTA Buttons */}
-          <div className="hidden md:flex items-center space-x-3">
+          <div className="hidden md:flex items-center space-x-4">
             {/* Sign Up Button */}
             <motion.button
               initial={{ opacity: 0, y: -10 }}
@@ -92,7 +92,7 @@ function Navbar() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/signup')}
-              className="px-5 py-2.5 text-sm font-medium text-white border border-[#C1B6FD]/30 rounded-lg hover:bg-[#745CB4]/10 hover:border-[#C1B6FD]/50 transition-all duration-200 backdrop-blur-sm"
+              className="px-6 py-3 text-base font-medium text-white border border-[#C1B6FD]/30 rounded-xl hover:bg-[#745CB4]/12 hover:border-[#C1B6FD]/50 transition-all duration-200 backdrop-blur-sm min-w-[110px]"
             >
               Sign Up
             </motion.button>
@@ -124,7 +124,7 @@ function Navbar() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/login')}
-              className="px-5 py-2.5 text-sm font-medium text-white bg-[#745CB4]/20 border border-[#C1B6FD]/50 rounded-lg hover:bg-[#745CB4]/30 hover:border-[#C1B6FD]/70 transition-all duration-200 backdrop-blur-sm"
+              className="px-6 py-3 text-base font-medium text-white bg-[#745CB4]/22 border border-[#C1B6FD]/50 rounded-xl hover:bg-[#745CB4]/32 hover:border-[#C1B6FD]/70 transition-all duration-200 backdrop-blur-sm min-w-[110px]"
             >
               Sign In
             </motion.button>
@@ -138,7 +138,7 @@ function Navbar() {
             className="md:hidden p-2 text-gray-300 hover:text-white transition-colors"
           >
             <svg
-              className="w-6 h-6"
+              className="w-8 h-8"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -161,7 +161,7 @@ function Navbar() {
           opacity: isMobileMenuOpen ? 1 : 0
         }}
         transition={{ duration: 0.3 }}
-        className="md:hidden overflow-hidden bg-[#1a1a1a]/98 backdrop-blur-xl border-t border-white/5"
+        className="md:hidden overflow-hidden bg-[#0b0b10]/98 backdrop-blur-xl border-t border-white/5"
       >
         <div className="px-4 py-6 space-y-3">
           {/* Sign Up Button */}
@@ -170,13 +170,13 @@ function Navbar() {
               navigate('/signup')
               setIsMobileMenuOpen(false)
             }}
-            className="w-full px-5 py-3 text-sm font-medium text-white border border-[#C1B6FD]/30 rounded-lg hover:bg-[#745CB4]/10 hover:border-[#C1B6FD]/50 transition-all duration-200"
+            className="w-full px-6 py-4 text-base font-medium text-white border border-[#C1B6FD]/30 rounded-lg hover:bg-[#745CB4]/10 hover:border-[#C1B6FD]/50 transition-all duration-200"
           >
             Sign Up
           </button>
 
           {/* Create Campaign with AI Button */}
-          <button className="w-full px-5 py-3 text-sm font-medium text-white bg-gradient-to-b from-[#C1B6FD] via-[#D3CBFC] to-[#C1B6FD] rounded-lg hover:shadow-lg hover:shadow-[#C1B6FD]/50 transition-all duration-200">
+          <button className="w-full px-6 py-4 text-base font-medium text-white bg-gradient-to-b from-[#C1B6FD] via-[#D3CBFC] to-[#C1B6FD] rounded-lg hover:shadow-lg hover:shadow-[#C1B6FD]/50 transition-all duration-200">
             <span className="flex items-center justify-center space-x-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -191,7 +191,7 @@ function Navbar() {
               navigate('/login')
               setIsMobileMenuOpen(false)
             }}
-            className="w-full px-5 py-3 text-sm font-medium text-white bg-[#745CB4]/20 border border-[#C1B6FD]/50 rounded-lg hover:bg-[#745CB4]/30 hover:border-[#C1B6FD]/70 transition-all duration-200"
+            className="w-full px-6 py-4 text-base font-medium text-white bg-[#745CB4]/20 border border-[#C1B6FD]/50 rounded-lg hover:bg-[#745CB4]/30 hover:border-[#C1B6FD]/70 transition-all duration-200"
           >
             Sign In
           </button>

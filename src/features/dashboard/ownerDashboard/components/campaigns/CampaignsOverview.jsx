@@ -11,9 +11,10 @@ function CampaignsOverview() {
     fetchCampaignsOverview().catch(() => {});
   }, [fetchCampaignsOverview]);
 
-  const totalCampaigns = campaignsOverview?.totalCampaigns ?? 8;
-  const recentCampaigns = campaignsOverview?.recentCampaigns ?? [];
-  const activeCampaigns = recentCampaigns.filter((c) => c.isPublished).length || 5;
+  const totalCampaigns = campaignsOverview?.data?.totalSaved  ?? 0;
+  const totalSaved = campaignsOverview?.data?.recentCampaigns ?? 0;
+  const recentCampaigns = campaignsOverview?.data?.recentCampaigns ?? [];
+
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -35,7 +36,7 @@ function CampaignsOverview() {
             
             <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-green-500/10 backdrop-blur-md border border-green-500/20 rounded-lg">
               <Play className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
-              <span className="text-xs sm:text-sm font-semibold text-green-400">{activeCampaigns} Active</span>
+              <span className="text-xs sm:text-sm font-semibold text-green-400">{totalSaved} Saved</span>
             </div>
 
             <Link to="/dashboard/owner/influencers">
@@ -45,12 +46,7 @@ function CampaignsOverview() {
               </button>
             </Link>
 
-            <Link to="/dashboard/owner/campaigns/create-ai">
-              <button className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg hover:border-purple-400/30 hover:bg-white/10 transition-all">
-                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-                <span className="text-xs sm:text-sm text-gray-300">AI Generate</span>
-              </button>
-            </Link>
+         
           </div>
         </div>
 
@@ -87,51 +83,9 @@ function CampaignsOverview() {
                 </div>
               ))
             ) : (
-              <> 
-                <div className="bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-all cursor-pointer group">
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="text-sm font-semibold text-white group-hover:text-[#C1B6FD] transition-colors flex-1">
-                      Summer Fashion Launch
-                    </h4>
-                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 animate-pulse">
-                      active
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-gray-400">
-                    <span className="flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" />
-                      2.4M
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="w-3 h-3" />
-                      24
-                    </span>
-                    <span className="text-[#C1B6FD] font-semibold">$85K</span>
-                  </div>
-                </div>
-
-                <div className="bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-all cursor-pointer group">
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="text-sm font-semibold text-white group-hover:text-[#C1B6FD] transition-colors flex-1">
-                      Holiday Collection 2024
-                    </h4>
-                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 animate-pulse">
-                      active
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-gray-400">
-                    <span className="flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" />
-                      3.8M
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="w-3 h-3" />
-                      32
-                    </span>
-                    <span className="text-[#C1B6FD] font-semibold">$120K</span>
-                  </div>
-                </div>
-              </>
+              <div className="bg-white/5 rounded-lg p-6 text-center text-sm text-gray-300">
+                No campaigns exist.
+              </div>
             )}
           </div>
 
@@ -194,7 +148,7 @@ function CampaignsOverview() {
             </div>
             <div className="flex items-center gap-2 mb-3">
               <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-blue-400 transition-colors">Active Campaigns</h3>
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-blue-400/20 to-blue-600/20 text-white border border-blue-400/30">{activeCampaigns}</span>
+              {/* <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-blue-400/20 to-blue-600/20 text-white border border-blue-400/30">{activeCampaigns}</span> */}
             </div>
             <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">View and manage currently running campaigns</p>
           </div>

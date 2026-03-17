@@ -121,30 +121,45 @@ function AllCampaigns() {
             className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-transparent transition-all"
           />
         </div>
-        <select
-          value={filterStatus}
-          onChange={(e) => handleStatusChange(e.target.value)}
-          className="px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
-        >
-          <option value="all">All Status</option>
-          <option value="draft">Draft</option>
-          <option value="active">Active</option>
-          <option value="paused">Paused</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-        <select
-          value={filterGoal}
-          onChange={(e) => setFilterGoal(e.target.value)}
-          className="px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
-        >
-          <option value="all">All Goals</option>
-          <option value="awareness">Awareness</option>
-          <option value="engagement">Engagement</option>
-          <option value="conversion">Conversion</option>
-          <option value="traffic">Traffic</option>
-          <option value="sales">Sales</option>
-        </select>
+        <div className="relative w-56">
+          <select
+            value={filterStatus}
+            onChange={(e) => handleStatusChange(e.target.value)}
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white appearance-none pr-10 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
+          >
+            <option value="all">All Status</option>
+            <option value="draft">Draft</option>
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+            <svg className="w-4 h-4 text-gray-400" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        </div>
+
+        <div className="relative w-56">
+          <select
+            value={filterGoal}
+            onChange={(e) => setFilterGoal(e.target.value)}
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white appearance-none pr-10 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
+          >
+            <option value="all">All Goals</option>
+            <option value="awareness">Awareness</option>
+            <option value="engagement">Engagement</option>
+            <option value="conversion">Conversion</option>
+            <option value="traffic">Traffic</option>
+            <option value="sales">Sales</option>
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+            <svg className="w-4 h-4 text-gray-400" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        </div>
       </div>
 
       {/* Campaigns Table */}

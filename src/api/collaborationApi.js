@@ -2,6 +2,18 @@ import api from '../config/axios';
 
 const collaborationService = {
 
+  // GET /api/collaborations/overview
+  // Get collaborations overview metrics for dashboard
+  getCollaborationsOverview: async () => {
+    try {
+      const response = await api.get('/collaborations/overview');
+      return response.data;
+    } catch (error) {
+      console.error('Get collaborations overview error:', error);
+      throw error.response?.data?.message || 'Failed to fetch collaborations overview';
+    }
+  },
+
   
   // POST /api/collaborations/requests
   // Owner sends a collaboration request to an influencer (alternative endpoint)

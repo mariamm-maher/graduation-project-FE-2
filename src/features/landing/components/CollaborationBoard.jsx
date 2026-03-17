@@ -114,12 +114,10 @@ const CollaborationBoard = () => {
           </p>
         </motion.div>
 
-        {/* Kanban Board */}
-        <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-6 mb-12 pb-6 snap-x snap-mandatory scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-[#745CB4]/50 hover:scrollbar-thumb-[#745CB4]">
+        {/* Kanban Board (stack on mobile, 3 columns on md+) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 pb-6">
           {kanbanColumns.map((column, index) => (
-            <div key={column.id} className="min-w-[320px] md:min-w-0 snap-center">
-              <KanbanColumn column={column} index={index} />
-            </div>
+            <KanbanColumn key={column.id} column={column} index={index} />
           ))}
         </div>
       </div>

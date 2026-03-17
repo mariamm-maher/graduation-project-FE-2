@@ -19,6 +19,7 @@ function MainContent() {
     fetchOverview();
   }, [fetchOverview]);
 
+  
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 transition-all duration-300">
       {/* Left Column - Campaign Performance & Active Campaigns */}
@@ -31,6 +32,8 @@ function MainContent() {
         <StatisticsChart
           kpis={ownerOverview?.kpis}
           performanceSeries={ownerOverview?.performanceSeries}
+          communicationsFeed={ownerOverview?.communicationsFeed}
+          activeCampaigns={ownerOverview?.activeCampaigns}
           loading={overviewLoading}
         />
         <ActiveCampaignCards

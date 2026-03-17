@@ -156,7 +156,6 @@ const useCampaignStore = create((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await campaignService.getCampaignsOverview();
-
       // response shape: { status, message, data: { totalCampaigns, totalSaved, recentCampaigns } }
       if (response.status === 'success' || response.success) {
         const overview = response.data || null;

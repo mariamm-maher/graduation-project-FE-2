@@ -249,7 +249,7 @@ function Header() {
        
 
           {/* Join as Owner Promotion Button (shows when user is not an owner) */}
-          {!hasOwnerRole && (
+          {/* {!hasOwnerRole && (
             <motion.button
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -265,7 +265,7 @@ function Header() {
                 <span className="sm:hidden">Join as Owner</span>
               </span>
             </motion.button>
-          )}
+          )} */}
 
           {/* Notifications */}
           <motion.button 

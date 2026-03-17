@@ -6,6 +6,11 @@ const useCollaborationStore = create((set) => ({
     currentCollaboration: null,
     isLoading: false,
     error: null,
+
+    // Overview state
+    collaborationsOverview: null,
+    isCollaborationsOverviewLoading: false,
+    collaborationsOverviewError: null,
     
     // Sent requests state
     sentRequests: [],
@@ -18,6 +23,34 @@ const useCollaborationStore = create((set) => ({
     ownerCollaborationsPagination: null,
     isOwnerCollaborationsLoading: false,
     ownerCollaborationsError: null,
+
+    // Fetch collaborations overview
+    getCollaborationsOverview: async () => {
+        set({ isCollaborationsOverviewLoading: true, collaborationsOverviewError: null });
+        try {
+            const response = await collaborationService.getCollaborationsOverview();
+
+            const payload = response?.data ?? response ?? {};
+            const ok = response?.success === true || payload?.status === 'success' || payload?.success === true || typeof payload === 'object';
+
+            if (!ok) {
+                throw new Error(payload?.message || response?.message || 'Failed to fetch collaborations overview');
+            }
+
+            const overview = payload?.overview || payload?.data || payload;
+
+            set({
+                collaborationsOverview: overview,
+                isCollaborationsOverviewLoading: false
+            });
+
+            return { success: true, data: overview };
+        } catch (error) {
+            const errorMessage = typeof error === 'string' ? error : error?.response?.data?.message || error?.message || 'Failed to fetch collaborations overview';
+            set({ collaborationsOverviewError: errorMessage, isCollaborationsOverviewLoading: false });
+            return { success: false, error: errorMessage };
+        }
+    },
 
     // Fetch my owner collaborations
     getMyOwnerCollaborations: async (params = {}) => {

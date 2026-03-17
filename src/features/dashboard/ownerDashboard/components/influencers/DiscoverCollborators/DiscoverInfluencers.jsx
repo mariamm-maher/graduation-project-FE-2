@@ -53,11 +53,7 @@ function DiscoverInfluencers() {
 
   return (
     <div className="space-y-6 lg:space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Discover Talent</h1>
-        <p className="text-gray-400 text-sm sm:text-base">Find influencers that match your campaign goals</p>
-      </div>
+   
 
       {/* Search & Filter Component */}
       <SearchFilters

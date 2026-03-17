@@ -1,4 +1,5 @@
 import { Sparkles, Clock, Zap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 function getStatusIcon(status = '') {
   const normalized = status.toLowerCase();
@@ -14,11 +15,16 @@ function getStatusIcon(status = '') {
 }
 
 function PendingCampaigns({ campaigns = [], loading }) {
+  const navigate = useNavigate();
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold">Pending Campaigns</h2>
-        <button className="text-xs text-[#C1B6FD] hover:text-white font-medium transition-colors">
+        <button
+          onClick={() => navigate('/dashboard/owner/campaigns/all')}
+          className="text-xs text-[#C1B6FD] hover:text-white font-medium transition-colors"
+        >
           View All
         </button>
       </div>
@@ -64,7 +70,10 @@ function PendingCampaigns({ campaigns = [], loading }) {
         ))}
       </div>
 
-      <button className="w-full mt-4 py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] rounded-xl text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105">
+      <button
+        onClick={() => navigate('/dashboard/owner/campaigns/create')}
+        className="w-full mt-4 py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] rounded-xl text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105"
+      >
         + Create New Campaign
       </button>
     </div>

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Megaphone, ShoppingCart, Share2, BarChart3, MessageCircle, Settings, LogOut, User, Users, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Megaphone, Share2, MessageCircle, Settings, LogOut, User, Users, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -32,10 +32,8 @@ function Sidebar() {
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard/owner' },
     { id: 'campaigns', icon: Megaphone, label: 'Campaigns', path: '/dashboard/owner/campaigns' },
-    { id: 'marketplace', icon: ShoppingCart, label: 'Market Place', path: '/dashboard/owner/marketplace' },
     { id: 'collaborations', icon: Users, label: 'Collaborations', path: '/dashboard/owner/collaborations' },
     { id: 'social', icon: Share2, label: 'Social Media', path: '/dashboard/owner/social-media' },
-    { id: 'analytics', icon: BarChart3, label: 'Analytics', path: '/dashboard/owner/analytics' },
     { id: 'influencers', icon: MessageCircle, label: 'Influencers', path: '/dashboard/owner/influencers' },
   ];
 
@@ -58,7 +56,7 @@ function Sidebar() {
       )}
 
       <div 
-        className={`fixed left-3 md:left-6 top-12 md:top-20 flex flex-col gap-2 backdrop-blur-md rounded-2xl p-4 border border-white/10 transition-all duration-300 ease-in-out z-50 ${
+        className={`fixed left-3 md:left-6 top-28 md:top-36 flex flex-col gap-2 backdrop-blur-md rounded-2xl p-4 border border-white/10 transition-all duration-300 ease-in-out z-50 ${
           isHovered ? 'w-64 bg-[#1a1a1a]/95' : 'w-20 bg-white/5'
         } ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'

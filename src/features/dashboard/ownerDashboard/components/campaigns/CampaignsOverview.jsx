@@ -1,4 +1,4 @@
-import { Megaphone, Users, DollarSign, TrendingUp, ArrowRight, Target, Play, Clock, BarChart3, Sparkles, CheckCircle, FileEdit, Grid3x3 } from 'lucide-react';
+import { Megaphone, Users, DollarSign, TrendingUp, ArrowRight, Target, Play, Clock, Sparkles, CheckCircle, FileEdit, Grid3x3, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import useCampaignStore from '../../../../../stores/campaignStore';
@@ -6,14 +6,12 @@ import useCampaignStore from '../../../../../stores/campaignStore';
 function CampaignsOverview() {
   const fetchCampaignsOverview = useCampaignStore((s) => s.fetchCampaignsOverview);
   const campaignsOverview = useCampaignStore((s) => s.campaignsOverview);
-  const isLoading = useCampaignStore((s) => s.isLoading);
 
   useEffect(() => {
     fetchCampaignsOverview().catch(() => {});
-  }, []);
+  }, [fetchCampaignsOverview]);
 
   const totalCampaigns = campaignsOverview?.totalCampaigns ?? 8;
-  const totalSaved = campaignsOverview?.totalSaved ?? 0;
   const recentCampaigns = campaignsOverview?.recentCampaigns ?? [];
   const activeCampaigns = recentCampaigns.filter((c) => c.isPublished).length || 5;
 
@@ -39,13 +37,6 @@ function CampaignsOverview() {
               <Play className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
               <span className="text-xs sm:text-sm font-semibold text-green-400">{activeCampaigns} Active</span>
             </div>
-
-            <Link to="/dashboard/owner/analytics">
-              <button className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg hover:border-purple-400/30 hover:bg-white/10 transition-all">
-                <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-                <span className="text-xs sm:text-sm text-gray-300">Analytics</span>
-              </button>
-            </Link>
 
             <Link to="/dashboard/owner/influencers">
               <button className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg hover:border-purple-400/30 hover:bg-white/10 transition-all">

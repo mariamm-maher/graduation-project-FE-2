@@ -1,4 +1,4 @@
-import { Share2, Calendar, Image, TrendingUp, ArrowRight, Target, Clock, BarChart3, Users, Megaphone } from 'lucide-react';
+import { Share2, Calendar, Image, TrendingUp, ArrowRight, Target, Clock, Users, Megaphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import useSocialMediaStore from '../../../../../stores/SocialMediaStore';
@@ -35,13 +35,6 @@ function SocialMediaOverview() {
               <Calendar className="w-4 h-4 text-blue-400" />
               <span className="text-sm font-semibold text-blue-400">{scheduledPosts} Scheduled</span>
             </div>
-
-            <Link to="/dashboard/owner/analytics">
-              <button className="flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg hover:border-purple-400/30 hover:bg-white/10 transition-all">
-                <BarChart3 className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-300">Analytics</span>
-              </button>
-            </Link>
 
             <Link to="/dashboard/owner/campaigns">
               <button className="flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg hover:border-purple-400/30 hover:bg-white/10 transition-all">

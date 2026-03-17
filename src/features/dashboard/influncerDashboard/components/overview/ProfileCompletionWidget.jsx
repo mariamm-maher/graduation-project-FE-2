@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 const ProfileCompletionWidget = ({ profileCompletion, loading }) => {
     const completionPercentage = profileCompletion?.completionPercentage ?? 0;
-    const missingFields = profileCompletion?.missingFields || [];
+   
 
     if (loading || completionPercentage >= 100) return null;
 

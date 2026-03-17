@@ -11,7 +11,6 @@ import {
   Requests,
   Messages,
   Analytics,
-  ChatRooms,
   CollaborationBoard
 } from './index';
 
@@ -29,10 +28,10 @@ function CollaborationsLayout() {
         <Route path="contracts/:id" element={<ContractDetail />} />
         <Route path=":id/contract" element={<CreateContract />} />
         <Route path="requests" element={<Requests />} />
-        <Route path="messages" element={<Messages />} />
+        <Route path="messages" element={<Messages userRole="owner" />} />
         <Route path="analytics" element={<Analytics />} />
    
-        <Route path="chat-rooms" element={<ChatRooms />} />
+        <Route path="chat-rooms" element={<Messages userRole="owner" />} />
         <Route path="board" element={<CollaborationBoard />} />
 
       </Routes>

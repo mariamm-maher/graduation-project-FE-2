@@ -1,10 +1,18 @@
 import { create } from 'zustand';
 import chatService from '../api/chatApi';
-import { connectChatSocket, disconnectChatSocket, getChatSocket } from '../utils/chatSocket';
+import { acquireChatSocket, getChatSocket, releaseChatSocket } from '../utils/chatSocket';
+
+let chatSocketListenersAttached = false;
+let chatSocketSubscribers = 0;
+const joinedRoomIds = new Set();
+const joinedCollaborationIds = new Set();
+const markReadEmitCache = new Map();
+const MARK_READ_EMIT_DEBOUNCE_MS = 1200;
 
 const useChatStore = create((set) => ({
   chatRooms: [],
   currentRoom: null,
+  activeRoomId: null,
   messages: [],
   connected: false,
   typingUsers: [],
@@ -38,121 +46,200 @@ const useChatStore = create((set) => ({
   },
 
   initSocket: () => {
-    const existing = getChatSocket();
-    if (existing) return;
+    chatSocketSubscribers += 1;
 
-    const socket = connectChatSocket();
+    (async () => {
+      try {
+        if (chatSocketListenersAttached) {
+          await acquireChatSocket();
+          return;
+        }
 
-    socket.on('connect', () => {
-      set({ connected: true, error: null });
-    });
+        const socket = await acquireChatSocket();
+        if (chatSocketListenersAttached) return;
 
-    socket.on('disconnect', () => {
-      set({ connected: false });
-    });
+        chatSocketListenersAttached = true;
 
-    socket.on('connect_error', (err) => {
-      set({ error: err?.message || 'Socket connection error' });
-    });
+        socket.on('connect', () => {
+          joinedRoomIds.forEach((chatRoomId) => {
+            socket.emit('join_room', { chatRoomId });
+          });
 
-    socket.on('error', (payload) => {
-      const message = payload?.message || 'Socket event failed';
-      set({ error: message });
-    });
+          joinedCollaborationIds.forEach((collaborationId) => {
+            socket.emit('join_collaboration_chat', { collaborationId });
+          });
 
-    socket.on('message_received', (incoming) => {
-      set((state) => {
-        const messageId = incoming?.id || incoming?._id;
-        const roomId = incoming?.chatRoomId || incoming?.roomId;
-        const currentRoomId = state.currentRoom?.id || state.currentRoom?._id;
-
-        const alreadyExists = state.messages.some((m) => (m.id || m._id) === messageId);
-        if (alreadyExists) return state;
-
-        const normalizedMessage = {
-          ...incoming,
-          id: messageId,
-          chatRoomId: roomId,
-          senderId: incoming?.senderId || incoming?.sender?.id,
-          content: incoming?.content || '',
-          sentAt: incoming?.sentAt || new Date().toISOString(),
-          status: incoming?.status || 'delivered'
-        };
-
-        const updatedRooms = state.chatRooms.map((room) => {
-          const id = room.id || room._id;
-          if (id !== roomId) return room;
-
-          const shouldIncrementUnread = currentRoomId !== id;
-          return {
-            ...room,
-            lastMessage: normalizedMessage,
-            unreadCount: shouldIncrementUnread ? Number(room.unreadCount || 0) + 1 : 0,
-            updatedAt: normalizedMessage.sentAt
-          };
-        });
-
-        const nextMessages = roomId === currentRoomId
-          ? [...state.messages, normalizedMessage].sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt))
-          : state.messages;
-
-        return {
-          chatRooms: updatedRooms,
-          messages: nextMessages
-        };
-      });
-    });
-
-    socket.on('messages_read', ({ chatRoomId, messageIds }) => {
-      set((state) => {
-        const updatedMessages = state.messages.map((message) => {
-          if ((message.chatRoomId || message.roomId) !== chatRoomId) return message;
-          if (messageIds === 'all' || (Array.isArray(messageIds) && messageIds.includes(message.id || message._id))) {
-            return { ...message, status: 'read' };
+          const state = useChatStore.getState();
+          state.getChatRooms();
+          if (state.activeRoomId) {
+            state.getMessages(state.activeRoomId);
           }
-          return message;
+
+          set({ connected: true, error: null });
         });
 
-        const updatedRooms = state.chatRooms.map((room) => {
-          const id = room.id || room._id;
-          if (id !== chatRoomId) return room;
-          return { ...room, unreadCount: 0 };
+        socket.on('disconnect', () => {
+          set({ connected: false });
         });
 
-        return { messages: updatedMessages, chatRooms: updatedRooms };
-      });
-    });
+        socket.on('connect_error', (err) => {
+          set({ error: err?.message || 'Socket connection error' });
+        });
 
-    socket.on('user_typing', ({ userId, chatRoomId }) => {
-      set((state) => {
-        const exists = state.typingUsers.some((u) => u.userId === userId && u.chatRoomId === chatRoomId);
-        if (exists) return state;
-        return { typingUsers: [...state.typingUsers, { userId, chatRoomId }] };
-      });
-    });
+        socket.on('error', (payload) => {
+          const message = payload?.message || 'Socket event failed';
+          set({ error: message });
+        });
 
-    socket.on('user_stopped_typing', ({ userId, chatRoomId }) => {
-      set((state) => ({
-        typingUsers: state.typingUsers.filter((u) => !(u.userId === userId && u.chatRoomId === chatRoomId))
-      }));
-    });
+        socket.on('message_received', (incoming) => {
+          set((state) => {
+            const messageId = incoming?.id || incoming?._id;
+            const roomId = incoming?.chatRoomId || incoming?.roomId;
+            const activeRoomId = state.activeRoomId || state.currentRoom?.id || state.currentRoom?._id;
+
+            const alreadyExists = state.messages.some((m) => (m.id || m._id) === messageId);
+            if (alreadyExists) return state;
+
+            const normalizedMessage = {
+              ...incoming,
+              id: messageId,
+              chatRoomId: roomId,
+              senderId: incoming?.senderId || incoming?.sender?.id,
+              content: incoming?.content || '',
+              sentAt: incoming?.sentAt || new Date().toISOString(),
+              status: incoming?.status || 'delivered'
+            };
+
+            const updatedRooms = state.chatRooms.map((room) => {
+              const id = room.id || room._id;
+              if (id !== roomId) return room;
+
+              const shouldIncrementUnread = String(activeRoomId) !== String(id);
+              return {
+                ...room,
+                lastMessage: normalizedMessage,
+                unreadCount: shouldIncrementUnread ? Number(room.unreadCount || 0) + 1 : 0,
+                updatedAt: normalizedMessage.sentAt
+              };
+            });
+
+            const nextMessages = String(roomId) === String(activeRoomId)
+              ? [...state.messages, normalizedMessage].sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt))
+              : state.messages;
+
+            return {
+              chatRooms: updatedRooms,
+              messages: nextMessages
+            };
+          });
+        });
+
+        socket.on('messages_read', ({ chatRoomId, messageIds }) => {
+          set((state) => {
+            const updatedMessages = state.messages.map((message) => {
+              if ((message.chatRoomId || message.roomId) !== chatRoomId) return message;
+              if (messageIds === 'all' || (Array.isArray(messageIds) && messageIds.includes(message.id || message._id))) {
+                return { ...message, status: 'read' };
+              }
+              return message;
+            });
+
+            const updatedRooms = state.chatRooms.map((room) => {
+              const id = room.id || room._id;
+              if (id !== chatRoomId) return room;
+              return { ...room, unreadCount: 0 };
+            });
+
+            return { messages: updatedMessages, chatRooms: updatedRooms };
+          });
+        });
+
+        socket.on('user_typing', ({ userId, chatRoomId }) => {
+          set((state) => {
+            const exists = state.typingUsers.some((u) => u.userId === userId && u.chatRoomId === chatRoomId);
+            if (exists) return state;
+            return { typingUsers: [...state.typingUsers, { userId, chatRoomId }] };
+          });
+        });
+
+        socket.on('user_stopped_typing', ({ userId, chatRoomId }) => {
+          set((state) => ({
+            typingUsers: state.typingUsers.filter((u) => !(u.userId === userId && u.chatRoomId === chatRoomId))
+          }));
+        });
+      } catch (error) {
+        const errorMessage = typeof error === 'string' ? error : error?.message || 'Socket connection failed';
+        set({ error: errorMessage, connected: false });
+      }
+    })();
   },
 
   disconnectSocket: () => {
-    disconnectChatSocket();
-    set({ connected: false, typingUsers: [] });
+    chatSocketSubscribers = Math.max(0, chatSocketSubscribers - 1);
+
+    if (chatSocketSubscribers > 0) {
+      releaseChatSocket();
+      return;
+    }
+
+    const socket = getChatSocket();
+    if (socket && chatSocketListenersAttached) {
+      socket.off('connect');
+      socket.off('disconnect');
+      socket.off('connect_error');
+      socket.off('error');
+      socket.off('message_received');
+      socket.off('messages_read');
+      socket.off('user_typing');
+      socket.off('user_stopped_typing');
+    }
+    chatSocketListenersAttached = false;
+    joinedRoomIds.clear();
+    joinedCollaborationIds.clear();
+    markReadEmitCache.clear();
+    releaseChatSocket();
+    set({ connected: false, typingUsers: [], activeRoomId: null });
   },
 
   joinCollaborationChat: (collaborationId) => {
     const socket = getChatSocket();
     if (!socket || !collaborationId) return;
+
+    const key = String(collaborationId);
+    if (joinedCollaborationIds.has(key)) return;
+
     socket.emit('join_collaboration_chat', { collaborationId });
+    joinedCollaborationIds.add(key);
+  },
+
+  setActiveRoom: (chatRoomId) => {
+    set({ activeRoomId: chatRoomId ? String(chatRoomId) : null });
   },
 
   leaveRoom: (chatRoomId) => {
     const socket = getChatSocket();
     if (!socket || !chatRoomId) return;
+
+    const roomKey = String(chatRoomId);
+    if (!joinedRoomIds.has(roomKey)) return;
+
     socket.emit('leave_room', { chatRoomId });
+    joinedRoomIds.delete(roomKey);
+    markReadEmitCache.delete(roomKey);
+    set((state) => ({
+      activeRoomId: state.activeRoomId === roomKey ? null : state.activeRoomId
+    }));
+  },
+
+  joinRoom: (chatRoomId) => {
+    const socket = getChatSocket();
+    if (!socket || !chatRoomId) return;
+
+    const roomKey = String(chatRoomId);
+    if (joinedRoomIds.has(roomKey)) return;
+
+    socket.emit('join_room', { chatRoomId });
+    joinedRoomIds.add(roomKey);
   },
 
   emitTyping: (chatRoomId) => {
@@ -170,7 +257,17 @@ const useChatStore = create((set) => ({
   emitMarkMessagesRead: (chatRoomId, messageIds = 'all') => {
     const socket = getChatSocket();
     if (!socket || !chatRoomId) return;
+
+    const roomKey = String(chatRoomId);
+    const now = Date.now();
+    const lastEmitAt = markReadEmitCache.get(roomKey) || 0;
+
+    if (now - lastEmitAt < MARK_READ_EMIT_DEBOUNCE_MS) {
+      return;
+    }
+
     socket.emit('mark_messages_read', { chatRoomId, messageIds });
+    markReadEmitCache.set(roomKey, now);
   },
 
   // Get chat room for a collaboration

@@ -1,7 +1,7 @@
 import { Search, Bell, MessageSquare, ChevronDown, X, Trash2, Check } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import useAuthStore from '../../../../stores/authStore';
 import useNotificationsStore from '../../../../stores/NotificationsStore';
@@ -18,13 +18,28 @@ function Header() {
   const [showInfluencerModal, setShowInfluencerModal] = useState(false);
 
   const user = useAuthStore((s) => s.user);
-  const { notifications, unreadCount, getUnreadNotifications, getNotifications, markAsRead, markAllAsRead, deleteNotification } = useNotificationsStore();
+  const {
+    notifications,
+    unreadCount,
+    fetchNotifications,
+    fetchUnreadCount,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    initRealtimeNotifications,
+    cleanupRealtimeNotifications
+  } = useNotificationsStore();
 
   // Fetch notifications on mount
   useEffect(() => {
-    getNotifications();
-    getUnreadNotifications();
-  }, [getNotifications, getUnreadNotifications]);
+    fetchNotifications(1, 10);
+    fetchUnreadCount();
+    initRealtimeNotifications();
+
+    return () => {
+      cleanupRealtimeNotifications();
+    };
+  }, [fetchNotifications, fetchUnreadCount, initRealtimeNotifications, cleanupRealtimeNotifications]);
 
   const handleMarkAsRead = async (notificationId) => {
     const res = await markAsRead(notificationId);
@@ -115,15 +130,11 @@ function Header() {
     }
   };
 
-  const handleCreateCampaignAI = () => {
-    navigate('/dashboard/owner/campaigns/create');
-  };
-
   return (
     <>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div className="flex items-center gap-4 sm:gap-8 w-full sm:w-auto">
-          <motion.h1 
+          <Motion.h1 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
@@ -131,10 +142,10 @@ function Header() {
           >
             <span className="text-[#C1B6FD]">Ad</span>
             <span className="text-white">Sphere</span>
-          </motion.h1>
+          </Motion.h1>
           
           {/* Enhanced Search Bar */}
-          <motion.div 
+          <Motion.div 
             ref={searchRef}
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -152,7 +163,7 @@ function Header() {
                 className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-full pl-9 sm:pl-10 pr-10 py-2 w-full sm:w-80 text-sm focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD] text-white placeholder:text-gray-500 transition-all duration-200"
               />
               {searchQuery && (
-                <motion.button
+                <Motion.button
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   exit={{ scale: 0 }}
@@ -161,14 +172,14 @@ function Header() {
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white transition-colors duration-200 z-10"
                 >
                   <X className="w-4 h-4" />
-                </motion.button>
+                </Motion.button>
               )}
             </form>
 
             {/* Search Results Dropdown */}
             <AnimatePresence>
               {showSearchResults && filteredSuggestions.length > 0 && (
-                <motion.div
+                <Motion.div
                   initial={{ opacity: 0, y: -10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -180,7 +191,7 @@ function Header() {
                       Search Results
                     </div>
                     {filteredSuggestions.map((suggestion, index) => (
-                      <motion.button
+                      <Motion.button
                         key={index}
                         whileHover={{ x: 4, backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
                         onClick={() => handleSuggestionClick(suggestion)}
@@ -201,13 +212,13 @@ function Header() {
                           </div>
                         </div>
                         <Search className="w-4 h-4 text-gray-600 group-hover:text-[#C1B6FD] transition-colors duration-200" />
-                      </motion.button>
+                      </Motion.button>
                     ))}
                   </div>
-                </motion.div>
+                </Motion.div>
               )}
               {showSearchResults && searchQuery && filteredSuggestions.length === 0 && (
-                <motion.div
+                <Motion.div
                   initial={{ opacity: 0, y: -10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -218,10 +229,10 @@ function Header() {
                     <Search className="w-8 h-8 text-gray-600 mx-auto mb-2" />
                     <p className="text-gray-400 text-sm">No results found for "{searchQuery}"</p>
                   </div>
-                </motion.div>
+                </Motion.div>
               )}
             </AnimatePresence>
-          </motion.div>
+          </Motion.div>
         </div>
         
         <div className="flex items-center gap-2 sm:gap-4 flex-wrap w-full sm:w-auto">
@@ -230,30 +241,30 @@ function Header() {
           {/* Join as Influencer Promotion Button (shows when user is not an influencer) */}
           {!hasInfluencerRole && (
             <>
-            <motion.button
+            <Motion.button
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.45 }}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => setShowInfluencerModal(true)}
-              className="relative px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white rounded-lg overflow-hidden group flex-1 sm:flex-initial bg-gradient-to-r from-green-400 via-teal-300 to-cyan-400"
+              className="relative px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white rounded-lg overflow-hidden group flex-1 sm:flex-initial bg-linear-to-r from-green-400 via-teal-300 to-cyan-400"
             >
               <div className="absolute inset-0 opacity-20"></div>
               <span className="relative flex items-center justify-center sm:justify-start space-x-2">
                 <span className="hidden sm:inline">Join as Influencer — get campaign opportunities</span>
                 <span className="sm:hidden">Become Influencer</span>
               </span>
-            </motion.button>
+            </Motion.button>
             </>
           )}
 
           {/* Team Status */}
-          <motion.div 
+          <Motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex items-center gap-2 hidden sm:flex"
+            className="hidden items-center gap-2 sm:flex"
           >
             <div className="flex -space-x-2">
               <div className="w-8 h-8 rounded-full bg-[#745CB4] border-2 border-[#000000]"></div>
@@ -262,10 +273,10 @@ function Header() {
               <div className="w-8 h-8 rounded-full bg-[#745CB4] border-2 border-[#000000] flex items-center justify-center text-xs">+9</div>
             </div>
             <span className="text-sm"><span className="font-bold">12</span> of <span className="font-bold">15</span> <span className="text-gray-400">active</span></span>
-          </motion.div>
+          </Motion.div>
 
           {/* Notifications */}
-          <motion.button
+          <Motion.button
             onClick={() => setShowNotificationsPanel(!showNotificationsPanel)}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -275,22 +286,21 @@ function Header() {
             className="relative p-2 hover:bg-white/5 rounded-lg transition-all duration-200"
           >
             <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-white" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-[#C1B6FD] rounded-full shadow-lg shadow-[#C1B6FD]/50"></span>
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold text-[10px] sm:text-xs">
-                {unreadCount}
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-4 h-4 px-1 sm:min-w-5 sm:h-5 sm:px-1.5 flex items-center justify-center font-bold text-[10px] sm:text-xs">
+                {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
-          </motion.button>
+          </Motion.button>
 
           {/* Notifications Panel */}
           <AnimatePresence>
             {showNotificationsPanel && (
-              <motion.div
+              <Motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute top-16 right-0 w-96 bg-gradient-to-br from-[#1a0933] to-[#2d1b4e] border border-white/20 rounded-xl shadow-2xl z-50"
+                className="absolute top-16 right-0 w-96 bg-linear-to-br from-[#1a0933] to-[#2d1b4e] border border-white/20 rounded-xl shadow-2xl z-50"
               >
                 <div className="p-4 border-b border-white/10 flex items-center justify-between">
                   <h3 className="text-white font-bold">Notifications</h3>
@@ -345,12 +355,12 @@ function Header() {
                     ))
                   )}
                 </div>
-              </motion.div>
+              </Motion.div>
             )}
           </AnimatePresence>
 
           {/* Messages/Chat */}
-          <motion.button 
+          <Motion.button 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
@@ -360,18 +370,18 @@ function Header() {
           >
             <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-white" />
             <span className="absolute -top-1 -right-1 bg-[#745CB4] text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold text-[10px] sm:text-xs">7</span>
-          </motion.button>
+          </Motion.button>
 
           <div className="hidden sm:block w-px h-8 bg-white/10"></div>
 
           {/* Role Switcher */}
-          <motion.div 
+          <Motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.35 }}
             className="relative w-full sm:w-auto"
           >
-            <motion.button
+            <Motion.button
               onClick={() => setShowRoleDropdown(!showRoleDropdown)}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -382,11 +392,11 @@ function Header() {
                 <span className="text-xs sm:text-sm font-medium">Active: <span className="text-[#C1B6FD]">{activeRole}</span></span>
               </div>
               <ChevronDown className={`w-3 h-3 sm:w-4 sm:h-4 text-gray-400 transition-transform duration-200 ${showRoleDropdown ? 'rotate-180' : ''}`} />
-            </motion.button>
+            </Motion.button>
 
             <AnimatePresence>
               {showRoleDropdown && (
-                <motion.div 
+                <Motion.div 
                   initial={{ opacity: 0, y: -10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -394,7 +404,7 @@ function Header() {
                   className="absolute right-0 mt-2 w-56 bg-[#1a1a3e] backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
                 >
                   <div className="p-2">
-                    <motion.button
+                    <Motion.button
                       whileHover={{ x: 4 }}
                       onClick={() => switchRole('Owner')}
                       className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
@@ -405,8 +415,8 @@ function Header() {
                     >
                       <div className="font-medium">Switch to Owner</div>
                       <div className="text-xs text-gray-600 mt-1">Manage campaigns & team</div>
-                    </motion.button>
-                    <motion.button
+                    </Motion.button>
+                    <Motion.button
                       whileHover={{ x: 4 }}
                       onClick={() => switchRole('Influencer')}
                       className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 mt-1 ${
@@ -417,12 +427,12 @@ function Header() {
                     >
                       <div className="font-medium">Switch to Influencer</div>
                       <div className="text-xs text-gray-600 mt-1">View offers & collaborations</div>
-                    </motion.button>
+                    </Motion.button>
                   </div>
-                </motion.div>
+                </Motion.div>
               )}
             </AnimatePresence>
-          </motion.div>
+          </Motion.div>
         </div>
       </div>
       <AnimatePresence>

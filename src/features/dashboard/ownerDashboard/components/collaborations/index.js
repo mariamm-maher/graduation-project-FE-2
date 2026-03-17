@@ -11,8 +11,8 @@ import CreateContract from './Contracts/CreateContract';
 import ContractDetail from './Contracts/contractDetails';
 import Requests from './Requests/Requests';
 import Analytics from './Analytics/Analytics';
-import ChatRooms from './ChatRooms/ChatRooms';
-import Messages from './messages/Messages';
+
+import Messages from '../../../shared/messages/Messages';
 import CollaborationBoard from './CollaborationBoard/CollaborationBoard';
 
 export {
@@ -28,6 +28,6 @@ export {
   Requests,
   Messages,
   Analytics,
-  ChatRooms,
+
   CollaborationBoard
 };

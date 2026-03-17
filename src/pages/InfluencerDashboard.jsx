@@ -4,11 +4,11 @@ import CampaignsLayout from '../features/dashboard/influncerDashboard/components
 import CollaborationsLayout from '../features/dashboard/influncerDashboard/components/collaborations/CollaborationsLayout';
 import Profile from '../features/dashboard/influncerDashboard/components/profile/Profile';
 import CompleteProfileWizard from '../features/dashboard/influncerDashboard/components/profile/CompleteProfileWizard';
-import Messages from '../features/dashboard/influncerDashboard/components/messages';
+import Messages from '../features/dashboard/shared/messages/Messages';
 
 function InfluencerDashboard() {
   return (
-    <div className="bg-gradient-to-br from-[#000000] via-[#1a0933] to-[#372557] min-h-screen text-white p-3 sm:p-4 md:p-6 overflow-x-hidden">
+    <div className="bg-linear-to-br from-[#000000] via-[#1a0933] to-[#372557] min-h-screen text-white p-3 sm:p-4 md:p-6 overflow-x-hidden">
       <Header />
       <Sidebar />
       <div className="ml-0 md:ml-20 lg:ml-32 transition-all duration-300 max-w-full">
@@ -20,7 +20,7 @@ function InfluencerDashboard() {
           <Route path="complete-profile" element={<CompleteProfileWizard />} />
           <Route path="social-media/*" element={<div>Social Media Content</div>} />
           <Route path="analytics/*" element={<div>Performance Analytics</div>} />
-          <Route path="messages/*" element={<Messages />} />
+          <Route path="messages/*" element={<Messages userRole="influencer" />} />
         </Routes>
       </div>
     </div>

@@ -9,7 +9,7 @@ const notificationsService = {
       const { page = 1, limit = 10 } = params;
       const query = new URLSearchParams({ page, limit });
       const response = await api.get(`/notifications?${query.toString()}`);
-      return response.data;
+      return response?.data?.data;
     } catch (error) {
       console.error('Get notifications error:', error);
       throw error.response?.data?.message || 'Failed to fetch notifications';
@@ -21,7 +21,7 @@ const notificationsService = {
   getUnreadCount: async () => {
     try {
       const response = await api.get('/notifications/unread');
-      return response.data;
+      return response?.data?.data;
     } catch (error) {
       console.error('Get unread count error:', error);
       throw error.response?.data?.message || 'Failed to fetch unread notifications count';
@@ -33,7 +33,7 @@ const notificationsService = {
   markAsRead: async (id) => {
     try {
       const response = await api.patch(`/notifications/${id}/read`);
-      return response.data;
+      return response?.data?.data;
     } catch (error) {
       console.error('Mark as read error:', error);
       throw error.response?.data?.message || 'Failed to mark notification as read';
@@ -45,7 +45,7 @@ const notificationsService = {
   markAllAsRead: async () => {
     try {
       const response = await api.patch('/notifications/read-all');
-      return response.data;
+      return response?.data?.data;
     } catch (error) {
       console.error('Mark all as read error:', error);
       throw error.response?.data?.message || 'Failed to mark all notifications as read';
@@ -57,7 +57,7 @@ const notificationsService = {
   deleteNotification: async (id) => {
     try {
       const response = await api.delete(`/notifications/${id}`);
-      return response.data;
+      return response?.data?.data;
     } catch (error) {
       console.error('Delete notification error:', error);
       throw error.response?.data?.message || 'Failed to delete notification';

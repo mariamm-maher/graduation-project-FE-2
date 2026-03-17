@@ -2,9 +2,26 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import authService from '../api/authApi';
 
+let refreshPromise = null;
+
+const decodeJwtPayload = (token) => {
+  if (!token || typeof token !== 'string') return null;
+
+  try {
+    const payloadPart = token.split('.')[1];
+    if (!payloadPart) return null;
+
+    const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    return JSON.parse(atob(padded));
+  } catch {
+    return null;
+  }
+};
+
 const useAuthStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       // State
       user: null,
       token: null,
@@ -28,6 +45,64 @@ const useAuthStore = create(
       setLoading: (isLoading) => set({ isLoading }),
       
       setError: (error) => set({ error, isLoading: false }),
+
+      isTokenExpired: (token, leewaySeconds = 30) => {
+        const candidateToken = token || get().token;
+        if (!candidateToken) return true;
+
+        const payload = decodeJwtPayload(candidateToken);
+        if (!payload?.exp) return true;
+
+        const nowInSeconds = Math.floor(Date.now() / 1000);
+        return payload.exp <= (nowInSeconds + leewaySeconds);
+      },
+
+      refreshAccessToken: async () => {
+        if (refreshPromise) return refreshPromise;
+
+        refreshPromise = (async () => {
+          try {
+            const response = await authService.refreshToken();
+            const newAccessToken = response?.data?.accessToken || response?.data?.token || null;
+
+            if (!newAccessToken) {
+              throw new Error(response?.message || 'Failed to refresh access token');
+            }
+
+            set((state) => ({
+              token: newAccessToken,
+              isAuthenticated: Boolean(state.user)
+            }));
+
+            return newAccessToken;
+          } catch (error) {
+            set({
+              user: null,
+              token: null,
+              isAuthenticated: false,
+              error: null,
+              isLoading: false
+            });
+            throw (typeof error === 'string' ? new Error(error) : error);
+          } finally {
+            refreshPromise = null;
+          }
+        })();
+
+        return refreshPromise;
+      },
+
+      getValidAccessToken: async (forceRefresh = false) => {
+        const { token, isTokenExpired, refreshAccessToken } = get();
+
+        if (!token) return null;
+
+        if (forceRefresh || isTokenExpired(token)) {
+          return refreshAccessToken();
+        }
+
+        return token;
+      },
       
       clearError: () => set({ error: null }),
       

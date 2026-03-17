@@ -1,0 +1,34 @@
+export const ALLOWED_NOTIFICATION_TYPES = Object.freeze([
+  'CAMPAIGN_INVITATION',
+  'CAMPAIGN_PUBLISHED',
+  'CAMPAIGN_APPROVED',
+  'CAMPAIGN_REJECTED',
+  'AI_CAMPAIGN_READY',
+
+  'CONTRACT_CREATED',
+  'CONTRACT_SENT',
+  'CONTRACT_SIGNED',
+
+  'OFFER_MADE',
+  'OFFER_ACCEPTED',
+  'OFFER_REJECTED',
+
+  'PROPOSAL_SUBMITTED',
+  'PROPOSAL_ACCEPTED',
+  'PROPOSAL_REJECTED',
+
+  'TASK_ASSIGNED',
+  'TASK_STARTED',
+  'TASK_SUBMITTED',
+  'TASK_APPROVED',
+  'TASK_REJECTED',
+  'TASK_FINAL_REJECTED',
+
+  'FILE_UPLOADED',
+  'MESSAGE_RECEIVED'
+]);
+
+export const isValidNotificationType = (type) => {
+  if (!type || typeof type !== 'string') return false;
+  return ALLOWED_NOTIFICATION_TYPES.includes(type);
+};

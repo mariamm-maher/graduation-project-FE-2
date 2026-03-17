@@ -123,6 +123,14 @@ export default function InfluencerOnboarding() {
     }
   };
 
+  const handleSkip = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(prev => prev + 1);
+    } else {
+      handleSubmit();
+    }
+  };
+
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(prev => prev - 1);
@@ -246,8 +254,8 @@ export default function InfluencerOnboarding() {
                   disabled={uploadingImage}
                   whileHover={{ scale: uploadingImage ? 1 : 1.02 }}
                   whileTap={{ scale: uploadingImage ? 1 : 0.98 }}
-                  className={`w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-500 text-white rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
-                    uploadingImage ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'
+                  className={`w-full py-3 px-6 bg-[#745CB4] hover:bg-[#9381C4] text-white rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
+                    uploadingImage ? 'opacity-50 cursor-not-allowed' : 'shadow-md shadow-[#745CB4]/20'
                   }`}
                 >
                   {uploadingImage ? (
@@ -602,102 +610,122 @@ export default function InfluencerOnboarding() {
   const progress = ((currentStep + 1) / steps.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#000000] via-[#05060F] to-[#1e1632] flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
+    <div className="min-h-screen bg-gradient-to-b from-[#000000] via-[#05060F] to-[#1e1632]  flex flex-col items-center justify-center p-4 font-sans text-gray-100">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-3xl"
+      >
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-500 rounded-full mb-4">
-            <Star className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-white mb-2">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-semibold tracking-tight text-white mb-3">
             Influencer Onboarding
           </h1>
-          <p className="text-gray-400 mb-4">
-            Step {currentStep + 1} of {steps.length}
+          <p className="text-gray-400 text-sm max-w-lg mx-auto">
+            These questions help us personalize your experience and match you with the most suitable brand collaborations.
           </p>
-
-          {/* Progress Bar */}
-          <div className="max-w-md mx-auto">
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-to-r from-purple-600 to-pink-500"
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.5 }}
-              />
-            </div>
+          <div className="mt-4 inline-block px-3 py-1 bg-gray-900 border border-[#745CB4]/30 rounded-full">
+            <p className="text-xs text-[#C1B6FD] font-medium tracking-wide">
+              Step {currentStep + 1} of {steps.length}
+            </p>
           </div>
-        </motion.div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-8 max-w-2xl mx-auto">
+          <div className="h-1.5 bg-gray-900 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-[#745CB4] to-[#C1B6FD]"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+            />
+          </div>
+        </div>
 
         {/* Form Card */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-8 max-w-2xl mx-auto flex flex-col min-h-[420px]">
           {/* Step Icon and Title */}
-          <div className="flex items-center gap-4 mb-6">
-            <div className="p-3 bg-gradient-to-br from-purple-600 to-pink-500 rounded-lg">
-              <Icon className="w-6 h-6 text-white" />
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-2.5 bg-gray-800/80 border border-gray-700/50 rounded-xl">
+              <Icon className="w-5 h-5 text-[#C1B6FD]" strokeWidth={2} />
             </div>
-            <h2 className="text-2xl font-bold text-white">{steps[currentStep].title}</h2>
+            <h2 className="text-xl font-semibold text-white">{steps[currentStep].title}</h2>
           </div>
 
           {/* Step Content */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentStep}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {steps[currentStep].component}
-            </motion.div>
-          </AnimatePresence>
+          <div className="flex-1">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                {steps[currentStep].component}
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
           {/* Navigation Buttons */}
-          <div className="flex gap-4 mt-8">
-            {currentStep > 0 && (
+          <div className="flex items-center justify-between mt-10 pt-6 border-t border-gray-800/50">
+            <div className="flex gap-3">
+              {currentStep > 0 && (
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="px-5 py-2.5 bg-transparent border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors duration-200 text-sm font-medium flex items-center justify-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
+                </button>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={handleBack}
-                className="flex-1 py-3 px-6 bg-white/5 border border-white/10 text-white rounded-lg hover:bg-white/10 transition-all duration-300 flex items-center justify-center gap-2"
+                onClick={handleSkip}
+                className="px-5 py-2.5 text-gray-400 hover:text-gray-200 transition-colors duration-200 text-sm font-medium"
               >
-                <ArrowLeft className="w-5 h-5" />
-                Back
+                Skip
               </button>
-            )}
-            
-            <button
-              type="button"
-              onClick={currentStep === steps.length - 1 ? handleSubmit : handleNext}
-              disabled={isLoading && currentStep === steps.length - 1}
-              className={`flex-1 py-3 px-6 text-white rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${currentStep === steps.length - 1 ? 'bg-gradient-to-r from-purple-600 to-pink-500' : 'bg-white/5'} ${isLoading && currentStep === steps.length - 1 ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}`}
-            >
-              {currentStep === steps.length - 1 ? 'Complete' : 'Next'}
-              {currentStep === steps.length - 1 ? (
-                <CheckCircle2 className="w-5 h-5" />
-              ) : (
-                <ArrowRight className="w-5 h-5" />
-              )}
-            </button>
+
+              <button
+                type="button"
+                onClick={currentStep === steps.length - 1 ? handleSubmit : handleNext}
+                disabled={isLoading && currentStep === steps.length - 1}
+                className={`px-6 py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm font-semibold transition-all duration-200 ${
+                  currentStep === steps.length - 1 
+                    ? 'bg-[#745CB4] hover:bg-[#9381C4] text-white shadow-md' 
+                    : 'bg-gray-100 hover:bg-white text-gray-900'
+                } ${isLoading && currentStep === steps.length - 1 ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+              >
+                {currentStep === steps.length - 1 ? 'Complete' : 'Next'}
+                {currentStep === steps.length - 1 ? (
+                  <CheckCircle2 className="w-4 h-4" />
+                ) : (
+                  <ArrowRight className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Skip Link */}
-        <div className="text-center mt-6">
+        {/* Global Skip Link */}
+        <div className="text-center mt-8">
           <button
             onClick={() => {
               logout();
-              setTimeout(() => navigate('/login'), 800);
+              navigate('/login');
             }}
-            className="text-gray-400 hover:text-white transition-colors duration-300 text-sm"
+            className="text-gray-500 hover:text-gray-300 transition-colors duration-200 text-xs font-medium"
           >
-            Skip for now
+            Skip all onboarding and go to dashboard
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

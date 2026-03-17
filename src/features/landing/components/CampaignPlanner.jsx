@@ -29,7 +29,7 @@ const plannerFeatures = [
 
 const CampaignPlanner = () => {
   return (
-    <section id="campaign-planner" className="py-16 bg-[#1a1a1a] relative overflow-hidden">
+    <section id="campaign-planner" className="py-16 relative overflow-hidden">
       {/* Animated Background Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -110,7 +110,7 @@ const CampaignPlanner = () => {
            
 
             <h2 className="text-4xl sm:text-5xl font-extrabold text-white drop-shadow-[0_2px_20px_rgba(116,92,180,0.4)]">
-              AI Campaigns in <span className="text-transparent bg-clip-text bg-linear-to-r from-[#745CB4] to-[#C1B6FD]">Seconds</span>
+              AI Campaigns in <span className="text-transparent bg-clip-text bg-gradient-to-b from-[#745CB4] to-[#C1B6FD]">Seconds</span>
             </h2>
 
             <p className="text-lg text-gray-400 leading-relaxed">
@@ -132,7 +132,7 @@ const CampaignPlanner = () => {
                     className="flex gap-6 p-6 rounded-xl backdrop-blur-sm bg-white/5 border border-white/10 hover:bg-[#745CB4]/5 transition-all duration-300 group"
                   >
                     <motion.div
-                      className="shrink-0 w-14 h-14 rounded-lg bg-linear-to-r from-[#745CB4] to-[#5D459D] flex items-center justify-center shadow-lg"
+                      className="shrink-0 w-14 h-14 rounded-lg bg-gradient-to-b from-[#745CB4] to-[#5D459D] flex items-center justify-center shadow-lg"
                       whileHover={{ rotate: 360, scale: 1.1 }}
                       transition={{ duration: 0.6 }}
                     >
@@ -272,3 +272,4 @@ const PlannerGraphic = () => {
 }
 
 export default CampaignPlanner
+

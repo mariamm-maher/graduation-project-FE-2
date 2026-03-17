@@ -10,7 +10,7 @@ import ScrollProgress from '../components/ui/ScrollProgress'
 
 function Landing() {
   return (
-    <div className="App bg-[#1a1a1a]">
+    <div className="App bg-gradient-to-b from-[#000000] via-[#05060F] to-[#1e1632] min-h-screen text-white">
       <Navbar />
       <ScrollProgress />
       <Hero />
@@ -18,7 +18,7 @@ function Landing() {
       <CampaignPlanner />
       <CollaborationBoard />
       <CommunicationSystem />
-      <AnalyticsDashboard />
+      {/* <AnalyticsDashboard /> */}
       <Footer />
     </div>
   )

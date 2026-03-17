@@ -58,7 +58,7 @@ const particles = [...Array(15)].map(() => ({
 
 const AnalyticsDashboard = () => {
   return (
-    <section id="analytics" className="py-14 bg-linear-to-b from-[#252525] via-[#1a1a1a] to-black relative overflow-hidden">
+    <section id="analytics" className="py-14 bg-gradient-to-b from-[#252525] via-[#1a1a1a] to-black relative overflow-hidden">
       {/* Animated Background Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -122,7 +122,7 @@ const AnalyticsDashboard = () => {
         {particles.map((particle, i) => (
           <motion.div
             key={i}
-            className="absolute w-0.5 h-0.5 bg-purple-400/40 rounded-full"
+            className="absolute w-0.5 h-0.5 bg-[#C1B6FD]/40 rounded-full"
             style={{
               left: `${particle.left}%`,
               top: `${particle.top}%`,
@@ -155,13 +155,13 @@ const AnalyticsDashboard = () => {
             whileInView={{ scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-linear-to-r from-purple-400/10 to-purple-300/10 border border-purple-400/30 mb-4"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#C1B6FD]/10 to-[#D3CBFC]/10 border border-[#C1B6FD]/30 mb-4"
           >
             <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-300"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C1B6FD] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-[#D3CBFC]"></span>
             </span>
-            <span className="text-purple-300 text-sm font-semibold">Real-Time Analytics</span>
+            <span className="text-[#D3CBFC] text-sm font-semibold">Real-Time Analytics</span>
           </motion.div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-4 drop-shadow-[0_2px_30px_rgba(167,139,250,0.5)]">
@@ -190,7 +190,7 @@ const DashboardCard = ({ card, index }) => {
       viewport={{ once: true }}
       transition={{ delay: index * 0.1, duration: 0.6 }}
       whileHover={{ y: -6, scale: 1.01 }}
-      className="group relative p-4 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl space-y-3 hover:border-purple-400/40 hover:bg-white/8 transition-all duration-300 overflow-hidden"
+      className="group relative p-4 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl space-y-3 hover:border-[#C1B6FD]/40 hover:bg-white/8 transition-all duration-300 overflow-hidden"
     >
       {/* Animated gradient overlay */}
       <motion.div
@@ -202,12 +202,12 @@ const DashboardCard = ({ card, index }) => {
       
       {/* Glow effect on hover */}
       <motion.div
-        className="absolute -inset-1 bg-linear-to-r from-purple-400/20 via-purple-300/20 to-indigo-400/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"
+        className="absolute -inset-1 bg-gradient-to-r from-[#C1B6FD]/20 via-[#D3CBFC]/20 to-[#C1B6FD]/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"
       />
 
       <div className="relative z-10 flex justify-between items-start">
-        <h4 className="text-sm font-semibold text-white group-hover:text-purple-300 transition-colors duration-300">{card.title}</h4>
-        <span className="text-xl font-bold text-purple-300">{card.value}</span>
+        <h4 className="text-sm font-semibold text-white group-hover:text-[#D3CBFC] transition-colors duration-300">{card.title}</h4>
+        <span className="text-xl font-bold text-[#D3CBFC]">{card.value}</span>
       </div>
 
       {card.type === 'line' && <LineChart />}
@@ -219,7 +219,7 @@ const DashboardCard = ({ card, index }) => {
       {card.trend && (
         <div className="relative z-10">
           <p className="text-xs text-gray-400 flex items-center gap-1.5">
-            <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse"></span>
+            <span className="inline-block w-1.5 h-1.5 bg-[#C1B6FD] rounded-full animate-pulse"></span>
             {card.trend}
           </p>
         </div>
@@ -235,14 +235,14 @@ const LineChart = () => (
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
-      className="text-purple-400"
+      className="text-[#C1B6FD]"
       initial={{ pathLength: 0 }}
       whileInView={{ pathLength: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 1.5 }}
     />
     {[10, 40, 100, 190].map((x, i) => (
-      <circle key={i} cx={x} cy={[60, 40, 20, 15][i]} r="3" className="fill-purple-300" />
+      <circle key={i} cx={x} cy={[60, 40, 20, 15][i]} r="3" className="fill-[#D3CBFC]" />
     ))}
   </svg>
 )
@@ -258,7 +258,7 @@ const BarChart = () => (
           y={80 - heights[i]}
           width="20"
           height={heights[i]}
-          className="fill-purple-400"
+          className="fill-[#C1B6FD]"
           initial={{ height: 0, y: 80 }}
           whileInView={{ height: heights[i], y: 80 - heights[i] }}
           viewport={{ once: true }}
@@ -277,7 +277,7 @@ const BubbleChart = () => (
         cx={cx}
         cy={cy}
         r={r}
-        className="fill-purple-400"
+        className="fill-[#C1B6FD]"
         initial={{ scale: 0 }}
         whileInView={{ scale: 1 }}
         viewport={{ once: true }}
@@ -293,11 +293,11 @@ const HorizontalBars = ({ bars }) => (
       <div key={i}>
         <div className="flex justify-between text-xs mb-1">
           <span className="text-gray-400">{bar.label}</span>
-          <span className="text-purple-300 font-semibold">{bar.value}%</span>
+          <span className="text-[#D3CBFC] font-semibold">{bar.value}%</span>
         </div>
         <div className="h-1.5 bg-gray-800/50 rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-linear-to-r from-purple-400 to-purple-300 shadow-[0_0_8px_rgba(167,139,250,0.5)]"
+            className="h-full bg-gradient-to-r from-[#C1B6FD] to-[#D3CBFC] shadow-[0_0_8px_rgba(167,139,250,0.5)]"
             initial={{ width: 0 }}
             whileInView={{ width: `${bar.value}%` }}
             viewport={{ once: true }}
@@ -324,14 +324,15 @@ const GaugeChart = () => (
       stroke="currentColor"
       strokeWidth="12"
       strokeLinecap="round"
-      className="text-purple-400"
+      className="text-[#C1B6FD]"
       initial={{ pathLength: 0 }}
       whileInView={{ pathLength: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 1.5 }}
     />
-    <circle cx="90" cy="80" r="4" className="fill-purple-300" />
+    <circle cx="90" cy="80" r="4" className="fill-[#D3CBFC]" />
   </svg>
 )
 
 export default AnalyticsDashboard
+

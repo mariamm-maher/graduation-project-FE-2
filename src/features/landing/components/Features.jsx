@@ -72,24 +72,8 @@ const features = [
 
 const Features = () => {
   return (
-    <section id="features" className="relative bg-linear-to-b from-[#1a1a1a] to-[#252525] overflow-hidden">
-      {/* Section Header */}
-      <div className="relative z-10 pt-20 pb-12">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.8 }}
-          className="text-center max-w-4xl mx-auto px-6"
-        >
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6 drop-shadow-[0_2px_30px_rgba(116,92,180,0.5)]\">
-            Powerful Features
-          </h2>
-          <p className="text-base sm:text-lg text-gray-400 max-w-3xl mx-auto leading-relaxed\">
-            Experience the future of social media marketing
-          </p>
-        </motion.div>
-      </div>
+    <section id="features" className="relative bg-gradient-to-b from-[#1e1632] to-[#05060e] overflow-hidden">
+     
 
       {/* Parallax Scenes (First 2) */}
       {features.slice(0, 2).map((feature, index) => (
@@ -122,11 +106,12 @@ const ParallaxScene = ({ feature, index }) => {
   const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0])
 
   const isEven = index % 2 === 0
-
+//from 1e1632
+//to #05060e
   return (
     <div 
       ref={containerRef}
-      className="relative min-h-[70vh] flex items-center justify-center py-20 px-6"
+      className="relative    min-h-[70vh] flex items-center justify-center py-20 px-6 "
     >
       <div className="max-w-[1400px] mx-auto w-full">
         <div className={`grid lg:grid-cols-2 gap-16 items-center ${!isEven ? 'lg:grid-flow-dense' : ''}`}>
@@ -135,12 +120,12 @@ const ParallaxScene = ({ feature, index }) => {
             style={{ y: imageY, scale: imageScale, opacity }}
             className={`relative max-w-[520px] ${!isEven ? 'lg:col-start-2' : ''}`}
           >
-              <div className="relative aspect-4/3 rounded-3xl overflow-hidden backdrop-blur-md bg-white/5 border border-white/10">
+              <div className="group relative aspect-4/3 rounded-3xl overflow-hidden backdrop-blur-md bg-white/5 border border-white/10 transition-all duration-500 hover:border-[#745CB4]/50 hover:shadow-[0_0_30px_rgba(116,92,180,0.2)]">
               {/* Feature image */}
-              <img src={feature.image} alt={feature.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover z-10" />
+              <img src={feature.image} alt={feature.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover z-10 transition-transform duration-700 group-hover:scale-110" />
               
               {/* Glow overlay */}
-              <div className="absolute inset-0 bg-linear-to-t from-[#252525]/80 via-transparent to-transparent z-20" />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#252525]/80 via-transparent to-transparent z-20" />
             </div>
 
             {/* Floating icon badge */}
@@ -148,7 +133,7 @@ const ParallaxScene = ({ feature, index }) => {
               initial={{ opacity: 0, scale: 0 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, duration: 0.5 }}
-              className="absolute -bottom-4 -right-4 w-20 h-20 rounded-2xl bg-linear-to-br from-[#745CB4] to-[#5D459D] flex items-center justify-center shadow-[0_0_40px_rgba(116,92,180,0.5)]"
+              className="absolute -bottom-4 -right-4 w-20 h-20 rounded-2xl bg-gradient-to-b from-[#745CB4] to-[#5D459D] flex items-center justify-center shadow-[0_0_40px_rgba(116,92,180,0.5)]"
             >
               <Icon className="w-10 h-10 text-white" />
             </motion.div>
@@ -172,7 +157,7 @@ const ParallaxScene = ({ feature, index }) => {
               </div>
 
               {/* Title */}
-              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
+              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 leading-tight">
                 {feature.title}
               </h3>
 
@@ -192,7 +177,7 @@ const ParallaxScene = ({ feature, index }) => {
                     transition={{ delay: 0.2 + i * 0.1, duration: 0.5 }}
                     className="flex items-start gap-4 text-gray-300"
                   >
-                    <span className="mt-2 w-2 h-2 rounded-full bg-linear-to-r from-[#745CB4] to-[#C1B6FD] shrink-0" />
+                    <span className="mt-2 w-2 h-2 rounded-full bg-gradient-to-b from-[#745CB4] to-[#C1B6FD] shrink-0" />
                     <span className="text-base">{item}</span>
                   </motion.li>
                 ))}
@@ -228,12 +213,12 @@ const ScrollytellingScenes = ({ features }) => {
                     transition={{ duration: 0.8 }}
                     className={`relative max-w-[520px] ${!isEven ? 'lg:col-start-2' : ''}`}
                   >
-                    <div className="relative aspect-4/3 rounded-3xl overflow-hidden backdrop-blur-md bg-white/5 border border-white/10">
+                    <div className="group relative aspect-4/3 rounded-3xl overflow-hidden backdrop-blur-md bg-white/5 border border-white/10 transition-all duration-500 hover:border-[#745CB4]/50 hover:shadow-[0_0_30px_rgba(116,92,180,0.2)]">
                     {/* Feature image */}
-                    <img src={feature.image} alt={feature.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover z-10" />
+                    <img src={feature.image} alt={feature.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover z-10 transition-transform duration-700 group-hover:scale-110" />
                     
                     {/* Glow overlay */}
-                    <div className="absolute inset-0 bg-linear-to-t from-[#252525]/80 via-transparent to-transparent z-20" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#252525]/80 via-transparent to-transparent z-20" />
                   </div>
 
                   {/* Floating icon badge */}
@@ -242,7 +227,7 @@ const ScrollytellingScenes = ({ features }) => {
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.3, duration: 0.5 }}
-                    className="absolute -bottom-4 -right-4 w-20 h-20 rounded-2xl bg-linear-to-br from-[#745CB4] to-[#5D459D] flex items-center justify-center shadow-[0_0_40px_rgba(116,92,180,0.5)] z-30"
+                    className="absolute -bottom-4 -right-4 w-20 h-20 rounded-2xl bg-gradient-to-b from-[#745CB4] to-[#5D459D] flex items-center justify-center shadow-[0_0_40px_rgba(116,92,180,0.5)] z-30"
                   >
                     <Icon className="w-10 h-10 text-white" />
                   </motion.div>
@@ -263,7 +248,7 @@ const ScrollytellingScenes = ({ features }) => {
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
+                    <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 leading-tight">
                       {feature.title}
                     </h3>
 
@@ -283,7 +268,7 @@ const ScrollytellingScenes = ({ features }) => {
                           transition={{ delay: 0.2 + i * 0.1, duration: 0.5 }}
                           className="flex items-start gap-4 text-gray-300"
                         >
-                          <span className="mt-2 w-2 h-2 rounded-full bg-linear-to-r from-[#745CB4] to-[#C1B6FD] shrink-0" />
+                          <span className="mt-2 w-2 h-2 rounded-full bg-gradient-to-b from-[#745CB4] to-[#C1B6FD] shrink-0" />
                           <span className="text-lg">{item}</span>
                         </motion.li>
                       ))}
@@ -300,3 +285,4 @@ const ScrollytellingScenes = ({ features }) => {
 }
 
 export default Features
+

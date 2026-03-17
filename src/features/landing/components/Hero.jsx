@@ -6,7 +6,7 @@ const Hero = () => {
 
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-linear-to-b from-[#1a1a1a] via-[#252525]/50 to-[#1a1a1a] pt-12">
+    <section className="relative bg-gradient-to-b from-[#000000] via-[#05060F] to-[#1e1632]  min-h-screen overflow-hidden pt-12">
       {/* Animated Background Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -65,7 +65,7 @@ const Hero = () => {
                 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-tight"
               >
                 <span className="block text-white">Transform Your</span>
-                <span className="block text-transparent bg-clip-text bg-linear-to-r from-[#745CB4] via-[#5D459D] to-[#C1B6FD]">
+                <span className="block text-transparent bg-clip-text bg-gradient-to-b from-[#745CB4] via-[#5D459D] to-[#C1B6FD]">
                   Social Presence
                 </span>
                 <span className="block text-white">Into Real Results</span>
@@ -178,7 +178,7 @@ const HeroMedia = () => {
 
           {/* Glass Frame Overlay */}
           <div className="absolute inset-0 rounded-4xl border-2 border-[#745CB4]/40 pointer-events-none">
-            <div className="absolute inset-0 bg-linear-to-br from-[#745CB4]/15 via-transparent to-[#C1B6FD]/12 rounded-4xl" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#745CB4]/15 via-transparent to-[#C1B6FD]/12 rounded-4xl" />
           </div>
         </div>
 
@@ -233,3 +233,4 @@ const FloatingElement = ({ icon, index }) => {
 }
 
 export default Hero
+

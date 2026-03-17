@@ -29,9 +29,10 @@ export default function RoleSelection() {
         { text: 'Influencer collaboration tools', icon: Users },
         { text: 'Advanced analytics dashboard', icon: BarChart3 }
       ],
-      gradient: 'from-[#745CB4] via-[#9381C4] to-[#C1B6FD]',
-      glowColor: '#C1B6FD',
-      bgPattern: 'campaign'
+      activeColor: 'border-[#745CB4]/50',
+      activeBg: 'bg-[#745CB4]/5',
+      accentText: 'text-[#C1B6FD]',
+      gradient: 'from-[#745CB4] to-[#C1B6FD]'
     },
     {
       id: 'influencer',
@@ -45,9 +46,10 @@ export default function RoleSelection() {
         { text: 'Professional portfolio builder', icon: Star },
         { text: 'Direct brand connections', icon: Building2 }
       ],
-      gradient: 'from-purple-600 via-pink-500 to-pink-400',
-      glowColor: '#ec4899',
-      bgPattern: 'influencer'
+      activeColor: 'border-purple-500/50',
+      activeBg: 'bg-purple-500/5',
+      accentText: 'text-purple-400',
+      gradient: 'from-purple-500 to-pink-500'
     }
   ];
 
@@ -130,173 +132,104 @@ export default function RoleSelection() {
   };
 
   return (
-    <div className="w-full min-h-[600px] flex flex-col">
+    <div className="w-full max-w-4xl mx-auto flex flex-col font-sans">
       {/* Header Section */}
       <motion.div
-        initial={{ opacity: 0, y: -30 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
         className="text-center mb-8"
       >
-
-
-        <motion.h2
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="text-3xl sm:text-4xl font-bold text-white mb-3 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
-        >
+        <h2 className="text-2xl sm:text-3xl font-semibold text-white mb-2 tracking-tight">
           Choose Your Path
-        </motion.h2>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="text-gray-400 text-lg max-w-md mx-auto"
-        >
-          Select the role that best describes you
-        </motion.p>
+        </h2>
+        <p className="text-gray-400 text-base max-w-md mx-auto">
+          Select the role that best describes your objective
+        </p>
 
         {userEmail && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5, type: 'spring' }}
-            className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#745CB4]/20 to-[#C1B6FD]/20 border border-[#C1B6FD]/30 rounded-full backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-gray-900/50 border border-gray-800 rounded-lg"
           >
-            <div className="w-2 h-2 bg-[#C1B6FD] rounded-full animate-pulse" />
-            <span className="text-sm text-[#C1B6FD] font-medium">{userEmail}</span>
+            <div className="w-2 h-2 bg-[#C1B6FD] rounded-full" />
+            <span className="text-xs text-gray-300 font-medium">{userEmail}</span>
           </motion.div>
         )}
       </motion.div>
 
       {/* Role Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 flex-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
         {roles.map((role, index) => {
           const Icon = role.icon;
-
           const isSelected = selectedRole === role.id;
 
           return (
             <motion.div
               key={role.id}
-              initial={{ opacity: 0, y: 50 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{
-                duration: 0.6,
-                delay: 0.6 + (index * 0.2),
-                ease: [0.22, 1, 0.36, 1]
+                duration: 0.5,
+                delay: 0.2 + (index * 0.1),
+                ease: 'easeOut'
               }}
               onClick={() => setSelectedRole(role.id)}
-              className="relative group cursor-pointer"
+              className="relative group cursor-pointer h-full"
             >
-              {/* Glow Effect */}
-              <motion.div
-                className="absolute -inset-1 rounded-3xl opacity-75 blur-xl transition-opacity duration-500"
-                style={{
-                  background: `linear-gradient(135deg, ${role.glowColor}40, ${role.glowColor}20)`
-                }}
-                animate={{ opacity: [0.5, 0.8, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-
               {/* Card */}
-              <div className="relative h-full rounded-3xl overflow-hidden transition-all duration-500 ">
-                {/* Background with gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/60 to-black/80 backdrop-blur-xl" />
-
-                {/* Animated gradient overlay */}
-                <motion.div
-                  className={`absolute inset-0 bg-gradient-to-br ${role.gradient} opacity-10 transition-opacity duration-500`}
-                  animate={{ opacity: [0.1, 0.15, 0.1] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                />
+              <div 
+                className={`relative h-full flex flex-col p-6 rounded-xl border transition-all duration-300 ${
+                  isSelected 
+                    ? `border-transparent shadow-md ${role.activeBg} ring-1 ring-inset ring-opacity-50 ring-white/10` 
+                    : 'border-gray-800 bg-gray-900/40 hover:bg-gray-800/60 hover:border-gray-700'
+                }`}
+              >
+                {/* Active Border Overlay */}
+                {isSelected && (
+                  <div className={`absolute inset-0 rounded-xl border-2 ${role.activeColor} transition-colors pointer-events-none`} />
+                )}
 
                 {/* Content */}
-                <div className="relative p-8 h-full flex flex-col">
-                  {/* Header with Icon */}
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex-1">
-                      <div className="mb-2">
-                        <h3 className="text-2xl font-bold text-white mb-1 flex items-center justify-between">
-                          <span>{role.title}</span>
-                          <motion.div
-                            whileHover={{ scale: 1.1 }}
-                            transition={{ duration: 0.2 }}
-                            className="flex-shrink-0 ml-3"
-                          >
-                            <Icon className="w-7 h-7 text-white/70 hover:text-white transition-colors duration-300" />
-                          </motion.div>
-                          {isSelected && (
-                            <motion.div
-                              initial={{ scale: 0, rotate: -180 }}
-                              animate={{ scale: 1, rotate: 0 }}
-                              transition={{ type: 'spring', stiffness: 500, damping: 15 }}
-                              className="ml-2"
-                            >
-                              <CheckCircle2 className="w-6 h-6 text-[#C1B6FD]" />
-                            </motion.div>
-                          )}
-                        </h3>
-                        <p className="text-sm text-[#C1B6FD] font-medium">{role.subtitle}</p>
-                      </div>
-
-                      <p className="text-gray-400 text-sm leading-relaxed">
-                        {role.description}
-                      </p>
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                       <div className={`p-2 rounded-lg bg-gray-800/80 border border-gray-700/50 flex-shrink-0 transition-colors ${isSelected ? `text-white bg-gradient-to-br ${role.gradient}` : 'text-gray-400 group-hover:text-gray-200'}`}>
+                         <Icon className="w-5 h-5" strokeWidth={2} />
+                       </div>
+                       <div>
+                         <h3 className="text-lg font-semibold text-gray-100 tracking-tight">
+                           {role.title}
+                         </h3>
+                         <p className={`text-xs font-medium ${isSelected ? role.accentText : 'text-gray-500'}`}>{role.subtitle}</p>
+                       </div>
                     </div>
-
-
                   </div>
-
-                  {/* Features Grid */}
-                  <div className="space-y-4 flex-1">
-                    {role.features.map((feature, idx) => {
-                      return (
-                        <motion.div
-                          key={idx}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{
-                            delay: 0.8 + (index * 0.15) + (idx * 0.08),
-                            duration: 0.5,
-                            ease: [0.25, 0.46, 0.45, 0.94]
-                          }}
-                          className="flex items-start gap-4 group/item"
-                        >
-                          <motion.div
-                            className={`relative flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br ${role.gradient} opacity-90 group-hover/item:opacity-100 transition-all duration-300 shadow-lg`}
-                            whileHover={{ scale: 1.2 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                          >
-                            <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
-                            <div className="absolute inset-[6px] rounded-full bg-white opacity-80 group-hover/item:opacity-100 transition-opacity duration-300" />
-                          </motion.div>
-                          <span className="text-sm text-gray-300 group-hover/item:text-white transition-colors duration-300 leading-relaxed">
-                            {feature.text}
-                          </span>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-
                   {/* Selection Indicator */}
-                  <AnimatePresence>
-                    {isSelected && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="mt-6 pt-6 border-t border-white/10"
-                      >
-                        <div className="flex items-center justify-center gap-2 text-[#C1B6FD]">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span className="text-sm font-semibold">Selected</span>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${isSelected ? `border-transparent bg-gradient-to-r ${role.gradient}` : 'border-gray-600 group-hover:border-gray-500'}`}>
+                    {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                  </div>
+                </div>
+
+                <p className="text-gray-400 text-sm leading-relaxed mb-5">
+                  {role.description}
+                </p>
+
+                {/* Features List */}
+                <div className="space-y-2.5 flex-1 mt-auto pt-4 border-t border-gray-800/50">
+                  {role.features.map((feature, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-2.5"
+                    >
+                      <CheckCircle2 className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? role.accentText : 'text-gray-600'}`} />
+                      <span className="text-sm text-gray-300 font-medium">
+                        {feature.text}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </motion.div>
@@ -306,59 +239,34 @@ export default function RoleSelection() {
 
       {/* Action Section */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.2, duration: 0.6 }}
-        className="space-y-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.4 }}
+        className="max-w-md mx-auto w-full space-y-6"
       >
         {/* Continue Button */}
-        <div className="relative group/btn">
-          {selectedRole && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="absolute -inset-1 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] rounded-2xl blur-xl opacity-50 group-hover/btn:opacity-75 transition-opacity"
-            />
-          )}
+        <button
+          onClick={handleContinue}
+          disabled={!selectedRole || isLoading}
+          className={`w-full py-3.5 rounded-xl font-semibold text-base transition-all duration-300 flex items-center justify-center gap-2 ${
+            selectedRole && !isLoading
+              ? `bg-gray-100 text-gray-900 hover:bg-white shadow-md active:scale-[0.98]`
+              : 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700/50'
+          }`}
+        >
+          {isLoading ? 'Processing...' : 'Continue'}
+          {!isLoading && <ArrowRight className="w-5 h-5" strokeWidth={2} />}
+        </button>
 
-          <motion.button
-            whileHover={selectedRole ? { scale: 1.02 } : {}}
-            whileTap={selectedRole ? { scale: 0.98 } : {}}
-            onClick={handleContinue}
-            disabled={!selectedRole || isLoading}
-            className={`relative w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 ${selectedRole && !isLoading
-              ? 'bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg'
-              : 'bg-white/5 text-gray-500 cursor-not-allowed'
-              }`}
-          >
-            <span className="flex items-center justify-center gap-3">
-              <span>{isLoading ? 'Assigning role...' : 'Continue to Next Step'}</span>
-              {!isLoading && (
-                <motion.div
-                  animate={selectedRole ? { x: [0, 4, 0] } : {}}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                  <ArrowRight className="w-6 h-6" />
-                </motion.div>
-              )}
-            </span>
-          </motion.button>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center space-y-3">
-          <p className="text-xs text-gray-500 flex items-center justify-center gap-2">
-            <Sparkles className="w-3 h-3" />
-            <span>You can update your role anytime in settings</span>
-          </p>
-
+        {/* Footer info */}
+        <div className="text-center space-y-2">
           <p className="text-sm text-gray-400">
             Already have an account?{' '}
             <button
               onClick={() => navigate('/login')}
-              className="text-[#C1B6FD] font-semibold hover:text-white transition-colors duration-300 underline-offset-4 hover:underline"
+              className="text-white font-medium hover:text-gray-200 transition-colors hover:underline underline-offset-4"
             >
-              Sign in here
+              Sign in
             </button>
           </p>
         </div>

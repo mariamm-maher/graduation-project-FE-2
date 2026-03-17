@@ -51,12 +51,12 @@ const Footer = () => {
     { icon: Facebook, href: '#', label: 'Facebook', color: 'hover:text-blue-400' },
     { icon: Twitter, href: '#', label: 'Twitter', color: 'hover:text-sky-400' },
     { icon: Instagram, href: '#', label: 'Instagram', color: 'hover:text-pink-400' },
-    { icon: Linkedin, href: '#', label: 'LinkedIn', color: 'hover:text-blue-500' },
+    { icon: Linkedin, href: '#', label: 'LinkedIn', color: 'hover:text-[#C1B6FD]' },
     { icon: Youtube, href: '#', label: 'YouTube', color: 'hover:text-red-500' },
   ]
 
   return (
-    <footer className="relative bg-linear-to-b from-gray-900 to-black border-t border-white/5 overflow-hidden">
+    <footer className="relative border-t border-white/5 overflow-hidden">
       {/* Animated background orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -97,7 +97,7 @@ const Footer = () => {
 
       <div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 relative z-10">
         {/* Main Footer Content */}
-        <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
+        <div className="py-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
           {/* Brand Column */}
           <div className="lg:col-span-2">
             <motion.div
@@ -106,7 +106,7 @@ const Footer = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <h3 className="text-3xl font-bold bg-linear-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent mb-4">
+              <h3 className="text-3xl font-bold bg-gradient-to-b from-[#C1B6FD] to-[#D3CBFC] bg-clip-text text-transparent mb-4">
                 AdSphere
               </h3>
               <p className="text-gray-400 leading-relaxed mb-6">
@@ -116,20 +116,20 @@ const Footer = () => {
 
               {/* Contact Info */}
               <div className="space-y-3 mb-6">
-                <a href="mailto:hello@adsphere.com" className="flex items-center gap-3 text-gray-400 hover:text-purple-300 transition-colors group">
-                  <div className="w-8 h-8 rounded-lg bg-purple-400/10 flex items-center justify-center group-hover:bg-purple-400/20 transition-colors">
+                <a href="mailto:hello@adsphere.com" className="flex items-center gap-3 text-gray-400 hover:text-[#D3CBFC] transition-colors group">
+                  <div className="w-8 h-8 rounded-lg bg-[#C1B6FD]/10 flex items-center justify-center group-hover:bg-[#C1B6FD]/20 transition-colors">
                     <Mail className="w-4 h-4" />
                   </div>
                   <span className="text-sm">hello@adsphere.com</span>
                 </a>
-                <a href="tel:+1234567890" className="flex items-center gap-3 text-gray-400 hover:text-purple-300 transition-colors group">
-                  <div className="w-8 h-8 rounded-lg bg-purple-400/10 flex items-center justify-center group-hover:bg-purple-400/20 transition-colors">
+                <a href="tel:+1234567890" className="flex items-center gap-3 text-gray-400 hover:text-[#D3CBFC] transition-colors group">
+                  <div className="w-8 h-8 rounded-lg bg-[#C1B6FD]/10 flex items-center justify-center group-hover:bg-[#C1B6FD]/20 transition-colors">
                     <Phone className="w-4 h-4" />
                   </div>
                   <span className="text-sm">+1 (234) 567-890</span>
                 </a>
                 <div className="flex items-start gap-3 text-gray-400">
-                  <div className="w-8 h-8 rounded-lg bg-purple-400/10 flex items-center justify-center mt-0.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#C1B6FD]/10 flex items-center justify-center mt-0.5">
                     <MapPin className="w-4 h-4" />
                   </div>
                   <span className="text-sm">123 Marketing Street<br/>San Francisco, CA 94102</span>
@@ -148,7 +148,7 @@ const Footer = () => {
                     transition={{ delay: index * 0.1, duration: 0.3 }}
                     whileHover={{ scale: 1.1, y: -2 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-gray-400 ${social.color} border border-white/10 hover:border-purple-400/30 transition-all duration-300`}
+                    className={`w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-gray-400 ${social.color} border border-white/10 hover:border-[#C1B6FD]/30 transition-all duration-300`}
                     aria-label={social.label}
                   >
                     <social.icon className="w-5 h-5" />
@@ -171,7 +171,7 @@ const Footer = () => {
                 <li key={link.name}>
                   <a 
                     href={link.href} 
-                    className="text-gray-400 hover:text-purple-300 transition-colors text-sm flex items-center gap-2 group"
+                    className="text-gray-400 hover:text-[#D3CBFC] transition-colors text-sm flex items-center gap-2 group"
                   >
                     <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 -ml-5 group-hover:ml-0 transition-all duration-300" />
                     {link.name}
@@ -194,7 +194,7 @@ const Footer = () => {
                 <li key={link.name}>
                   <a 
                     href={link.href} 
-                    className="text-gray-400 hover:text-purple-300 transition-colors text-sm flex items-center gap-2 group"
+                    className="text-gray-400 hover:text-[#D3CBFC] transition-colors text-sm flex items-center gap-2 group"
                   >
                     <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 -ml-5 group-hover:ml-0 transition-all duration-300" />
                     {link.name}
@@ -217,7 +217,7 @@ const Footer = () => {
                 <li key={link.name}>
                   <a 
                     href={link.href} 
-                    className="text-gray-400 hover:text-purple-300 transition-colors text-sm flex items-center gap-2 group"
+                    className="text-gray-400 hover:text-[#D3CBFC] transition-colors text-sm flex items-center gap-2 group"
                   >
                     <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 -ml-5 group-hover:ml-0 transition-all duration-300" />
                     {link.name}
@@ -240,7 +240,7 @@ const Footer = () => {
                 <li key={link.name}>
                   <a 
                     href={link.href} 
-                    className="text-gray-400 hover:text-purple-300 transition-colors text-sm flex items-center gap-2 group"
+                    className="text-gray-400 hover:text-[#D3CBFC] transition-colors text-sm flex items-center gap-2 group"
                   >
                     <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 -ml-5 group-hover:ml-0 transition-all duration-300" />
                     {link.name}
@@ -257,7 +257,7 @@ const Footer = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="py-12 border-t border-white/5"
+          className="py-20 border-t border-white/5"
         >
           <div className="max-w-2xl mx-auto text-center">
             <h3 className="text-2xl font-bold text-white mb-3">Stay Updated</h3>
@@ -268,12 +268,12 @@ const Footer = () => {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 px-5 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-400/50 transition-colors"
+                className="flex-1 px-5 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-[#C1B6FD]/50 transition-colors"
               />
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 rounded-xl bg-linear-to-r from-purple-400 to-purple-300 text-white font-semibold shadow-[0_0_20px_rgba(167,139,250,0.4)] hover:shadow-[0_0_30px_rgba(167,139,250,0.6)] transition-all duration-300 flex items-center justify-center gap-2"
+                className="px-6 py-3 rounded-xl bg-gradient-to-b from-[#C1B6FD] to-[#D3CBFC] text-white font-semibold shadow-[0_0_20px_rgba(167,139,250,0.4)] hover:shadow-[0_0_30px_rgba(167,139,250,0.6)] transition-all duration-300 flex items-center justify-center gap-2"
               >
                 <span>Subscribe</span>
                 <Send className="w-4 h-4" />
@@ -319,3 +319,4 @@ const Footer = () => {
 }
 
 export default Footer
+

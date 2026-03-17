@@ -38,7 +38,7 @@ function Navbar() {
   return (
     <motion.nav
       style={{ backgroundColor, backdropFilter: backdropBlur }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={` top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled ? 'shadow-2xl border-b border-white/5' : ''
       }`}
     >
@@ -55,7 +55,7 @@ function Navbar() {
               <motion.div
                 whileHover={{ scale: 1.1 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
-                className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center shadow-lg shadow-purple-500/30"
+                className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center shadow-lg shadow-[#745CB4]/30"
               >
                 <img 
                   src={logoGif} 
@@ -64,7 +64,7 @@ function Navbar() {
                 />
               </motion.div>
               <motion.div
-                className="absolute inset-0 bg-gradient-to-br from-purple-400 via-purple-300 to-indigo-400 rounded-full blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-300"
+                className="absolute inset-0 bg-gradient-to-b from-[#C1B6FD] via-[#D3CBFC] to-[#C1B6FD] rounded-full blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-300"
                 animate={{
                   scale: [1, 1.15, 1],
                 }}
@@ -75,7 +75,7 @@ function Navbar() {
                 }}
               />
             </div>
-            <span className="text-lg font-bold bg-gradient-to-r from-purple-300 via-purple-200 to-indigo-300 bg-clip-text text-transparent">
+            <span className="text-lg font-bold bg-gradient-to-b from-[#D3CBFC] via-purple-200 to-indigo-300 bg-clip-text text-transparent">
               AdSphere
             </span>
           </motion.div>
@@ -92,7 +92,7 @@ function Navbar() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/signup')}
-              className="px-5 py-2.5 text-sm font-medium text-white border border-purple-400/30 rounded-lg hover:bg-purple-500/10 hover:border-purple-400/50 transition-all duration-200 backdrop-blur-sm"
+              className="px-5 py-2.5 text-sm font-medium text-white border border-[#C1B6FD]/30 rounded-lg hover:bg-[#745CB4]/10 hover:border-[#C1B6FD]/50 transition-all duration-200 backdrop-blur-sm"
             >
               Sign Up
             </motion.button>
@@ -106,8 +106,8 @@ function Navbar() {
               whileTap={{ scale: 0.95 }}
               className="relative px-5 py-2.5 text-sm font-medium text-white rounded-lg overflow-hidden group"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-purple-300 to-indigo-400"></div>
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-purple-300 to-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-[#C1B6FD] via-[#D3CBFC] to-[#C1B6FD]"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-[#C1B6FD] via-[#D3CBFC] to-[#C1B6FD] opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
               <span className="relative flex items-center space-x-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -124,7 +124,7 @@ function Navbar() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/login')}
-              className="px-5 py-2.5 text-sm font-medium text-white bg-purple-500/20 border border-purple-400/50 rounded-lg hover:bg-purple-500/30 hover:border-purple-400/70 transition-all duration-200 backdrop-blur-sm"
+              className="px-5 py-2.5 text-sm font-medium text-white bg-[#745CB4]/20 border border-[#C1B6FD]/50 rounded-lg hover:bg-[#745CB4]/30 hover:border-[#C1B6FD]/70 transition-all duration-200 backdrop-blur-sm"
             >
               Sign In
             </motion.button>
@@ -170,13 +170,13 @@ function Navbar() {
               navigate('/signup')
               setIsMobileMenuOpen(false)
             }}
-            className="w-full px-5 py-3 text-sm font-medium text-white border border-purple-400/30 rounded-lg hover:bg-purple-500/10 hover:border-purple-400/50 transition-all duration-200"
+            className="w-full px-5 py-3 text-sm font-medium text-white border border-[#C1B6FD]/30 rounded-lg hover:bg-[#745CB4]/10 hover:border-[#C1B6FD]/50 transition-all duration-200"
           >
             Sign Up
           </button>
 
           {/* Create Campaign with AI Button */}
-          <button className="w-full px-5 py-3 text-sm font-medium text-white bg-gradient-to-r from-purple-400 via-purple-300 to-indigo-400 rounded-lg hover:shadow-lg hover:shadow-purple-400/50 transition-all duration-200">
+          <button className="w-full px-5 py-3 text-sm font-medium text-white bg-gradient-to-b from-[#C1B6FD] via-[#D3CBFC] to-[#C1B6FD] rounded-lg hover:shadow-lg hover:shadow-[#C1B6FD]/50 transition-all duration-200">
             <span className="flex items-center justify-center space-x-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -191,7 +191,7 @@ function Navbar() {
               navigate('/login')
               setIsMobileMenuOpen(false)
             }}
-            className="w-full px-5 py-3 text-sm font-medium text-white bg-purple-500/20 border border-purple-400/50 rounded-lg hover:bg-purple-500/30 hover:border-purple-400/70 transition-all duration-200"
+            className="w-full px-5 py-3 text-sm font-medium text-white bg-[#745CB4]/20 border border-[#C1B6FD]/50 rounded-lg hover:bg-[#745CB4]/30 hover:border-[#C1B6FD]/70 transition-all duration-200"
           >
             Sign In
           </button>
@@ -202,3 +202,4 @@ function Navbar() {
 }
 
 export default Navbar
+

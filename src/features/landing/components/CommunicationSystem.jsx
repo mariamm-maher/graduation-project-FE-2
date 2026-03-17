@@ -33,7 +33,7 @@ const commFeatures = [
 
 const CommunicationSystem = () => {
   return (
-    <section id="communication" className="py-14 bg-linear-to-b from-black to-gray-900 relative overflow-hidden">
+    <section id="communication" className="py-20 bg-gradient-to-b from-[#1e1632] via-[#05060F] to-[#000000] relative overflow-hidden">
       {/* Animated background orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -70,7 +70,7 @@ const CommunicationSystem = () => {
               whileInView={{ scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-linear-to-r from-[#745CB4]/10 to-[#C1B6FD]/10 border border-[#745CB4]/30 mb-3"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-b from-[#745CB4]/10 to-[#C1B6FD]/10 border border-[#745CB4]/30 mb-3"
             >
               <MessageSquare className="w-4 h-4 text-[#745CB4]" />
               <span className="text-[#745CB4] text-sm font-semibold">Real-Time Communication</span>
@@ -98,7 +98,7 @@ const CommunicationSystem = () => {
                     whileHover={{ y: -4, scale: 1.02 }}
                     className="group p-3 backdrop-blur-md bg-white/5 border border-white/10 rounded-xl hover:border-[#745CB4]/30 transition-all duration-300"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-linear-to-br from-[#745CB4]/20 to-[#C1B6FD]/20 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform duration-300">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-b from-[#745CB4]/20 to-[#C1B6FD]/20 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform duration-300">
                       <Icon className="w-5 h-5 text-[#745CB4]" />
                     </div>
                     <h4 className="font-bold text-sm text-white mb-1.5 group-hover:text-[#745CB4] transition-colors duration-300">{feature.title}</h4>
@@ -162,11 +162,11 @@ const ChatMockup = () => {
       className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl overflow-hidden max-w-sm mx-auto shadow-2xl"
     >
       {/* Header */}
-      <div className="p-4 border-b border-[#745CB4]/20 bg-linear-to-r from-[#745CB4]/10 to-[#C1B6FD]/5">
+      <div className="p-4 border-b border-[#745CB4]/20 bg-gradient-to-b from-[#745CB4]/10 to-[#C1B6FD]/5">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#745CB4]/30 to-[#C1B6FD]/30 flex items-center justify-center border border-[#745CB4]/30">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-b from-[#745CB4]/30 to-[#C1B6FD]/30 flex items-center justify-center border border-[#745CB4]/30">
                 <Users className="w-5 h-5 text-[#745CB4]" />
               </div>
               <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-gray-900"></div>
@@ -191,7 +191,7 @@ const ChatMockup = () => {
       </div>
 
       {/* Messages */}
-      <div className="p-4 space-y-4 min-h-[360px] bg-linear-to-b from-gray-900/50 to-black/50">
+      <div className="p-4 space-y-4 min-h-[360px] bg-gradient-to-b from-gray-900/50 to-black/50">
         {budgetConversation.map((message, index) => {
           const Icon = message.icon
           return (
@@ -204,7 +204,7 @@ const ChatMockup = () => {
               className={`flex ${message.type === 'sent' ? 'justify-end' : 'justify-start'} gap-2`}
             >
               {message.type === 'received' && (
-                <div className="w-8 h-8 rounded-full bg-linear-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center shrink-0 border border-blue-500/30">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-b from-[#C1B6FD]/30 to-[#745CB4]/30 flex items-center justify-center shrink-0 border border-[#C1B6FD]/30">
                   <Icon className="w-4 h-4 text-blue-400" />
                 </div>
               )}
@@ -214,8 +214,8 @@ const ChatMockup = () => {
                   whileHover={{ scale: 1.02 }}
                   className={`p-4 rounded-2xl ${
                     message.type === 'sent'
-                      ? 'bg-linear-to-br from-[#745CB4] to-[#5D459D] text-white shadow-[0_0_20px_rgba(116,92,180,0.3)]'
-                      : 'bg-linear-to-br from-gray-800/80 to-gray-900/80 text-gray-100 border border-white/5'
+                      ? 'bg-gradient-to-b from-[#745CB4] to-[#5D459D] text-white shadow-[0_0_20px_rgba(116,92,180,0.3)]'
+                      : 'bg-gradient-to-b from-gray-800/80 to-gray-900/80 text-gray-100 border border-white/5'
                   }`}
                 >
                   <p className="text-xs leading-relaxed">{message.text}</p>
@@ -223,7 +223,7 @@ const ChatMockup = () => {
                 <div className="text-[11px] text-gray-500 mt-1">{message.time}</div>
               </div>
               {message.type === 'sent' && (
-                <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#745CB4]/30 to-[#C1B6FD]/30 flex items-center justify-center shrink-0 border border-[#745CB4]/30">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-b from-[#745CB4]/30 to-[#C1B6FD]/30 flex items-center justify-center shrink-0 border border-[#745CB4]/30">
                   <Icon className="w-4 h-4 text-[#745CB4]" />
                 </div>
               )}
@@ -243,7 +243,7 @@ const ChatMockup = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-3 py-2.5 rounded-xl bg-linear-to-r from-[#745CB4] to-[#5D459D] text-white shadow-[0_0_20px_rgba(116,92,180,0.3)]"
+            className="px-3 py-2.5 rounded-xl bg-gradient-to-b from-[#745CB4] to-[#5D459D] text-white shadow-[0_0_20px_rgba(116,92,180,0.3)]"
           >
             <Send className="w-4 h-4" />
           </motion.button>
@@ -254,3 +254,4 @@ const ChatMockup = () => {
 }
 
 export default CommunicationSystem
+

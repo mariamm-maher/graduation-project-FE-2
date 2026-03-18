@@ -1,4 +1,4 @@
-import { Megaphone, Users, DollarSign, TrendingUp, ArrowRight, Target, Play, Clock, Sparkles, CheckCircle, FileEdit, Grid3x3, BarChart3 } from 'lucide-react';
+import { Megaphone, Users, DollarSign, TrendingUp, ArrowRight, Target, Play, Clock, Sparkles, CheckCircle, FileEdit, Grid3x3, BarChart3, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import useCampaignStore from '../../../../../stores/campaignStore';
@@ -10,245 +10,175 @@ function CampaignsOverview() {
   useEffect(() => {
     fetchCampaignsOverview().catch(() => {});
   }, [fetchCampaignsOverview]);
+  const totalCampaigns = campaignsOverview?.totalCampaigns ?? 0;
+  const totalSaved =  campaignsOverview?.totalSaved ?? 0;
+  const recentCampaigns =campaignsOverview?.recentCampaigns || [];
 
-  const totalCampaigns = campaignsOverview?.data?.totalSaved  ?? 0;
-  const totalSaved = campaignsOverview?.data?.recentCampaigns ?? 0;
-  const recentCampaigns = campaignsOverview?.data?.recentCampaigns ?? [];
-
-
+  
   return (
-    <div className="space-y-6 sm:space-y-8">
-      {/* Header with Recent Campaigns */}
-      <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
-        <div className="flex-1 w-full lg:w-auto">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Campaign Overview</h1>
-          <p className="text-sm sm:text-base text-gray-400 mb-4 sm:mb-6">Manage and track all your marketing campaigns</p>
-          
-          {/* Quick Stats & Navigation */}
-          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-            <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg">
-              <Target className="w-4 h-4 sm:w-5 sm:h-5 text-[#C1B6FD]" />
-              <div>
-                <span className="text-xl sm:text-2xl font-bold text-white">{totalCampaigns}</span>
-                <span className="text-xs text-gray-400 ml-1 sm:ml-2">Total Campaigns</span>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-green-500/10 backdrop-blur-md border border-green-500/20 rounded-lg">
-              <Play className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
-              <span className="text-xs sm:text-sm font-semibold text-green-400">{totalSaved} Saved</span>
-            </div>
-
-            <Link to="/dashboard/owner/influencers">
-              <button className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg hover:border-purple-400/30 hover:bg-white/10 transition-all">
-                <Users className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-                <span className="text-xs sm:text-sm text-gray-300">Influencers</span>
-              </button>
-            </Link>
-
-         
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Campaigns Overview</h1>
+          <p className="text-sm sm:text-base text-gray-400">
+            Manage your marketing campaigns and track performance
+          </p>
         </div>
-
-        {/* Recent Campaigns Section */}
-        <div className="w-full lg:w-80 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-white">Recent Campaigns</h3>
-            <Clock className="w-4 h-4 text-gray-400" />
-          </div>
-          
-          <div className="space-y-3 mb-4">
-            {recentCampaigns.length > 0 ? (
-              recentCampaigns.slice(0, 5).map((c) => (
-                <div key={c.id} className="bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-all cursor-pointer group">
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="text-sm font-semibold text-white group-hover:text-[#C1B6FD] transition-colors flex-1">
-                      {c.campaignName || 'Untitled Campaign'}
-                    </h4>
-                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-400">
-                      {c.isPublished ? (c.lifecycleStage || 'active') : (c.lifecycleStage || 'draft')}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-gray-400">
-                    <span className="flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" />
-                      {c.goals || '—'}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="w-3 h-3" />
-                      {c.UserDescription ? c.UserDescription.length > 20 ? `${c.UserDescription.slice(0, 20)}...` : c.UserDescription : '—'}
-                    </span>
-                    <span className="text-[#C1B6FD] font-semibold">{c.isPublished ? '$' : ''}{c.duration ?? '—'}</span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="bg-white/5 rounded-lg p-6 text-center text-sm text-gray-300">
-                No campaigns exist.
-              </div>
-            )}
-          </div>
-
+        
+        <div className="flex items-center gap-3">
+          <Link to="/dashboard/owner/influencers">
+            <button className="flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg hover:bg-white/10 transition-all text-sm font-medium text-white">
+              <Users className="w-4 h-4 text-gray-400" />
+              Influencers
+            </button>
+          </Link>
           <Link to="/dashboard/owner/campaigns/create">
-            <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300">
-              <Megaphone className="w-4 h-4" />
-              Create Campaign
+            <button className="flex items-center gap-2 px-4 py-2 bg-[#C1B6FD] border border-[#C1B6FD] text-gray-900 rounded-lg hover:bg-[#A89AF0] font-semibold transition-all shadow-lg shadow-[#C1B6FD]/20">
+              <Plus className="w-4 h-4" />
+              New Campaign
             </button>
           </Link>
         </div>
       </div>
 
-   
-
- 
-
-      {/* Quick Navigation */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* All Campaigns */}
-        <Link
-          to="/dashboard/owner/campaigns/all"
-          className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:from-white/15 hover:to-white/10 hover:border-purple-400/50 hover:shadow-2xl hover:shadow-purple-400/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
-        >
-          {/* Gradient Accent Border */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-400/20 via-transparent to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Left Column: Quick Nav & Stats (Takes up 2/3) */}
+        <div className="lg:col-span-2 space-y-6">
           
-          <div className="relative z-10">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-600/30 group-hover:shadow-xl group-hover:shadow-purple-400/40 group-hover:scale-110 transition-all duration-300">
-                <Grid3x3 className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Total Campaigns</p>
+                <p className="text-3xl font-bold text-white">{totalCampaigns}</p>
               </div>
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-purple-400 transition-all duration-300">
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+              <div className="w-12 h-12 rounded-full bg-[#C1B6FD]/10 flex items-center justify-center">
+                <Target className="w-6 h-6 text-[#C1B6FD]" />
               </div>
             </div>
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-purple-400 transition-colors">All Campaigns</h3>
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-purple-400/20 to-purple-600/20 text-white border border-purple-400/30">{totalCampaigns}</span>
+            
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Saved Drafts</p>
+                <p className="text-3xl font-bold text-white">{totalSaved}</p>
+              </div>
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
+                <FileEdit className="w-6 h-6 text-amber-400" />
+              </div>
             </div>
-            <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">View all your marketing campaigns</p>
           </div>
-        </Link>
 
-        {/* Active Campaigns */}
-        <Link
-          to="/dashboard/owner/campaigns/active"
-          className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:from-white/15 hover:to-white/10 hover:border-blue-400/50 hover:shadow-2xl hover:shadow-blue-400/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
-        >
-          {/* Gradient Accent Border */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-400/20 via-transparent to-blue-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-          
-          <div className="relative z-10">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/30 group-hover:shadow-xl group-hover:shadow-blue-400/40 group-hover:scale-110 transition-all duration-300">
-                <Play className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-              </div>
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-blue-400 transition-all duration-300">
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
-              </div>
-            </div>
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-blue-400 transition-colors">Active Campaigns</h3>
-              {/* <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-blue-400/20 to-blue-600/20 text-white border border-blue-400/30">{activeCampaigns}</span> */}
-            </div>
-            <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">View and manage currently running campaigns</p>
-          </div>
-        </Link>
+          {/* Navigation Links */}
+          <div>
+            <h2 className="text-lg font-semibold text-white mb-4">Management</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              
+              <Link to="/dashboard/owner/campaigns/all" className="group bg-white/5 border border-white/10 hover:border-[#C1B6FD]/30 rounded-xl p-4 flex items-center gap-4 transition-all hover:bg-white/10 hover:shadow-lg hover:shadow-[#C1B6FD]/5">
+                <div className="w-10 h-10 rounded-lg bg-white/5 group-hover:bg-[#C1B6FD]/20 border border-white/10 group-hover:border-[#C1B6FD]/30 flex items-center justify-center transition-all">
+                  <Grid3x3 className="w-5 h-5 text-gray-400 group-hover:text-[#C1B6FD]" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white group-hover:text-[#C1B6FD] transition-colors">All Campaigns</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">Browse your entire portfolio</p>
+                </div>
+              </Link>
 
-        {/* Create Campaign */}
-        <Link
-          to="/dashboard/owner/campaigns/create"
-          className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:from-white/15 hover:to-white/10 hover:border-[#C1B6FD]/50 hover:shadow-2xl hover:shadow-[#C1B6FD]/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
-        >
-          {/* Gradient Accent Border */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#C1B6FD]/20 via-transparent to-[#745CB4]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-          
-          <div className="relative z-10">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center shadow-lg shadow-[#745CB4]/30 group-hover:shadow-xl group-hover:shadow-[#C1B6FD]/40 group-hover:scale-110 transition-all duration-300">
-                <Megaphone className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-              </div>
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#C1B6FD] transition-all duration-300">
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
-              </div>
-            </div>
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-[#C1B6FD] transition-colors">Create Campaign</h3>
-            </div>
-            <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">Launch a new marketing campaign</p>
-          </div>
-        </Link>
+              <Link to="/dashboard/owner/campaigns/active" className="group bg-white/5 border border-white/10 hover:border-green-400/30 rounded-xl p-4 flex items-center gap-4 transition-all hover:bg-white/10 hover:shadow-lg hover:shadow-green-500/5">
+                <div className="w-10 h-10 rounded-lg bg-white/5 group-hover:bg-green-500/20 border border-white/10 group-hover:border-green-500/30 flex items-center justify-center transition-all">
+                  <Play className="w-5 h-5 text-gray-400 group-hover:text-green-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white group-hover:text-green-400 transition-colors">Active Campaigns</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">Currently live and running</p>
+                </div>
+              </Link>
 
-        {/* Completed Campaigns */}
-        <Link
-          to="/dashboard/owner/campaigns/completed"
-          className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:from-white/15 hover:to-white/10 hover:border-green-400/50 hover:shadow-2xl hover:shadow-green-400/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
-        >
-          {/* Gradient Accent Border */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-green-400/20 via-transparent to-green-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-          
-          <div className="relative z-10">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-lg shadow-green-600/30 group-hover:shadow-xl group-hover:shadow-green-400/40 group-hover:scale-110 transition-all duration-300">
-                <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-              </div>
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-green-400 transition-all duration-300">
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
-              </div>
-            </div>
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-green-400 transition-colors">Completed Campaigns</h3>
-            </div>
-            <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">Review finished campaign results</p>
-          </div>
-        </Link>
+              <Link to="/dashboard/owner/campaigns/completed" className="group bg-white/5 border border-white/10 hover:border-blue-400/30 rounded-xl p-4 flex items-center gap-4 transition-all hover:bg-white/10 hover:shadow-lg hover:shadow-blue-500/5">
+                <div className="w-10 h-10 rounded-lg bg-white/5 group-hover:bg-blue-500/20 border border-white/10 group-hover:border-blue-500/30 flex items-center justify-center transition-all">
+                  <CheckCircle className="w-5 h-5 text-gray-400 group-hover:text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white group-hover:text-blue-400 transition-colors">Completed</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">Archived and finished</p>
+                </div>
+              </Link>
 
-        {/* Draft Campaigns */}
-        <Link
-          to="/dashboard/owner/campaigns/draft"
-          className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:from-white/15 hover:to-white/10 hover:border-amber-400/50 hover:shadow-2xl hover:shadow-amber-400/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
-        >
-          {/* Gradient Accent Border */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-400/20 via-transparent to-amber-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-          
-          <div className="relative z-10">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-600/30 group-hover:shadow-xl group-hover:shadow-amber-400/40 group-hover:scale-110 transition-all duration-300">
-                <FileEdit className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-              </div>
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-amber-400 transition-all duration-300">
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
-              </div>
-            </div>
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-amber-400 transition-colors">Draft Campaigns</h3>
-            </div>
-            <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">Continue working on saved drafts</p>
-          </div>
-        </Link>
+              <Link to="/dashboard/owner/campaigns/analytics" className="group bg-white/5 border border-white/10 hover:border-purple-400/30 rounded-xl p-4 flex items-center gap-4 transition-all hover:bg-white/10 hover:shadow-lg hover:shadow-purple-500/5">
+                <div className="w-10 h-10 rounded-lg bg-white/5 group-hover:bg-purple-500/20 border border-white/10 group-hover:border-purple-500/30 flex items-center justify-center transition-all">
+                  <BarChart3 className="w-5 h-5 text-gray-400 group-hover:text-purple-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white group-hover:text-purple-400 transition-colors">Analytics</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">View performance metrics</p>
+                </div>
+              </Link>
 
-        {/* Campaign Analytics */}
-        <Link
-          to="/dashboard/owner/campaigns/analytics"
-          className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:from-white/15 hover:to-white/10 hover:border-indigo-400/50 hover:shadow-2xl hover:shadow-indigo-400/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
-        >
-          {/* Gradient Accent Border */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-400/20 via-transparent to-indigo-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-          
-          <div className="relative z-10">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30 group-hover:shadow-xl group-hover:shadow-indigo-400/40 group-hover:scale-110 transition-all duration-300">
-                <BarChart3 className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-              </div>
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-indigo-400 transition-all duration-300">
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
-              </div>
             </div>
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-indigo-400 transition-colors">Campaign Analytics</h3>
-            </div>
-            <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">Detailed performance insights</p>
           </div>
-        </Link>
+        </div>
+
+        {/* Right Column: Recent Campaigns (Takes up 1/3) */}
+        <div className="lg:col-span-1">
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 h-full min-h-[350px]">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-semibold text-white">Recent Activity</h2>
+              <Clock className="w-4 h-4 text-gray-400" />
+            </div>
+            
+            <div className="space-y-5">
+              {recentCampaigns.length > 0 ? (
+                recentCampaigns.slice(0, 5).map((c) => (
+                  <div key={c.id} className="group relative pl-4 border-l-2 border-white/10 hover:border-[#C1B6FD] transition-colors pb-1">
+                    {/* Timeline dot */}
+                    <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-gray-600 group-hover:bg-[#C1B6FD] transition-colors shadow"></div>
+                    
+                    <h4 className="text-sm font-semibold text-white group-hover:text-[#C1B6FD] transition-colors line-clamp-1">
+                      {c.campaignName || 'Untitled Campaign'}
+                    </h4>
+                    
+                    <div className="flex flex-col gap-2 mt-2">
+                      <div className="flex items-center justify-between">
+                        <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${
+                          c.isPublished || c.lifecycleStage === 'active' 
+                            ? 'bg-green-500/10 text-green-400 border border-green-500/20' 
+                            : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                        }`}>
+                          {c.isPublished ? (c.lifecycleStage || 'Active') : (c.lifecycleStage || 'Draft')}
+                        </span>
+                        <span className="text-[#C1B6FD] text-xs font-semibold">
+                           {c.duration ? `${c.duration}` : '—'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 text-xs text-gray-400 overflow-hidden">
+                        <span className="flex items-center gap-1.5 truncate max-w-[50%]">
+                          <TrendingUp className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{c.goals || 'No goal'}</span>
+                        </span>
+                        <span className="flex items-center gap-1.5 truncate flex-1">
+                          <Users className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{c.UserDescription || '—'}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-10 flex flex-col items-center justify-center h-full">
+                  <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mb-3">
+                    <Grid3x3 className="w-5 h-5 text-gray-500" />
+                  </div>
+                  <p className="text-sm text-gray-400">No campaigns yet</p>
+                  <p className="text-xs text-gray-500 mt-1">Create one to get started</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );

@@ -93,21 +93,6 @@ function DraftCampaigns() {
           <p className="text-gray-400 text-sm mb-1">Total Drafts</p>
           <p className="text-2xl font-bold text-amber-400">{totalItems}</p>
         </div>
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
-          <p className="text-gray-400 text-sm mb-1">Almost Ready</p>
-          <p className="text-2xl font-bold text-green-400">
-            {draftCampaigns.filter(d => {
-              const hint = getCompletionHint(d);
-              return hint.text === 'Almost ready';
-            }).length}
-          </p>
-        </div>
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
-          <p className="text-gray-400 text-sm mb-1">Recently Updated</p>
-          <p className="text-2xl font-bold text-white">
-            {draftCampaigns.filter(d => getRelativeTime(d.createdAt || d.updatedAt) === 'Today').length}
-          </p>
-        </div>
       </div>
 
       {/* Search */}

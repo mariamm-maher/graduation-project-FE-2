@@ -1,4 +1,4 @@
-import { Calendar, DollarSign, Target, Users, FileText, Image } from 'lucide-react';
+import { Calendar, DollarSign, Target, FileText, Sparkles, Layout, Info } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -65,7 +65,6 @@ function CreateCampaign() {
         endDate: new Date(campaignData.endDate).toISOString(),
       };
 
-      setSubmitMessage({ type: '', text: 'Generating AI campaign strategy...' });
       const result = await generateCampaignAI(apiData);
 
       if (result.success) {
@@ -123,7 +122,7 @@ function CreateCampaign() {
       } else {
         toast.error(result.error || 'Failed to save draft', { position: 'top-right', autoClose: 4000 });
       }
-    } catch (error) {
+    } catch {
       toast.error('An unexpected error occurred', { position: 'top-right', autoClose: 4000 });
     }
   };
@@ -142,9 +141,14 @@ function CreateCampaign() {
       `}</style>
     <div className="space-y-6 lg:space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Create New Campaign</h1>
-        <p className="text-gray-400 text-sm sm:text-base">Set up your marketing campaign details</p>
+      <div className="rounded-2xl border border-white/10 bg-[#1e1632]/55 backdrop-blur-md px-5 py-5 sm:px-6 sm:py-6 shadow-xl">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1.5">Create New Campaign</h1>
+            <p className="text-gray-300/90 text-sm sm:text-base">Set up your marketing campaign details</p>
+          </div>
+          
+        </div>
       </div>
 
       {/* Main Grid – Stack on mobile */}
@@ -154,103 +158,117 @@ function CreateCampaign() {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Basic Information */}
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-bold text-white mb-5">Basic Information</h2>
-            <div className="space-y-5">
+          <div className="bg-[#1e1632]/85 backdrop-blur-md border border-[#C1B6FD]/20 rounded-2xl p-6 sm:p-8 shadow-xl shadow-black/20">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-[#C1B6FD]/10 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-[#C1B6FD]" />
+              </div>
+              <h2 className="text-xl font-bold text-white">Basic Information</h2>
+            </div>
+            
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Campaign Name</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Campaign Name</label>
                 <input
                   type="text"
                   value={campaignData.name}
                   onChange={(e) => setCampaignData({ ...campaignData, name: e.target.value })}
-                  placeholder="Enter campaign name"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
+                  placeholder="e.g., Summer Launch 2024"
+                  className="w-full bg-[#2A2240] border border-white/15 rounded-xl px-4 py-3.5 text-white placeholder:text-gray-400 hover:border-[#C1B6FD]/45 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">User Description</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">User Description</label>
                 <textarea
                   value={campaignData.userDescription}
                   onChange={(e) => setCampaignData({ ...campaignData, userDescription: e.target.value })}
-                  placeholder="Describe your campaign objectives..."
+                  placeholder="Describe your campaign objectives, target audience, and key deliverables..."
                   rows={4}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] resize-none transition-all"
+                  className="w-full bg-[#2A2240] border border-white/15 rounded-xl px-4 py-3.5 text-white placeholder:text-gray-400 hover:border-[#C1B6FD]/45 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 resize-none transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  <Target className="w-4 h-4 inline mr-1" />
-                  Goal Type
-                </label>
-                <select
-                  value={campaignData.goalType}
-                  onChange={(e) => setCampaignData({ ...campaignData, goalType: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all appearance-none cursor-pointer"
-                  style={{
-                      colorScheme: 'dark'
-                  }}
+                <label className="block text-sm font-medium text-gray-300 mb-2">Goal Type</label>
+                <div className="relative">
+                  <Target className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                  <select
+                    value={campaignData.goalType}
+                    onChange={(e) => setCampaignData({ ...campaignData, goalType: e.target.value })}
+                    className="w-full bg-[#2A2240] border border-white/15 rounded-xl pl-12 pr-4 py-3.5 text-white hover:border-[#C1B6FD]/45 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all appearance-none cursor-pointer"
+                    style={{ colorScheme: 'dark' }}
                   >
-                  <option value="" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>Select goal type</option>
-                  <option value="awareness" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>Awareness</option>
-                  <option value="consideration" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>Consideration</option>
-                  <option value="conversion" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>Conversion</option>
-                  <option value="lead_generation" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>Lead Generation</option>
-                  <option value="retention" style={{ backgroundColor: '#1e1632', color: '#ffffff' }}>Retention</option>
-                </select>
+                    <option value="" disabled>Select primary objective</option>
+                    <option value="awareness">Brand Awareness</option>
+                    <option value="consideration">Consideration</option>
+                    <option value="conversion">Conversion & Sales</option>
+                    <option value="lead_generation">Lead Generation</option>
+                    <option value="retention">Customer Retention</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Budget & Timeline */}
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-bold text-white mb-5">Budget & Timeline</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  <DollarSign className="w-4 h-4 inline mr-1" />
-                  Total Budget
-                </label>
-                <input
-                  type="number"
-                  value={campaignData.budget}
-                  onChange={(e) => setCampaignData({ ...campaignData, budget: e.target.value })}
-                  placeholder="0"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
-                />
+          <div className="bg-[#1e1632]/85 backdrop-blur-md border border-[#C1B6FD]/20 rounded-2xl p-6 sm:p-8 shadow-xl shadow-black/20">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-amber-500" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Currency</label>
-                <select
-                  value={campaignData.currency}
-                  onChange={(e) => setCampaignData({ ...campaignData, currency: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all appearance-none cursor-pointer"
-                >
-                  <option value="">Select currency</option>
-                  <option value="USD">USD ($)</option>
-                  <option value="EUR">EUR (€)</option>
-                  <option value="GBP">GBP (£)</option>
-                  <option value="JPY">JPY (¥)</option>
-                  <option value="CAD">CAD ($)</option>
-                  <option value="AUD">AUD ($)</option>
-                </select>
+              <h2 className="text-xl font-bold text-white">Budget & Timeline</h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Budget Input Group */}
+              <div className="sm:col-span-2 grid grid-cols-3 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Total Budget</label>
+                  <div className="relative">
+                    <DollarSign className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="number"
+                      value={campaignData.budget}
+                      onChange={(e) => setCampaignData({ ...campaignData, budget: e.target.value })}
+                      placeholder="0.00"
+                      className="w-full bg-[#2A2240] border border-white/15 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder:text-gray-400 hover:border-[#C1B6FD]/45 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all"
+                    />
+                  </div>
+                </div>
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Currency</label>
+                  <select
+                    value={campaignData.currency}
+                    onChange={(e) => setCampaignData({ ...campaignData, currency: e.target.value })}
+                    className="w-full bg-[#2A2240] border border-white/15 rounded-xl px-4 py-3.5 text-white hover:border-[#C1B6FD]/45 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="" disabled>Select</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                    <option value="JPY">JPY (¥)</option>
+                    <option value="CAD">CAD ($)</option>
+                    <option value="AUD">AUD ($)</option>
+                  </select>
+                </div>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Budget Flexibility</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Budget Flexibility</label>
                 <select
                   value={campaignData.budgetFlexibility}
                   onChange={(e) => setCampaignData({ ...campaignData, budgetFlexibility: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all appearance-none cursor-pointer"
+                  className="w-full bg-[#2A2240] border border-white/15 rounded-xl px-4 py-3.5 text-white hover:border-[#C1B6FD]/45 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all appearance-none cursor-pointer"
                 >
-                  <option value="">Select flexibility</option>
-                  <option value="strict">Strict</option>
-                  <option value="flexible">Flexible</option>
+                  <option value="" disabled>Select flexibility</option>
+                  <option value="strict">Strict (Firm limit)</option>
+                  <option value="flexible">Flexible (Can increase)</option>
                 </select>
               </div>
+
+              <div className="hidden sm:block"></div> {/* Spacer */}
+
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  <Calendar className="w-4 h-4 inline mr-1" />
-                  Start Date
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Start Date</label>
                 <input
                   type="date"
                   value={campaignData.startDate}
@@ -259,72 +277,86 @@ function CreateCampaign() {
                     setCampaignData({ 
                       ...campaignData, 
                       startDate: newStartDate,
-                      // If end date is before new start date, clear it
                       endDate: campaignData.endDate && newStartDate > campaignData.endDate ? '' : campaignData.endDate
                     });
                   }}
                   min={today}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
+                  className="w-full bg-[#2A2240] border border-white/15 rounded-xl px-4 py-3.5 text-white hover:border-[#C1B6FD]/45 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all"
                   style={{ colorScheme: 'dark' }}
                 />
               </div>
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  <Calendar className="w-4 h-4 inline mr-1" />
-                  End Date
-                </label>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">End Date</label>
                 <input
                   type="date"
                   value={campaignData.endDate}
                   onChange={(e) => setCampaignData({ ...campaignData, endDate: e.target.value })}
                   min={campaignData.startDate || today}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
+                  className="w-full bg-[#2A2240] border border-white/15 rounded-xl px-4 py-3.5 text-white hover:border-[#C1B6FD]/45 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all"
                   style={{ colorScheme: 'dark' }}
                 />
               </div>
+
               {duration !== null && (
-                <div className="sm:col-span-2 p-3 bg-[#745CB4]/20 border border-[#745CB4]/30 rounded-xl">
-                  <p className="text-sm text-[#C1B6FD] font-medium">
-                    Duration: <span className="text-white">{duration} {duration === 1 ? 'day' : 'days'}</span>
-                  </p>
+                <div className="sm:col-span-2 p-4 bg-linear-to-r from-[#C1B6FD]/12 to-[#745CB4]/12 border border-[#C1B6FD]/25 rounded-xl flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#C1B6FD]/20 flex items-center justify-center">
+                    <Calendar className="w-4 h-4 text-[#C1B6FD]" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-[#C1B6FD] font-medium">
+                      Campaign Duration: <span className="text-white font-bold">{duration} {duration === 1 ? 'day' : 'days'}</span>
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Right Sidebar – Stacks below on mobile */}
-        <div className="space-y-6">
+        {/* Right Sidebar – Stacks below on mobile, sticky on desktop */}
+        <div className="lg:sticky lg:top-6 space-y-6 h-fit">
           
-          {/* Campaign Preview */}
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 sm:p-6">
-            <h3 className="text-lg font-bold text-white mb-5">Campaign Preview</h3>
-            <div className="space-y-4">
+          {/* Campaign Overview Summary Card */}
+          <div className="bg-[#1e1632]/85 backdrop-blur-md border border-[#C1B6FD]/20 rounded-2xl p-6 shadow-xl shadow-black/20 relative overflow-hidden">
+            {/* Soft background glow */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#C1B6FD]/10 blur-3xl rounded-full"></div>
+
+            <h3 className="text-lg font-bold text-white mb-6 relative z-10">Campaign Summary</h3>
+            <div className="space-y-4 relative z-10">
               <div>
-                <p className="text-xs text-gray-400 mb-1">Name</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <FileText className="w-3.5 h-3.5 text-gray-500" />
+                  <p className="text-xs text-gray-400">Name</p>
+                </div>
                 <p className="text-sm text-white font-medium truncate">{campaignData.name || 'Untitled Campaign'}</p>
               </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Budget</p>
+              <div className="pt-3 border-t border-white/5">
+                <div className="flex items-center gap-2 mb-1">
+                  <DollarSign className="w-3.5 h-3.5 text-gray-500" />
+                  <p className="text-xs text-gray-400">Budget</p>
+                </div>
                 <p className="text-sm text-[#C1B6FD] font-semibold">
                   {campaignData.budget && campaignData.currency 
                     ? `${campaignData.currency} ${campaignData.budget}` 
                     : campaignData.budget || '0'}
                 </p>
               </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Budget Flexibility</p>
-                <p className="text-sm text-white capitalize">{campaignData.budgetFlexibility || 'Not set'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Goal Type</p>
+              <div className="pt-3 border-t border-white/5">
+                <div className="flex items-center gap-2 mb-1">
+                  <Target className="w-3.5 h-3.5 text-gray-500" />
+                  <p className="text-xs text-gray-400">Goal Type</p>
+                </div>
                 <p className="text-sm text-white capitalize">{campaignData.goalType ? campaignData.goalType.replace('_', ' ') : 'Not selected'}</p>
               </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Duration</p>
+              <div className="pt-3 border-t border-white/5">
+                <div className="flex items-center gap-2 mb-1">
+                  <Calendar className="w-3.5 h-3.5 text-gray-500" />
+                  <p className="text-xs text-gray-400">Timeline</p>
+                </div>
                 <p className="text-sm text-white">
                   {campaignData.startDate && campaignData.endDate 
-                    ? `${campaignData.startDate} to ${campaignData.endDate}` 
+                    ? `${new Date(campaignData.startDate).toLocaleDateString()} - ${new Date(campaignData.endDate).toLocaleDateString()}` 
                     : 'Not set'}
                 </p>
               </div>
@@ -332,20 +364,29 @@ function CreateCampaign() {
           </div>
 
           {/* Quick Tips */}
-          <div className="bg-[#745CB4]/10 border border-[#C1B6FD]/30 rounded-xl p-5 sm:p-6">
-            <h3 className="text-lg font-bold text-white mb-4">Campaign Tips</h3>
-            <ul className="space-y-3 text-sm text-gray-400">
-              <li className="flex items-start gap-2">
-                <span className="text-[#C1B6FD] mt-0.5">•</span>
-                <span>Set clear, measurable goals for your campaign</span>
+          <div className="bg-linear-to-br from-[#C1B6FD]/10 to-[#745CB4]/10 border border-[#C1B6FD]/15 rounded-2xl p-6 relative overflow-hidden backdrop-blur-md">
+            <div className="flex items-center gap-2 mb-5">
+              <Info className="w-4 h-4 text-purple-400" />
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Campaign Tips</h3>
+            </div>
+            <ul className="space-y-4 text-sm text-gray-400">
+              <li className="flex items-start gap-4 p-3 rounded-lg bg-[#120D1E]/60 hover:bg-[#120D1E]/90 transition-colors border border-transparent hover:border-[#C1B6FD]/25 group">
+                <div className="w-8 h-8 rounded-lg bg-[#C1B6FD]/10 flex items-center justify-center shrink-0 group-hover:bg-[#C1B6FD]/20 transition-colors">
+                  <Target className="w-4 h-4 text-[#C1B6FD]" />
+                </div>
+                <span className="leading-snug mt-1.5"><strong className="text-white font-medium">Be precise with goals.</strong> Clear, measurable goals help our AI generate a laser-focused strategy.</span>
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#C1B6FD] mt-0.5">•</span>
-                <span>Choose influencers that align with your brand values</span>
+              <li className="flex items-start gap-4 p-3 rounded-lg bg-[#120D1E]/60 hover:bg-[#120D1E]/90 transition-colors border border-transparent hover:border-[#C1B6FD]/25 group">
+                <div className="w-8 h-8 rounded-lg bg-[#C1B6FD]/10 flex items-center justify-center shrink-0 group-hover:bg-[#C1B6FD]/20 transition-colors">
+                  <Layout className="w-4 h-4 text-[#C1B6FD]" />
+                </div>
+                <span className="leading-snug mt-1.5"><strong className="text-white font-medium">Provide ample context.</strong> The User Description is crucial for generating accurate deliverables and messaging angles.</span>
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#C1B6FD] mt-0.5">•</span>
-                <span>Monitor performance regularly and adjust as needed</span>
+              <li className="flex items-start gap-4 p-3 rounded-lg bg-[#120D1E]/60 hover:bg-[#120D1E]/90 transition-colors border border-transparent hover:border-[#C1B6FD]/25 group">
+                <div className="w-8 h-8 rounded-lg bg-[#C1B6FD]/10 flex items-center justify-center shrink-0 group-hover:bg-[#C1B6FD]/20 transition-colors">
+                  <DollarSign className="w-4 h-4 text-[#C1B6FD]" />
+                </div>
+                <span className="leading-snug mt-1.5"><strong className="text-white font-medium">Consider budget flexibility.</strong> Allowing flexibility often yields better ROI projections from the AI.</span>
               </li>
             </ul>
           </div>
@@ -362,22 +403,25 @@ function CreateCampaign() {
           )}
 
           {/* Action Buttons */}
-          <div className="space-y-3">
+          <div className="space-y-3 pt-2">
             <button
               onClick={handleGenerateAI}
               disabled={isLoading}
-              className="w-full px-6 py-3.5 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full px-6 py-4 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-bold hover:brightness-110 hover:shadow-xl hover:shadow-purple-500/35 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
             >
               {isLoading ? (
-                <><span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span> Generating...</>
+                <><span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span> Generating Strategy...</>
               ) : (
-                '✨ Generate with AI'
+                <>
+                  <Sparkles className="w-4 h-4 text-purple-100 group-hover:scale-110 transition-transform" />
+                  Generate Strategy with AI
+                </>
               )}
             </button>
             <button
               onClick={handleSaveAsDraft}
               disabled={isLoading}
-              className="w-full px-6 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-6 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Save as Draft
             </button>

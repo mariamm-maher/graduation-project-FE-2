@@ -77,55 +77,59 @@ function AllCampaigns() {
         </div>
         <button 
           onClick={() => navigate('/dashboard/owner/campaigns/create')}
-          className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all"
+          className="w-full sm:w-auto px-6 py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-bold hover:brightness-110 hover:shadow-xl hover:shadow-purple-500/35 transition-all"
         >
           + Create Campaign
         </button>
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
-          <p className="text-gray-400 text-sm mb-1">Total Campaigns</p>
-          <p className="text-2xl font-bold text-white">{totalItems}</p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-[#1e1632]/60 backdrop-blur-md border border-white/5 rounded-lg py-2.5 px-4 flex items-center justify-between shadow-sm">
+          <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Total</p>
+          <p className="text-lg font-bold text-white">{totalItems}</p>
         </div>
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
-          <p className="text-gray-400 text-sm mb-1">Draft</p>
-          <p className="text-2xl font-bold text-amber-400">{campaigns.filter(c => c.lifecycleStage === 'draft').length}</p>
+        <div className="bg-[#1e1632]/60 backdrop-blur-md border border-white/5 rounded-lg py-2.5 px-4 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+            <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Draft</p>
+          </div>
+          <p className="text-lg font-bold text-amber-400">{campaigns.filter(c => c.lifecycleStage === 'draft').length}</p>
         </div>
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
-          <p className="text-gray-400 text-sm mb-1">Active</p>
-          <p className="text-2xl font-bold text-green-400">{campaigns.filter(c => c.lifecycleStage === 'active').length}</p>
+        <div className="bg-[#1e1632]/60 backdrop-blur-md border border-white/5 rounded-lg py-2.5 px-4 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-green-400"></span>
+            <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Active</p>
+          </div>
+          <p className="text-lg font-bold text-green-400">{campaigns.filter(c => c.lifecycleStage === 'active').length}</p>
         </div>
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
-          <p className="text-gray-400 text-sm mb-1">Completed</p>
-          <p className="text-2xl font-bold text-blue-400">{campaigns.filter(c => c.lifecycleStage === 'completed').length}</p>
-        </div>
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
-          <p className="text-gray-400 text-sm mb-1">Total Budget</p>
-          <p className="text-2xl font-bold text-white">
-            ${campaigns.reduce((sum, c) => sum + (parseFloat(c.totalBudget) || 0), 0).toLocaleString()}
-          </p>
+        <div className="bg-[#1e1632]/60 backdrop-blur-md border border-white/5 rounded-lg py-2.5 px-4 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+            <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Completed</p>
+          </div>
+          <p className="text-lg font-bold text-blue-400">{campaigns.filter(c => c.lifecycleStage === 'completed').length}</p>
         </div>
       </div>
 
       {/* Search & Filter */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search campaigns by name..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-transparent transition-all"
+            className="w-full bg-[#2A2240] border border-white/15 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-gray-400 hover:border-[#C1B6FD]/45 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all"
           />
         </div>
-        <div className="relative w-56">
+        <div className="relative w-full sm:w-48 lg:w-56">
           <select
             value={filterStatus}
             onChange={(e) => handleStatusChange(e.target.value)}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white appearance-none pr-10 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
+            className="w-full px-4 py-3 bg-[#2A2240] border border-white/15 rounded-xl text-white hover:border-[#C1B6FD]/45 appearance-none pr-10 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all cursor-pointer"
+            style={{ colorScheme: 'dark' }}
           >
             <option value="all">All Status</option>
             <option value="draft">Draft</option>
@@ -141,11 +145,12 @@ function AllCampaigns() {
           </div>
         </div>
 
-        <div className="relative w-56">
+        <div className="relative w-full sm:w-48 lg:w-56">
           <select
             value={filterGoal}
             onChange={(e) => setFilterGoal(e.target.value)}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white appearance-none pr-10 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
+            className="w-full px-4 py-3 bg-[#2A2240] border border-white/15 rounded-xl text-white hover:border-[#C1B6FD]/45 appearance-none pr-10 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all cursor-pointer"
+            style={{ colorScheme: 'dark' }}
           >
             <option value="all">All Goals</option>
             <option value="awareness">Awareness</option>
@@ -163,7 +168,7 @@ function AllCampaigns() {
       </div>
 
       {/* Campaigns Table */}
-      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden">
+      <div className="bg-[#1e1632]/85 backdrop-blur-md border border-[#C1B6FD]/20 shadow-xl shadow-black/20 rounded-2xl overflow-hidden">
         {/* Loading State */}
         {isLoading && (
           <div className="text-center py-16">
@@ -182,7 +187,7 @@ function AllCampaigns() {
             <p className="text-gray-400 mb-6">{error}</p>
             <button 
               onClick={() => fetchCampaigns()}
-              className="px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all"
+              className="px-6 py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-bold hover:brightness-110 hover:shadow-xl hover:shadow-purple-500/35 transition-all"
             >
               Try Again
             </button>
@@ -193,7 +198,7 @@ function AllCampaigns() {
         {!isLoading && !error && (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-white/5 border-b border-white/10">
+              <thead className="bg-[#120D1E]/80 border-b border-white/10">
                 <tr>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Campaign Name</th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Status</th>
@@ -204,16 +209,16 @@ function AllCampaigns() {
                   <th className="text-right px-6 py-4 text-sm font-semibold text-gray-400">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/10">
+              <tbody className="divide-y divide-white/5">
                 {filteredCampaigns.map((campaign) => (
                 <tr 
                   key={campaign.id}
-                  className="hover:bg-white/5 transition-colors"
+                  className="hover:bg-[#C1B6FD]/5 transition-colors group/row"
                 >
                   {/* Campaign Name */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#745CB4] to-[#C1B6FD] flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 rounded-lg bg-linear-to-br from-[#745CB4] to-[#C1B6FD] shadow-lg shadow-purple-500/20 flex items-center justify-center shrink-0">
                         <Target className="w-5 h-5 text-white" />
                       </div>
                       <div>
@@ -318,7 +323,7 @@ function AllCampaigns() {
             {campaigns.length === 0 && (
               <button 
                 onClick={() => navigate('/dashboard/owner/campaigns/create')}
-                className="px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all"
+                className="px-6 py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-bold hover:brightness-110 hover:shadow-xl hover:shadow-purple-500/35 transition-all"
               >
                 + Create Campaign
               </button>
@@ -339,7 +344,7 @@ function AllCampaigns() {
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-300 bg-white/5 border border-white/10 rounded-xl hover:border-[#C1B6FD]/40 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-300 bg-[#2A2240] border border-white/15 rounded-xl hover:border-[#C1B6FD]/45 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
               <ChevronLeft className="w-4 h-4" /> Previous
             </button>
@@ -362,8 +367,8 @@ function AllCampaigns() {
                       onClick={() => setPage(item)}
                       className={`w-9 h-9 rounded-lg text-sm font-semibold transition-all ${
                         item === page
-                          ? 'bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-md'
-                          : 'text-gray-400 bg-white/5 border border-white/10 hover:border-[#C1B6FD]/40 hover:text-white'
+                          ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg shadow-purple-500/20'
+                          : 'text-gray-400 bg-[#2A2240] border border-white/15 hover:border-[#C1B6FD]/45 hover:text-white'
                       }`}
                     >
                       {item}
@@ -375,7 +380,7 @@ function AllCampaigns() {
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-300 bg-white/5 border border-white/10 rounded-xl hover:border-[#C1B6FD]/40 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-300 bg-[#2A2240] border border-white/15 rounded-xl hover:border-[#C1B6FD]/45 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
               Next <ChevronRight className="w-4 h-4" />
             </button>

@@ -7,6 +7,7 @@ const useCampaignStore = create((set) => ({
   campaigns: [],
   currentCampaign: null,
   campaignsOverview: null,
+  activeTrackingTools: null,
   pagination: { total: 0, page: 1, limit: 10, totalPages: 0 },
   isLoading: false,
   error: null,
@@ -146,6 +147,42 @@ const useCampaignStore = create((set) => ({
       throw new Error(response.message || 'Failed to fetch campaigns');
     } catch (error) {
       const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch campaigns';
+      set({ error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Fetch Active Campaigns
+  fetchActiveCampaigns: async ({ page = 1, limit = 10 } = {}) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await campaignService.getActiveCampaigns({ page, limit });
+
+      if (response.status === 'success' || response.success) {
+        const campaigns = response.data?.campaigns || [];
+        const trackingTools = response.data?.trackingTools || null;
+
+        const total =
+          response.data?.pagination?.total ??
+          trackingTools?.totalActiveCampaigns ??
+          campaigns.length;
+
+        const totalPages = response.data?.pagination?.totalPages ?? Math.max(1, Math.ceil(total / limit));
+
+        const pagination = {
+          total,
+          page: response.data?.pagination?.page ?? page,
+          limit: response.data?.pagination?.limit ?? limit,
+          totalPages,
+        };
+
+        set({ campaigns, activeTrackingTools: trackingTools, pagination, isLoading: false, error: null });
+        return { success: true, data: campaigns, trackingTools, pagination };
+      }
+
+      throw new Error(response.message || 'Failed to fetch active campaigns');
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch active campaigns';
       set({ error: errorMessage, isLoading: false });
       return { success: false, error: errorMessage };
     }

@@ -77,6 +77,20 @@ const campaignService = {
     }
   },
 
+  // Get active campaigns
+  getActiveCampaigns: async ({ page = 1, limit = 10 } = {}) => {
+    try {
+      const response = await api.get('/campaigns/active', {
+        params: { page, limit },
+      });
+      console.log('Active campaigns response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Active campaigns error:', error);
+      throw error.response?.data?.message || 'Failed to fetch active campaigns';
+    }
+  },
+
   // Get campaigns overview
   getCampaignsOverview: async () => {
     try {

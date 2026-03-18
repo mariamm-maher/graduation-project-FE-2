@@ -10,39 +10,19 @@ function ActiveCampaigns() {
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
-  const { campaigns: campaignsRaw, pagination, isLoading, error, fetchCampaigns } = useCampaignStore();
+  const { campaigns: campaignsRaw, activeTrackingTools, pagination, isLoading, error, fetchActiveCampaigns } = useCampaignStore();
   const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
   const totalPages = pagination?.totalPages || 1;
-  const totalItems = pagination?.total || 0;
+  const totalItems = pagination?.total || activeTrackingTools?.totalActiveCampaigns || 0;
 
   useEffect(() => {
-    fetchCampaigns({ page, limit: LIMIT, lifecycleStage: 'saved' });
-  }, [page, fetchCampaigns]);
+    fetchActiveCampaigns({ page, limit: LIMIT });
+  }, [page, fetchActiveCampaigns]);
 
   // Client-side search filter only
   const activeCampaigns = campaigns.filter(campaign =>
     searchQuery === '' || campaign.campaignName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  // Calculate time progress
-  const getTimeProgress = (startDate, endDate) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const now = new Date();
-    const total = end - start;
-    const elapsed = now - start;
-    const percentage = Math.min(100, Math.max(0, (elapsed / total) * 100));
-    return Math.round(percentage);
-  };
-
-  // Get days remaining
-  const getDaysRemaining = (endDate) => {
-    const end = new Date(endDate);
-    const now = new Date();
-    const diff = end - now;
-    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-    return days > 0 ? days : 0;
-  };
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -56,7 +36,7 @@ function ActiveCampaigns() {
         </div>
         <button 
           onClick={() => navigate('/dashboard/owner/campaigns/create')}
-          className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all">
+          className="w-full sm:w-auto px-6 py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all">
           + Create Campaign
         </button>
       </div>
@@ -97,8 +77,8 @@ function ActiveCampaigns() {
             </div>
             <h3 className="text-xl font-bold text-white mb-2">Error Loading Campaigns</h3>
             <p className="text-gray-400 mb-6">{error}</p>
-            <button onClick={() => fetchCampaigns({ page, limit: LIMIT, lifecycleStage: 'active' })}
-              className="px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all">
+            <button onClick={() => fetchActiveCampaigns({ page, limit: LIMIT })}
+              className="px-6 py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all">
               Try Again
             </button>
           </div>
@@ -114,7 +94,7 @@ function ActiveCampaigns() {
             <p className="text-gray-400 mb-6">You don't have any running campaigns at the moment</p>
             <button 
               onClick={() => navigate('/dashboard/owner/campaigns/create')}
-              className="px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all">
+              className="px-6 py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all">
               Create Your First Campaign
             </button>
           </div>
@@ -123,18 +103,19 @@ function ActiveCampaigns() {
         {/* Campaign Cards */}
         {!isLoading && !error && activeCampaigns.length > 0 && (
           activeCampaigns.map((campaign) => {
-            const timeProgress = getTimeProgress(campaign.startDate, campaign.endDate);
-            const daysRemaining = getDaysRemaining(campaign.endDate);
-            
-            // Mock task data (in production, fetch from CollaborationTask table)
-            const totalTasks = campaign.kpisCount * 3 || 12;
-            const completedTasks = Math.floor(totalTasks * (timeProgress / 100));
-            const taskProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-            
-            // Mock content calendar data (in production, fetch from ContentCalendar table)
-            const scheduledContent = Math.floor(totalTasks * 0.3);
-            const postedContent = completedTasks;
-            const failedContent = Math.floor(totalTasks * 0.05);
+            const durationTracking = campaign.tracking?.duration || {};
+            const kpisTracking = campaign.tracking?.kpis || {};
+            const contentTracking = campaign.tracking?.content || {};
+
+            const timeProgress = durationTracking.progressPercent ?? 0;
+            const daysRemaining = durationTracking.remainingDurationDays ?? 0;
+            const totalTasks = kpisTracking.totalKpis ?? 0;
+            const completedTasks = Math.max(0, durationTracking.elapsedDurationDays ?? 0);
+            const taskProgress = totalTasks > 0 ? Math.min(100, Math.round((completedTasks / totalTasks) * 100)) : 0;
+            const scheduledContent = contentTracking.scheduledContentCount ?? 0;
+            const postedContent = contentTracking.postedContentCount ?? 0;
+            const failedContent = contentTracking.failedContentCount ?? 0;
+            const totalContent = contentTracking.totalItems ?? 0;
 
             return (
               <div
@@ -157,11 +138,11 @@ function ActiveCampaigns() {
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
                       <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 flex-shrink-0" />
+                        <Calendar className="w-4 h-4 shrink-0" />
                         <span>{new Date(campaign.startDate).toLocaleDateString()} - {new Date(campaign.endDate).toLocaleDateString()}</span>
                       </div>
                       <div className="flex items-center gap-2 text-amber-400">
-                        <Clock className="w-4 h-4 flex-shrink-0" />
+                        <Clock className="w-4 h-4 shrink-0" />
                         <span className="font-semibold">{daysRemaining} days remaining</span>
                       </div>
                     </div>
@@ -179,7 +160,7 @@ function ActiveCampaigns() {
                   </div>
                   <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full transition-all duration-700"
+                      className="h-full bg-linear-to-r from-blue-400 to-blue-600 rounded-full transition-all duration-700"
                       style={{ width: `${timeProgress}%` }}
                     />
                   </div>
@@ -191,24 +172,22 @@ function ActiveCampaigns() {
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                     <div className="flex items-center gap-2 mb-2">
                       <Users className="w-4 h-4 text-blue-400" />
-                      <p className="text-xs text-gray-400">Active Influencers</p>
+                      <p className="text-xs text-gray-400">Total KPIs</p>
                     </div>
-                    <p className="text-2xl font-bold text-white">{campaign.collaboratorsCount || campaign.influencers || 0}</p>
-                    {campaign.pendingRequests > 0 && (
-                      <p className="text-xs text-amber-400 mt-1">+{campaign.pendingRequests} pending</p>
-                    )}
+                    <p className="text-2xl font-bold text-white">{totalTasks}</p>
+                    <p className="text-xs text-gray-400 mt-1">Tracked KPI metrics</p>
                   </div>
 
                   {/* Tasks Progress */}
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                     <div className="flex items-center gap-2 mb-2">
                       <CheckCircle className="w-4 h-4 text-green-400" />
-                      <p className="text-xs text-gray-400">Tasks Progress</p>
+                      <p className="text-xs text-gray-400">Duration Progress</p>
                     </div>
-                    <p className="text-2xl font-bold text-white">{completedTasks}/{totalTasks}</p>
+                    <p className="text-2xl font-bold text-white">{durationTracking.elapsedDurationDays ?? 0}/{durationTracking.totalDurationDays ?? 0}</p>
                     <div className="mt-2 h-1.5 bg-white/10 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full"
+                        className="h-full bg-linear-to-r from-green-400 to-green-600 rounded-full"
                         style={{ width: `${taskProgress}%` }}
                       />
                     </div>
@@ -241,29 +220,35 @@ function ActiveCampaigns() {
                         </>
                       )}
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">Posted | Scheduled {failedContent > 0 && '| Failed'}</p>
+                    <p className="text-xs text-gray-400 mt-1">{totalContent} total items</p>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <button 
-                    onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}`)}
-                    className="px-4 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] hover:shadow-lg hover:shadow-purple-500/30 rounded-xl text-white font-medium transition-all"
-                  >
-                    View Details
-                  </button>
-                  <button 
-                    onClick={() => navigate(`/dashboard/owner/collaborations?campaign=${campaign.id}`)}
-                    className="px-4 py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-white font-medium transition-all"
-                  >
-                    Manage Tasks
-                  </button>
-                  <button 
+                <div className="flex flex-col sm:flex-row sm:justify-end gap-3 items-center">
+                  <div className="w-full sm:w-auto">
+                    <button
+                      onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}`)}
+                      className="w-full sm:w-auto px-5 py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                    >
+                      <span>View Details</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <button
                     onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}/content`)}
-                    className="px-4 py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-white font-medium transition-all"
+                    className="px-4 py-3 bg-transparent hover:bg-white/5 border border-white/10 rounded-xl text-white font-medium transition-all"
                   >
                     Content Calendar
+                  </button>
+
+                  <button
+                    onClick={() => { /* placeholder for quick actions/menu */ }}
+                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all"
+                    aria-label="More"
+                  >
+                    <MoreVertical className="w-4 h-4 text-gray-300" />
                   </button>
                 </div>
               </div>
@@ -301,7 +286,7 @@ function ActiveCampaigns() {
                     <span key={`e-${i}`} className="px-2 text-gray-500 text-sm">…</span>
                   ) : (
                     <button key={item} onClick={() => setPage(item)}
-                      className={`w-9 h-9 rounded-lg text-sm font-semibold transition-all ${item === page ? 'bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-md' : 'text-gray-400 bg-white/5 border border-white/10 hover:border-[#C1B6FD]/40 hover:text-white'}`}>
+                      className={`w-9 h-9 rounded-lg text-sm font-semibold transition-all ${item === page ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-md' : 'text-gray-400 bg-white/5 border border-white/10 hover:border-[#C1B6FD]/40 hover:text-white'}`}>
                       {item}
                     </button>
                   )

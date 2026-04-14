@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Edit2, Save, X, Loader } from 'lucide-react';
 import { motion } from 'framer-motion';
 import useAuthStore from '../../../../../stores/authStore';
 import useProfileStore from '../../../../../stores/profileStore';
+import uploadService from '../../../../../api/uploadApi';
 import { toast } from 'react-toastify';
 
 import ProfileHeader from './ProfileHeader';
@@ -14,6 +15,9 @@ import SocialMediaCard from './SocialMediaCard';
 function Profile() {
   const { getProfile, isLoading } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState('');
+  const fileInputRef = useRef(null);
 
   // Initialize with default structure
   const [profileData, setProfileData] = useState({
@@ -127,7 +131,9 @@ function Profile() {
       socialMediaLinks: {
         ...prev.socialMediaLinks,
         [platform]: {
-          ...prev.socialMediaLinks?.[platform],
+          ...(typeof prev.socialMediaLinks?.[platform] === 'object' && prev.socialMediaLinks?.[platform] !== null
+            ? prev.socialMediaLinks[platform]
+            : {}),
           [field]: value
         }
       }
@@ -135,21 +141,64 @@ function Profile() {
   };
 
   const handleImageChange = () => {
-    console.log('Upload profile image');
+    fileInputRef.current?.click();
   };
+
+  const handleImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSelectedImageFile(file);
+
+    if (previewImageUrl) {
+      URL.revokeObjectURL(previewImageUrl);
+    }
+    const previewUrl = URL.createObjectURL(file);
+    setPreviewImageUrl(previewUrl);
+    setProfileData(prev => ({ ...prev, image: previewUrl }));
+  };
+
+  useEffect(() => {
+    return () => {
+      if (previewImageUrl) {
+        URL.revokeObjectURL(previewImageUrl);
+      }
+    };
+  }, [previewImageUrl]);
 
   const updateInfluencerProfile = useProfileStore((s) => s.updateInfluencerProfile);
 
   const handleSave = async () => {
     try {
+      const payload = { ...profileData };
+
+      // Two-step save: upload image first, then update profile with uploaded URL.
+      if (selectedImageFile) {
+        toast.info('Uploading image...', { position: 'top-right' });
+        const uploadResponse = await uploadService.uploadImage(selectedImageFile, 'avatar');
+        const uploadedImageUrl = uploadResponse?.data?.data?.url;
+
+        if (!uploadedImageUrl) {
+          toast.error('Image upload failed. Please try again.', { position: 'top-right' });
+          return;
+        }
+
+        payload.image = uploadedImageUrl;
+      }
+
       toast.info('Saving profile...', { position: 'top-right' });
-      const res = await updateInfluencerProfile(profileData);
+      const res = await updateInfluencerProfile(payload);
       if (res && res.success) {
         toast.success('Profile updated', { position: 'top-right' });
         // update local state with normalized profile from store
         const p = res.profile || res.data?.profile || res.data;
         if (p) {
           setProfileData(prev => ({ ...prev, ...p }));
+        }
+        setSelectedImageFile(null);
+        if (previewImageUrl) {
+          URL.revokeObjectURL(previewImageUrl);
+          setPreviewImageUrl('');
         }
         setIsEditing(false);
       } else {
@@ -199,6 +248,14 @@ function Profile() {
       animate="visible"
       className="space-y-8 relative"
     >
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/jpg,image/webp"
+        onChange={handleImageSelect}
+        className="hidden"
+      />
+
       {/* Subtle background glow for premium feel */}
       <div className="absolute -top-20 -right-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-40 -left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -251,16 +308,8 @@ function Profile() {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 relative z-10">
-        {/* Left/Main Column - Wider */}
+        {/* Left/Main Column - Content & Audience (Wider) */}
         <div className="xl:col-span-2 space-y-6">
-          <motion.div variants={itemVariants}>
-            <PersonalInfoCard
-              profileData={profileData}
-              isEditing={isEditing}
-              onInputChange={handleInputChange}
-            />
-          </motion.div>
-
           <motion.div variants={itemVariants}>
             <ProfessionalDetailsCard
               profileData={profileData}
@@ -280,8 +329,16 @@ function Profile() {
           </motion.div>
         </div>
 
-        {/* Right Sidebar - Narrower */}
+        {/* Right Sidebar - Personal & Links (Narrower) */}
         <div className="space-y-6">
+          <motion.div variants={itemVariants}>
+            <PersonalInfoCard
+              profileData={profileData}
+              isEditing={isEditing}
+              onInputChange={handleInputChange}
+            />
+          </motion.div>
+
           <motion.div variants={itemVariants} className="xl:sticky xl:top-6">
             <SocialMediaCard
               profileData={profileData}

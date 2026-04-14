@@ -1,6 +1,7 @@
 import { TrendingUp, CheckCircle2, DollarSign, Target } from 'lucide-react';
 
 function HistoryStats({ collaborations }) {
+  const totalCount = collaborations.length;
   const totalCompleted = collaborations.filter(c => c.status === 'completed').length;
   const totalRevenue = collaborations.reduce((sum, c) => {
     const revenue = parseFloat(c.revenue.replace(/[^0-9.-]+/g, ''));
@@ -10,12 +11,12 @@ function HistoryStats({ collaborations }) {
   const avgPerformance = collaborations.reduce((sum, c) => {
     const perf = parseFloat(c.performance.replace(/[^0-9.-]+/g, ''));
     return sum + perf;
-  }, 0) / collaborations.length;
+  }, 0) / (totalCount || 1);
 
   const avgROI = collaborations.reduce((sum, c) => {
     const roi = parseFloat(c.roi.replace(/[^0-9.-]+/g, ''));
     return sum + roi;
-  }, 0) / collaborations.length;
+  }, 0) / (totalCount || 1);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

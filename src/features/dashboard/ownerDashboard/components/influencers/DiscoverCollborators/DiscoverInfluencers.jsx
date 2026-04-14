@@ -23,7 +23,8 @@ function DiscoverInfluencers() {
 
   // Map API data to component props
   const mappedInfluencers = influencers.map(inf => ({
-    id: inf.userId ,
+    id: inf.id ?? inf.userId,
+    userId: inf.userId ?? inf.user?.id ?? null,
     name: `${inf.user?.firstName || 'Unknown'} ${inf.user?.lastName || ''}`,
     image: inf.image || null,
     location: inf.location || 'Unknown Location',

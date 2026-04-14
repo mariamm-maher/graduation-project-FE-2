@@ -1,6 +1,44 @@
-import { Globe, Instagram, Youtube, CheckCircle } from 'lucide-react';
+import { Globe, Instagram, Youtube, CheckCircle, Copy } from 'lucide-react';
+import { useState } from 'react';
 
 function SocialMediaCard({ profileData, isEditing, onSocialMediaChange }) {
+  const [copied, setCopied] = useState(null);
+
+  const getPlatformData = (platform) => {
+    const data = profileData.socialMediaLinks?.[platform];
+    if (typeof data === 'string') {
+      return { link: data, verified: false };
+    }
+    return {
+      link: data?.link || '',
+      verified: Boolean(data?.verified)
+    };
+  };
+
+  const formatDisplayUrl = (url, maxLen = 50) => {
+    if (!url) return '';
+    try {
+      const parsed = new URL(url);
+      const host = parsed.hostname.replace('www.', '');
+      const path = parsed.pathname === '/' ? '' : parsed.pathname;
+      const display = host + path + (parsed.search || '') + (parsed.hash || '');
+      if (display.length <= maxLen) return display;
+      return display.slice(0, maxLen - 1) + '…';
+    } catch (e) {
+      // fallback: truncate raw string
+      return url.length <= maxLen ? url : url.slice(0, maxLen - 1) + '…';
+    }
+  };
+
+  const copyToClipboard = async (text, key) => {
+    try {
+      await navigator.clipboard.writeText(text || '');
+      setCopied(key);
+      setTimeout(() => setCopied(null), 1500);
+    } catch (err) {
+      // ignore
+    }
+  };
   return (
     <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6">
       <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
@@ -14,33 +52,47 @@ function SocialMediaCard({ profileData, isEditing, onSocialMediaChange }) {
             <div className="flex items-center gap-2">
               <Instagram className="w-5 h-5 text-pink-400" />
               <span className="text-white font-semibold">Instagram</span>
-              {profileData.socialMediaLinks?.instagram?.verified && (
+              {getPlatformData('instagram').verified && (
                 <CheckCircle className="w-4 h-4 text-blue-400" />
               )}
             </div>
           </div>
           {isEditing ? (
-            <div className="space-y-2">
+            <div>
               <input
-                type="text"
-                value={profileData.socialMediaLinks?.instagram?.username || ''}
-                onChange={(e) => onSocialMediaChange('instagram', 'username', e.target.value)}
+                type="url"
+                value={getPlatformData('instagram').link}
+                onChange={(e) => onSocialMediaChange('instagram', 'link', e.target.value)}
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-[#C1B6FD]/50"
-                placeholder="@username"
-              />
-              <input
-                type="text"
-                value={profileData.socialMediaLinks?.instagram?.followers || ''}
-                onChange={(e) => onSocialMediaChange('instagram', 'followers', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-[#C1B6FD]/50"
-                placeholder="Followers (e.g., 284K)"
+                placeholder="https://instagram.com/yourprofile"
               />
             </div>
           ) : (
             <div>
-              <p className="text-[#C1B6FD]">{profileData.socialMediaLinks?.instagram?.username || 'Not connected'}</p>
-              {profileData.socialMediaLinks?.instagram?.followers && (
-                <p className="text-sm text-gray-400">{profileData.socialMediaLinks.instagram.followers} followers</p>
+              {getPlatformData('instagram').link ? (
+                <div className="flex items-center justify-between gap-3">
+                  <a
+                    href={getPlatformData('instagram').link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#C1B6FD] underline truncate"
+                    title={getPlatformData('instagram').link}
+                    style={{ maxWidth: '100%' }}
+                  >
+                    {formatDisplayUrl(getPlatformData('instagram').link)}
+                  </a>
+                  <button
+                    onClick={() => copyToClipboard(getPlatformData('instagram').link, 'instagram')}
+                    className="text-white/60 hover:text-white ml-2"
+                    aria-label="Copy Instagram URL"
+                    title="Copy full URL"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                  {copied === 'instagram' && <span className="text-sm text-green-400 ml-2">Copied</span>}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400">Not connected</p>
               )}
             </div>
           )}
@@ -52,33 +104,47 @@ function SocialMediaCard({ profileData, isEditing, onSocialMediaChange }) {
             <div className="flex items-center gap-2">
               <Youtube className="w-5 h-5 text-red-400" />
               <span className="text-white font-semibold">YouTube</span>
-              {profileData.socialMediaLinks?.youtube?.verified && (
+              {getPlatformData('youtube').verified && (
                 <CheckCircle className="w-4 h-4 text-blue-400" />
               )}
             </div>
           </div>
           {isEditing ? (
-            <div className="space-y-2">
+            <div>
               <input
-                type="text"
-                value={profileData.socialMediaLinks?.youtube?.username || ''}
-                onChange={(e) => onSocialMediaChange('youtube', 'username', e.target.value)}
+                type="url"
+                value={getPlatformData('youtube').link}
+                onChange={(e) => onSocialMediaChange('youtube', 'link', e.target.value)}
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-[#C1B6FD]/50"
-                placeholder="Channel name"
-              />
-              <input
-                type="text"
-                value={profileData.socialMediaLinks?.youtube?.subscribers || ''}
-                onChange={(e) => onSocialMediaChange('youtube', 'subscribers', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-[#C1B6FD]/50"
-                placeholder="Subscribers (e.g., 128K)"
+                placeholder="https://youtube.com/channel/yourchannel"
               />
             </div>
           ) : (
             <div>
-              <p className="text-[#C1B6FD]">{profileData.socialMediaLinks?.youtube?.username || 'Not connected'}</p>
-              {profileData.socialMediaLinks?.youtube?.subscribers && (
-                <p className="text-sm text-gray-400">{profileData.socialMediaLinks.youtube.subscribers} subscribers</p>
+              {getPlatformData('youtube').link ? (
+                <div className="flex items-center justify-between gap-3">
+                  <a
+                    href={getPlatformData('youtube').link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#C1B6FD] underline truncate"
+                    title={getPlatformData('youtube').link}
+                    style={{ maxWidth: '100%' }}
+                  >
+                    {formatDisplayUrl(getPlatformData('youtube').link)}
+                  </a>
+                  <button
+                    onClick={() => copyToClipboard(getPlatformData('youtube').link, 'youtube')}
+                    className="text-white/60 hover:text-white ml-2"
+                    aria-label="Copy YouTube URL"
+                    title="Copy full URL"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                  {copied === 'youtube' && <span className="text-sm text-green-400 ml-2">Copied</span>}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400">Not connected</p>
               )}
             </div>
           )}
@@ -92,27 +158,41 @@ function SocialMediaCard({ profileData, isEditing, onSocialMediaChange }) {
             </div>
           </div>
           {isEditing ? (
-            <div className="space-y-2">
+            <div>
               <input
-                type="text"
-                value={profileData.socialMediaLinks?.tiktok?.username || ''}
-                onChange={(e) => onSocialMediaChange('tiktok', 'username', e.target.value)}
+                type="url"
+                value={getPlatformData('tiktok').link}
+                onChange={(e) => onSocialMediaChange('tiktok', 'link', e.target.value)}
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-[#C1B6FD]/50"
-                placeholder="@username"
-              />
-              <input
-                type="text"
-                value={profileData.socialMediaLinks?.tiktok?.followers || ''}
-                onChange={(e) => onSocialMediaChange('tiktok', 'followers', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-[#C1B6FD]/50"
-                placeholder="Followers (e.g., 456K)"
+                placeholder="https://tiktok.com/@yourprofile"
               />
             </div>
           ) : (
             <div>
-              <p className="text-[#C1B6FD]">{profileData.socialMediaLinks?.tiktok?.username || 'Not connected'}</p>
-              {profileData.socialMediaLinks?.tiktok?.followers && (
-                <p className="text-sm text-gray-400">{profileData.socialMediaLinks.tiktok.followers} followers</p>
+              {getPlatformData('tiktok').link ? (
+                <div className="flex items-center justify-between gap-3">
+                  <a
+                    href={getPlatformData('tiktok').link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#C1B6FD] underline truncate"
+                    title={getPlatformData('tiktok').link}
+                    style={{ maxWidth: '100%' }}
+                  >
+                    {formatDisplayUrl(getPlatformData('tiktok').link)}
+                  </a>
+                  <button
+                    onClick={() => copyToClipboard(getPlatformData('tiktok').link, 'tiktok')}
+                    className="text-white/60 hover:text-white ml-2"
+                    aria-label="Copy TikTok URL"
+                    title="Copy full URL"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                  {copied === 'tiktok' && <span className="text-sm text-green-400 ml-2">Copied</span>}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400">Not connected</p>
               )}
             </div>
           )}
@@ -126,27 +206,41 @@ function SocialMediaCard({ profileData, isEditing, onSocialMediaChange }) {
             </div>
           </div>
           {isEditing ? (
-            <div className="space-y-2">
+            <div>
               <input
-                type="text"
-                value={profileData.socialMediaLinks?.twitter?.username || ''}
-                onChange={(e) => onSocialMediaChange('twitter', 'username', e.target.value)}
+                type="url"
+                value={getPlatformData('twitter').link}
+                onChange={(e) => onSocialMediaChange('twitter', 'link', e.target.value)}
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-[#C1B6FD]/50"
-                placeholder="@username"
-              />
-              <input
-                type="text"
-                value={profileData.socialMediaLinks?.twitter?.followers || ''}
-                onChange={(e) => onSocialMediaChange('twitter', 'followers', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm focus:outline-none focus:border-[#C1B6FD]/50"
-                placeholder="Followers (e.g., 92K)"
+                placeholder="https://twitter.com/yourhandle"
               />
             </div>
           ) : (
             <div>
-              <p className="text-[#C1B6FD]">{profileData.socialMediaLinks?.twitter?.username || 'Not connected'}</p>
-              {profileData.socialMediaLinks?.twitter?.followers && (
-                <p className="text-sm text-gray-400">{profileData.socialMediaLinks.twitter.followers} followers</p>
+              {getPlatformData('twitter').link ? (
+                <div className="flex items-center justify-between gap-3">
+                  <a
+                    href={getPlatformData('twitter').link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#C1B6FD] underline truncate"
+                    title={getPlatformData('twitter').link}
+                    style={{ maxWidth: '100%' }}
+                  >
+                    {formatDisplayUrl(getPlatformData('twitter').link)}
+                  </a>
+                  <button
+                    onClick={() => copyToClipboard(getPlatformData('twitter').link, 'twitter')}
+                    className="text-white/60 hover:text-white ml-2"
+                    aria-label="Copy Twitter URL"
+                    title="Copy full URL"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                  {copied === 'twitter' && <span className="text-sm text-green-400 ml-2">Copied</span>}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400">Not connected</p>
               )}
             </div>
           )}

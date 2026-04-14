@@ -47,13 +47,6 @@ function CampaignsOverview() {
     return matchesSearch && matchesFilter;
   });
 
-  const totalBudget = normalizedCampaigns.reduce((sum, campaign) => {
-    const campaignBudget = Number(campaign?.budget?.total) || 0;
-    return sum + campaignBudget;
-  }, 0);
-
-  const activeApplied = normalizedCampaigns.filter((campaign) => campaign.applied).length;
-
   const formatMoney = (value, currency) => {
     if (!value) return '-';
     return `${value.toLocaleString()} ${currency || ''}`.trim();
@@ -120,23 +113,15 @@ function CampaignsOverview() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
-          <p className="text-xs text-gray-400 mb-1">Available</p>
-          <p className="text-2xl font-bold text-white">{exploreCampaignsPagination?.totalItems ?? normalizedCampaigns.length}</p>
+      <div className="grid grid-cols-2 gap-3 max-w-md">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-lg px-3 py-2.5 hover:border-[#C1B6FD]/30 transition-all duration-200">
+          <p className="text-[11px] uppercase tracking-wide text-gray-400 mb-1">Available</p>
+          <p className="text-lg sm:text-xl font-bold text-white leading-none">{exploreCampaignsPagination?.totalItems ?? normalizedCampaigns.length}</p>
         </div>
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
-          <p className="text-xs text-gray-400 mb-1">Saved Local</p>
-          <p className="text-2xl font-bold text-[#C1B6FD]">{savedCampaigns.length}</p>
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-lg px-3 py-2.5 hover:border-[#C1B6FD]/30 transition-all duration-200">
+          <p className="text-[11px] uppercase tracking-wide text-gray-400 mb-1">Saved Local</p>
+          <p className="text-lg sm:text-xl font-bold text-[#C1B6FD] leading-none">{savedCampaigns.length}</p>
         </div>
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
-          <p className="text-xs text-gray-400 mb-1">Total Budget</p>
-          <p className="text-2xl font-bold text-green-400">{formatMoney(totalBudget, normalizedCampaigns[0]?.budget?.currency)}</p>
-        </div>
-        <Link to="/dashboard/influencer/collaborations" className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all">
-          <p className="text-xs text-gray-400 mb-1">Applied</p>
-          <p className="text-2xl font-bold text-white">{activeApplied}</p>
-        </Link>
       </div>
 
       {/* Available Campaigns List */}

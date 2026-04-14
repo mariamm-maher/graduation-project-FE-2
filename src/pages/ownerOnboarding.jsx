@@ -19,6 +19,10 @@ export default function OwnerOnboarding() {
   const [currentStep, setCurrentStep] = useState(0);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageUploaded, setImageUploaded] = useState(false);
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState({
+    business: false,
+    target: false
+  });
   const [formData, setFormData] = useState({
     businessName: '',
     businessType: '',
@@ -83,6 +87,16 @@ export default function OwnerOnboarding() {
 
   const ageRanges = ['18-24', '25-34', '35-44', '45-54', '55+'];
   const genders = ['Male', 'Female', 'All'];
+  const popularCountries = [
+    'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
+    'Italy', 'Spain', 'Netherlands', 'Sweden', 'Norway', 'Denmark', 'Switzerland',
+    'Belgium', 'Austria', 'Ireland', 'Portugal', 'Poland', 'Czech Republic',
+    'Hungary', 'Romania', 'Greece', 'Turkey', 'Russia', 'Ukraine', 'India',
+    'Pakistan', 'Bangladesh', 'China', 'Japan', 'South Korea', 'Indonesia',
+    'Philippines', 'Vietnam', 'Thailand', 'Malaysia', 'Singapore', 'Saudi Arabia',
+    'United Arab Emirates', 'Egypt', 'South Africa', 'Nigeria', 'Kenya', 'Brazil',
+    'Mexico', 'Argentina', 'Chile', 'Colombia', 'Peru', 'New Zealand'
+  ];
 
   const handleChange = (field, value) => {
     setFormData(prev => ({
@@ -108,6 +122,25 @@ export default function OwnerOnboarding() {
         ? prev.platformsUsed.filter(p => p !== platform)
         : [...prev.platformsUsed, platform]
     }));
+  };
+
+  const getFilteredCountries = (query) => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return popularCountries.slice(0, 12);
+    }
+
+    return popularCountries
+      .filter((country) => country.toLowerCase().includes(normalizedQuery))
+      .slice(0, 12);
+  };
+
+  const openCountryDropdown = (key) => {
+    setCountryDropdownOpen((prev) => ({ ...prev, [key]: true }));
+  };
+
+  const closeCountryDropdown = (key) => {
+    setCountryDropdownOpen((prev) => ({ ...prev, [key]: false }));
   };
 
   const handleImageUpload = (e) => {
@@ -301,7 +334,7 @@ export default function OwnerOnboarding() {
         // logout and redirect to login (match influencer flow)
         try {
           await logout();
-        } catch (e) {
+        } catch {
           // ignore logout errors
         }
 
@@ -403,13 +436,42 @@ export default function OwnerOnboarding() {
           <label className="block text-sm font-medium text-gray-300">
             Where is your business located?
           </label>
-          <input
-            type="text"
-            value={formData.location}
-            onChange={(e) => handleChange('location', e.target.value)}
-            placeholder="City / Country"
-            className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              value={formData.location}
+              onChange={(e) => {
+                handleChange('location', e.target.value);
+                openCountryDropdown('business');
+              }}
+              onFocus={() => openCountryDropdown('business')}
+              onBlur={() => setTimeout(() => closeCountryDropdown('business'), 120)}
+              placeholder="Search or select a country"
+              className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+            />
+
+            {countryDropdownOpen.business && (
+              <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                {getFilteredCountries(formData.location).length > 0 ? (
+                  getFilteredCountries(formData.location).map((country) => (
+                    <button
+                      key={country}
+                      type="button"
+                      onClick={() => {
+                        handleChange('location', country);
+                        closeCountryDropdown('business');
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                    >
+                      {country}
+                    </button>
+                  ))
+                ) : (
+                  <p className="px-4 py-3 text-sm text-gray-400">No countries found</p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )
     },
@@ -657,13 +719,42 @@ export default function OwnerOnboarding() {
           {/* Location */}
           <div>
             <label className="block text-xs text-gray-400 mb-2">Target Location</label>
-            <input
-              type="text"
-              value={formData.targetAudience.location}
-              onChange={(e) => handleTargetAudienceChange('location', e.target.value)}
-              placeholder="Country or Region"
-              className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={formData.targetAudience.location}
+                onChange={(e) => {
+                  handleTargetAudienceChange('location', e.target.value);
+                  openCountryDropdown('target');
+                }}
+                onFocus={() => openCountryDropdown('target')}
+                onBlur={() => setTimeout(() => closeCountryDropdown('target'), 120)}
+                placeholder="Search or select a country"
+                className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+              />
+
+              {countryDropdownOpen.target && (
+                <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                  {getFilteredCountries(formData.targetAudience.location).length > 0 ? (
+                    getFilteredCountries(formData.targetAudience.location).map((country) => (
+                      <button
+                        key={country}
+                        type="button"
+                        onClick={() => {
+                          handleTargetAudienceChange('location', country);
+                          closeCountryDropdown('target');
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                      >
+                        {country}
+                      </button>
+                    ))
+                  ) : (
+                    <p className="px-4 py-3 text-sm text-gray-400">No countries found</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )

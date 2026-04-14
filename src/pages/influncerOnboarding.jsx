@@ -19,6 +19,10 @@ export default function InfluencerOnboarding() {
   const [currentStep, setCurrentStep] = useState(0);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageUploaded, setImageUploaded] = useState(false);
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState({
+    location: false,
+    audience: false
+  });
   const [formData, setFormData] = useState({
     bio: '',
     location: '',
@@ -62,6 +66,25 @@ export default function InfluencerOnboarding() {
         ? prev[field].filter(item => item !== value)
         : [...prev[field], value]
     }));
+  };
+
+  const getFilteredCountries = (query) => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return popularCountries.slice(0, 12);
+    }
+
+    return popularCountries
+      .filter((country) => country.toLowerCase().includes(normalizedQuery))
+      .slice(0, 12);
+  };
+
+  const openCountryDropdown = (key) => {
+    setCountryDropdownOpen((prev) => ({ ...prev, [key]: true }));
+  };
+
+  const closeCountryDropdown = (key) => {
+    setCountryDropdownOpen((prev) => ({ ...prev, [key]: false }));
   };
 
   const handleImageUpload = (e) => {
@@ -180,8 +203,24 @@ export default function InfluencerOnboarding() {
   };
 
   const platforms = ['Instagram', 'TikTok', 'YouTube', 'Facebook', 'Other'];
-  const followerRanges = ['0–5K', '5K–10K', '10K–50K', '50K–100K', '100K+'];
-  const engagementRates = ['1%', '2%', '3%', '5%', '10%+'];
+  const popularCountries = [
+    'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
+    'Italy', 'Spain', 'Netherlands', 'Sweden', 'Norway', 'Denmark', 'Switzerland',
+    'Belgium', 'Austria', 'Ireland', 'Portugal', 'Poland', 'Czech Republic',
+    'Hungary', 'Romania', 'Greece', 'Turkey', 'Russia', 'Ukraine', 'India',
+    'Pakistan', 'Bangladesh', 'China', 'Japan', 'South Korea', 'Indonesia',
+    'Philippines', 'Vietnam', 'Thailand', 'Malaysia', 'Singapore', 'Saudi Arabia',
+    'United Arab Emirates', 'Egypt', 'South Africa', 'Nigeria', 'Kenya', 'Brazil',
+    'Mexico', 'Argentina', 'Chile', 'Colombia', 'Peru', 'New Zealand'
+  ];
+  const followerRanges = ['0–5K', '5K–10K', '10K–50K', '50K–100K', '100K–500K', '500K+'];
+  const engagementRates = [
+    { value: '0-1', label: '0% – 1% (Low)' },
+    { value: '1-2', label: '1% – 2% (Below average)' },
+    { value: '2-5', label: '2% – 5% (Good)' },
+    { value: '5-10', label: '5% – 10% (Very good)' },
+    { value: '10+', label: '10%+ (Exceptional)' }
+  ];
   const categories = ['Beauty', 'Fashion', 'Food', 'Fitness', 'Travel', 'Technology', 'Gaming', 'Lifestyle', 'Education'];
   const contentTypes = ['Post', 'Story', 'Reel', 'Short video', 'Long-form video', 'Live stream'];
   const collaborationTypes = ['Sponsored Post', 'Product Review', 'Brand Ambassador', 'Affiliate Marketing', 'Event Appearance'];
@@ -212,13 +251,42 @@ export default function InfluencerOnboarding() {
       component: (
         <div className="space-y-4">
           <label className="block text-sm font-medium text-gray-300">Where are you located?</label>
-          <input
-            type="text"
-            value={formData.location}
-            onChange={(e) => handleChange('location', e.target.value)}
-            placeholder="City, Country"
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              value={formData.location}
+              onChange={(e) => {
+                handleChange('location', e.target.value);
+                openCountryDropdown('location');
+              }}
+              onFocus={() => openCountryDropdown('location')}
+              onBlur={() => setTimeout(() => closeCountryDropdown('location'), 120)}
+              placeholder="Search or select a country"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
+            />
+
+            {countryDropdownOpen.location && (
+              <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                {getFilteredCountries(formData.location).length > 0 ? (
+                  getFilteredCountries(formData.location).map((country) => (
+                    <button
+                      key={country}
+                      type="button"
+                      onClick={() => {
+                        handleChange('location', country);
+                        closeCountryDropdown('location');
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                    >
+                      {country}
+                    </button>
+                  ))
+                ) : (
+                  <p className="px-4 py-3 text-sm text-gray-400">No countries found</p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )
     },
@@ -404,18 +472,18 @@ export default function InfluencerOnboarding() {
           <div className="grid grid-cols-2 gap-3">
             {engagementRates.map((rate) => (
               <motion.button
-                key={rate}
+                key={rate.value}
                 type="button"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => handleChange('engagementRate', rate)}
+                onClick={() => handleChange('engagementRate', rate.value)}
                 className={`p-4 rounded-lg border-2 transition-all duration-300 ${
-                  formData.engagementRate === rate
+                  formData.engagementRate === rate.value
                     ? 'border-purple-500 bg-purple-500/10 text-white'
                     : 'border-white/10 bg-white/5 text-gray-300 hover:border-white/20'
                 }`}
               >
-                {rate}
+                {rate.label}
               </motion.button>
             ))}
           </div>
@@ -566,13 +634,42 @@ export default function InfluencerOnboarding() {
       component: (
         <div className="space-y-4">
           <label className="block text-sm font-medium text-gray-300">Where is most of your audience located?</label>
-          <input
-            type="text"
-            value={formData.audienceLocation}
-            onChange={(e) => handleChange('audienceLocation', e.target.value)}
-            placeholder="Country / Region"
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              value={formData.audienceLocation}
+              onChange={(e) => {
+                handleChange('audienceLocation', e.target.value);
+                openCountryDropdown('audience');
+              }}
+              onFocus={() => openCountryDropdown('audience')}
+              onBlur={() => setTimeout(() => closeCountryDropdown('audience'), 120)}
+              placeholder="Search or select a country"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
+            />
+
+            {countryDropdownOpen.audience && (
+              <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                {getFilteredCountries(formData.audienceLocation).length > 0 ? (
+                  getFilteredCountries(formData.audienceLocation).map((country) => (
+                    <button
+                      key={country}
+                      type="button"
+                      onClick={() => {
+                        handleChange('audienceLocation', country);
+                        closeCountryDropdown('audience');
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                    >
+                      {country}
+                    </button>
+                  ))
+                ) : (
+                  <p className="px-4 py-3 text-sm text-gray-400">No countries found</p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )
     },

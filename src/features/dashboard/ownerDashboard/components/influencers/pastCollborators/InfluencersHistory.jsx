@@ -1,109 +1,11 @@
-import { Search } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { Search, Loader } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import CollaborationRow from './CollaborationRow';
 import HistoryStats from './HistoryStats';
 import HistorySearchBar from './HistorySearchBar';
 import HistoryFiltersPanel from './HistoryFiltersPanel';
-
-const pastCollaborations = [
-  {
-    id: 1,
-    influencerId: 8,
-    influencerName: 'Chris Wilson',
-    influencerAvatar: 'CW',
-    influencerImage: 'https://i.pravatar.cc/150?img=13',
-    niche: 'Gaming',
-    campaignName: 'Holiday Gaming Setup Launch',
-    startDate: 'Oct 1, 2024',
-    endDate: 'Dec 15, 2024',
-    status: 'completed',
-    performance: '4.8',
-    roi: '245%',
-    engagement: '12.5%',
-    revenue: '28,400',
-  },
-  {
-    id: 2,
-    influencerId: 9,
-    influencerName: 'Maria Garcia',
-    influencerAvatar: 'MG',
-    influencerImage: 'https://i.pravatar.cc/150?img=26',
-    niche: 'Lifestyle',
-    campaignName: 'Fall Lifestyle Collection',
-    startDate: 'Sep 1, 2024',
-    endDate: 'Oct 8, 2024',
-    status: 'completed',
-    performance: '4.2',
-    roi: '180%',
-    engagement: '8.7%',
-    revenue: '15,600',
-  },
-  {
-    id: 3,
-    influencerId: 10,
-    influencerName: 'Tom Anderson',
-    influencerAvatar: 'TA',
-    influencerImage: 'https://i.pravatar.cc/150?img=52',
-    niche: 'Tech Reviews',
-    campaignName: 'Smart Home Tech Series',
-    startDate: 'Sep 15, 2024',
-    endDate: 'Nov 22, 2024',
-    status: 'completed',
-    performance: '4.9',
-    roi: '320%',
-    engagement: '15.2%',
-    revenue: '42,100',
-  },
-  {
-    id: 4,
-    influencerId: 11,
-    influencerName: 'Sophie Martinez',
-    influencerAvatar: 'SM',
-    influencerImage: 'https://i.pravatar.cc/150?img=32',
-    niche: 'Beauty',
-    campaignName: 'Summer Makeup Launch',
-    startDate: 'Jun 1, 2024',
-    endDate: 'Jul 20, 2024',
-    status: 'completed',
-    performance: '4.6',
-    roi: '210%',
-    engagement: '11.3%',
-    revenue: '35,800',
-  },
-  {
-    id: 5,
-    influencerId: 12,
-    influencerName: 'James Taylor',
-    influencerAvatar: 'JT',
-    influencerImage: 'https://i.pravatar.cc/150?img=15',
-    niche: 'Fitness',
-    campaignName: 'Spring Fitness Challenge',
-    startDate: 'Mar 1, 2024',
-    endDate: 'Apr 15, 2024',
-    status: 'cancelled',
-    performance: '2.8',
-    roi: '45%',
-    engagement: '4.2%',
-    revenue: '8,200',
-  },
-  {
-    id: 6,
-    influencerId: 13,
-    influencerName: 'Rachel Green',
-    influencerAvatar: 'RG',
-    influencerImage: 'https://i.pravatar.cc/150?img=44',
-    niche: 'Fashion',
-    campaignName: 'Winter Fashion Lookbook',
-    startDate: 'Nov 1, 2025',
-    endDate: 'Dec 31, 2025',
-    status: 'completed',
-    performance: '4.7',
-    roi: '265%',
-    engagement: '13.8%',
-    revenue: '48,500',
-  },
-];
+import useOwnerStore from '../../../../../../stores/ownerStore';
 
 function InfluencersHistory() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -116,6 +18,60 @@ function InfluencersHistory() {
     maxROI: 500,
     year: 'all',
   });
+
+  const {
+    pastInfluencers,
+    pastInfluencersLoading,
+    pastInfluencersError,
+    fetchPastInfluencers
+  } = useOwnerStore();
+
+  useEffect(() => {
+    fetchPastInfluencers();
+  }, [fetchPastInfluencers]);
+
+  const pastCollaborations = useMemo(() => {
+    return (pastInfluencers || []).map((collab, index) => {
+      const influencer = collab?.influencer || collab?.influencerId || {};
+      const influencerFirstName = influencer?.firstName || influencer?.user?.firstName || '';
+      const influencerLastName = influencer?.lastName || influencer?.user?.lastName || '';
+      const influencerName = `${influencerFirstName} ${influencerLastName}`.trim() || influencer?.name || 'Unknown Influencer';
+      const influencerAvatar = influencerName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'NA';
+
+      const endDateSource = collab?.endDate || collab?.completedAt || collab?.updatedAt || collab?.createdAt;
+      const startDateSource = collab?.startDate || collab?.createdAt;
+
+      const formatDate = (value) => {
+        if (!value) return 'N/A';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return String(value);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      };
+
+      const status = collab?.status || collab?.collaborationStatus || 'completed';
+      const performanceValue = Number(collab?.performance ?? collab?.rating ?? 0);
+      const roiValue = Number(collab?.roi ?? collab?.returnOnInvestment ?? 0);
+      const engagementValue = Number(collab?.engagementRate ?? collab?.engagement ?? 0);
+      const revenueValue = Number(collab?.revenue ?? collab?.totalRevenue ?? collab?.earnedAmount ?? 0);
+
+      return {
+        id: collab?.id ?? collab?._id ?? index + 1,
+        influencerId: influencer?.id ?? influencer?._id ?? null,
+        influencerName,
+        influencerAvatar,
+        influencerImage: influencer?.image || influencer?.avatar || influencer?.profileImage || null,
+        niche: influencer?.categories?.[0] || influencer?.niche || collab?.niche || 'General',
+        campaignName: collab?.campaign?.campaignName || collab?.campaign?.name || collab?.campaignName || 'General Collaboration',
+        startDate: formatDate(startDateSource),
+        endDate: formatDate(endDateSource),
+        status,
+        performance: performanceValue ? performanceValue.toFixed(1) : '0.0',
+        roi: `${roiValue.toFixed(1)}%`,
+        engagement: `${engagementValue.toFixed(1)}%`,
+        revenue: revenueValue.toLocaleString()
+      };
+    });
+  }, [pastInfluencers]);
 
   // Filter logic
   const filteredCollaborations = useMemo(() => {
@@ -221,7 +177,27 @@ function InfluencersHistory() {
       }`}>
         {/* Collaborations List */}
         <div className="space-y-4 order-2 lg:order-1">
-          {filteredCollaborations.length === 0 ? (
+          {pastInfluencersLoading ? (
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-12 text-center">
+              <div className="flex flex-col items-center gap-4">
+                <Loader className="w-8 h-8 text-white animate-spin" />
+                <p className="text-sm text-gray-400">Loading past collaborations...</p>
+              </div>
+            </div>
+          ) : pastInfluencersError ? (
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-12 text-center">
+              <div className="flex flex-col items-center gap-4">
+                <h3 className="text-lg font-semibold text-white">Failed to load past collaborations</h3>
+                <p className="text-sm text-gray-400">{pastInfluencersError}</p>
+                <button
+                  onClick={() => fetchPastInfluencers()}
+                  className="px-4 py-2 bg-[#745CB4] text-white rounded-lg text-sm font-medium hover:bg-[#5D459D] transition-all"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          ) : filteredCollaborations.length === 0 ? (
             <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-12 text-center">
               <div className="flex flex-col items-center gap-4">
                 <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">

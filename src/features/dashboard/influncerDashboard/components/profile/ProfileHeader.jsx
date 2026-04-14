@@ -70,23 +70,33 @@ function ProfileHeader({ profileData, isEditing, onInputChange, onImageChange })
             <p className="text-gray-300 mb-4">{profileData.bio}</p>
           )}
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-white/5 rounded-lg p-3">
-              <p className="text-xs text-gray-400 mb-1">Total Followers</p>
-              <p className="text-xl font-bold text-white">{profileData.followersCount?.toLocaleString() || '0'}</p>
+          {/* Stats Grid (compact) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-full">
+         
+
+            <div className="bg-white/5 rounded-lg px-3 py-2 hover:border-[#C1B6FD]/20 transition-all">
+              <p className="text-[11px] uppercase tracking-wide text-gray-400 mb-1">Engagement Rate</p>
+              {isEditing ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    name="engagementRate"
+                    value={profileData.engagementRate ?? ''}
+                    onChange={onInputChange}
+                    className="w-full bg-transparent text-lg font-bold text-green-400 outline-none"
+                    min="0"
+                    step="0.1"
+                  />
+                  <span className="text-sm text-gray-400">%</span>
+                </div>
+              ) : (
+                <p className="text-lg font-bold text-green-400 leading-none">{profileData.engagementRate || '0'}%</p>
+              )}
             </div>
-            <div className="bg-white/5 rounded-lg p-3">
-              <p className="text-xs text-gray-400 mb-1">Engagement Rate</p>
-              <p className="text-xl font-bold text-green-400">{profileData.engagementRate || '0'}%</p>
-            </div>
-            <div className="bg-white/5 rounded-lg p-3">
-              <p className="text-xs text-gray-400 mb-1">Total Reach</p>
-              <p className="text-xl font-bold text-white">{profileData.stats?.totalReach || '0'}</p>
-            </div>
-            <div className="bg-white/5 rounded-lg p-3">
-              <p className="text-xs text-gray-400 mb-1">Completion</p>
-              <p className="text-xl font-bold text-[#C1B6FD]">{profileData.completionPercentage || 0}%</p>
+
+            <div className="bg-white/5 rounded-lg px-3 py-2 hover:border-[#C1B6FD]/20 transition-all">
+              <p className="text-[11px] uppercase tracking-wide text-gray-400 mb-1">Completion</p>
+              <p className="text-lg font-bold text-[#C1B6FD] leading-none">{profileData.completionPercentage || 0}%</p>
             </div>
           </div>
 

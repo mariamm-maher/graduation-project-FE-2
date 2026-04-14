@@ -36,7 +36,7 @@ function Sidebar() {
     // { id: 'content', icon: Share2, label: 'My Content', path: '/dashboard/influencer/social-media' },
     // { id: 'analytics', icon: BarChart3, label: 'Performance', path: '/dashboard/influencer/analytics' },
     { id: 'messages', icon: MessageCircle, label: 'Messages', path: '/dashboard/influencer/messages' },
-    { id: 'profile', icon: User, label: 'My Profile', path: '/dashboard/influencer/profile' },
+    // { id: 'profile', icon: User, label: 'My Profile', path: '/dashboard/influencer/profile' },
   ];
 
   return (
@@ -72,10 +72,16 @@ function Sidebar() {
           <User className="w-5 h-5 text-white" />
         </div>
         {isHovered && (
-          <div className="flex-1 overflow-hidden">
+          <Link
+            to="/dashboard/influencer/profile"
+            className="flex-1 overflow-hidden"
+            title={user?.email || 'No email'}
+          >
             <p className="text-sm font-semibold text-white whitespace-nowrap">{user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Guest User'}</p>
-            <p className="text-xs text-gray-400 whitespace-nowrap">{user?.email || 'No email'}</p>
-          </div>
+            <span className="text-xs text-gray-400 whitespace-nowrap truncate underline-offset-2 hover:underline">
+              {user?.email || 'No email'}
+            </span>
+          </Link>
         )}
       </div>
 

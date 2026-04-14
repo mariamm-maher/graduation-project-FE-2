@@ -1,146 +1,12 @@
-import { MessageSquare, Search } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { MessageSquare, Search, Loader } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import CollaborationCard from './CollaborationCard';
 import ChatPanel from './ChatPanel';
 import FiltersPanel from './FiltersPanel';
 import StatsOverview from './StatsOverview';
 import SearchBar from './SearchBar';
-
-const activeCollaborations = [
-  {
-    id: 1,
-    influencerId: 1,
-    influencerName: 'Sarah Johnson',
-    influencerAvatar: 'SJ',
-    influencerImage: 'https://i.pravatar.cc/150?img=5',
-    campaignId: 101,
-    campaignName: 'Summer Fashion Collection 2026',
-    platform: 'instagram',
-    status: 'in-progress',
-    progress: 65,
-    currentTasks: [
-      { id: 1, title: 'Create mood board', completed: true },
-      { id: 2, title: 'Product photoshoot', completed: true },
-      { id: 3, title: 'Edit and post content', completed: false },
-      { id: 4, title: 'Engagement monitoring', completed: false },
-    ],
-    deadline: '2026-02-15',
-    budget: '$12,500',
-    unreadMessages: 3,
-    lastActivity: '2 hours ago',
-  },
-  {
-    id: 2,
-    influencerId: 2,
-    influencerName: 'Mike Chen',
-    influencerAvatar: 'MC',
-    influencerImage: 'https://i.pravatar.cc/150?img=12',
-    campaignId: 102,
-    campaignName: 'Tech Product Launch Review',
-    platform: 'youtube',
-    status: 'pending',
-    progress: 25,
-    currentTasks: [
-      { id: 1, title: 'Unboxing video script', completed: true },
-      { id: 2, title: 'Record unboxing', completed: false },
-      { id: 3, title: 'Edit video', completed: false },
-      { id: 4, title: 'Publish & promote', completed: false },
-    ],
-    deadline: '2026-02-20',
-    budget: '$8,000',
-    unreadMessages: 0,
-    lastActivity: '1 day ago',
-  },
-  {
-    id: 3,
-    influencerId: 3,
-    influencerName: 'Emma Davis',
-    influencerAvatar: 'ED',
-    influencerImage: 'https://i.pravatar.cc/150?img=9',
-    campaignId: 103,
-    campaignName: 'Wellness Brand Partnership',
-    platform: 'instagram',
-    status: 'in-progress',
-    progress: 80,
-    currentTasks: [
-      { id: 1, title: 'Product testing', completed: true },
-      { id: 2, title: 'Create Reels content', completed: true },
-      { id: 3, title: 'Story highlights', completed: true },
-      { id: 4, title: 'Final report', completed: false },
-    ],
-    deadline: '2026-02-10',
-    budget: '$15,000',
-    unreadMessages: 1,
-    lastActivity: '30 minutes ago',
-  },
-  {
-    id: 4,
-    influencerId: 4,
-    influencerName: 'Alex Rivera',
-    influencerAvatar: 'AR',
-    influencerImage: 'https://i.pravatar.cc/150?img=14',
-    campaignId: 104,
-    campaignName: 'Fitness Equipment Showcase',
-    platform: 'youtube',
-    status: 'completed',
-    progress: 100,
-    currentTasks: [
-      { id: 1, title: 'Equipment demo video', completed: true },
-      { id: 2, title: 'Tutorial series', completed: true },
-      { id: 3, title: 'Community Q&A', completed: true },
-      { id: 4, title: 'Performance report', completed: true },
-    ],
-    deadline: '2026-01-25',
-    budget: '$10,500',
-    unreadMessages: 0,
-    lastActivity: '3 days ago',
-  },
-  {
-    id: 5,
-    influencerId: 5,
-    influencerName: 'Lisa Wang',
-    influencerAvatar: 'LW',
-    influencerImage: 'https://i.pravatar.cc/150?img=45',
-    campaignId: 105,
-    campaignName: 'Luxury Brand Ambassador',
-    platform: 'instagram',
-    status: 'in-progress',
-    progress: 50,
-    currentTasks: [
-      { id: 1, title: 'Brand photoshoot', completed: true },
-      { id: 2, title: 'Feed posts series', completed: true },
-      { id: 3, title: 'Influencer event', completed: false },
-      { id: 4, title: 'Story takeover', completed: false },
-    ],
-    deadline: '2026-02-28',
-    budget: '$25,000',
-    unreadMessages: 5,
-    lastActivity: '15 minutes ago',
-  },
-  {
-    id: 6,
-    influencerId: 6,
-    influencerName: 'David Kim',
-    influencerAvatar: 'DK',
-    influencerImage: 'https://i.pravatar.cc/150?img=33',
-    campaignId: 106,
-    campaignName: 'Gaming Gear Review Series',
-    platform: 'youtube',
-    status: 'pending',
-    progress: 10,
-    currentTasks: [
-      { id: 1, title: 'Product briefing', completed: true },
-      { id: 2, title: 'Testing period', completed: false },
-      { id: 3, title: 'Video production', completed: false },
-      { id: 4, title: 'Channel promotion', completed: false },
-    ],
-    deadline: '2026-03-05',
-    budget: '$6,500',
-    unreadMessages: 2,
-    lastActivity: '5 hours ago',
-  },
-];
+import useOwnerStore from '../../../../../../stores/ownerStore';
 
 function ActiveInfluencers() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -154,6 +20,56 @@ function ActiveInfluencers() {
     minProgress: 0,
     maxProgress: 100,
   });
+
+  const {
+    activeInfluencers,
+    activeInfluencersLoading,
+    activeInfluencersError,
+    fetchActiveInfluencers
+  } = useOwnerStore();
+
+  useEffect(() => {
+    fetchActiveInfluencers();
+  }, [fetchActiveInfluencers]);
+
+  const activeCollaborations = useMemo(() => {
+    return (activeInfluencers || []).map((collab, index) => {
+      const influencer = collab?.influencer || collab?.influencerId || {};
+      const influencerFirstName = influencer?.firstName || influencer?.user?.firstName || '';
+      const influencerLastName = influencer?.lastName || influencer?.user?.lastName || '';
+      const influencerName = `${influencerFirstName} ${influencerLastName}`.trim() || influencer?.name || 'Unknown Influencer';
+      const avatarName = influencerName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+
+      const collaborationStatus = collab?.status || collab?.collaborationStatus || 'pending';
+      const status = collaborationStatus === 'active' ? 'in-progress' : collaborationStatus;
+
+      const tasks = (collab?.tasks || []).map((task, taskIndex) => ({
+        id: task?.id ?? task?._id ?? taskIndex + 1,
+        title: task?.title || task?.name || `Task ${taskIndex + 1}`,
+        completed: task?.completed === true || task?.status === 'completed'
+      }));
+
+      const budgetValue = collab?.proposedBudget ?? collab?.budget;
+
+      return {
+        id: collab?.id ?? collab?._id ?? index + 1,
+        influencerId: influencer?.id ?? influencer?._id ?? null,
+        influencerName,
+        influencerAvatar: avatarName || 'NA',
+        influencerImage: influencer?.image || influencer?.avatar || influencer?.profileImage || null,
+        campaignId: collab?.campaign?.id ?? collab?.campaignId ?? null,
+        campaignName: collab?.campaign?.campaignName || collab?.campaign?.name || collab?.campaignName || 'General Collaboration',
+        platform: (influencer?.primaryPlatform || collab?.platform || 'instagram').toLowerCase(),
+        status,
+        progress: Number(collab?.progress ?? collab?.completionPercentage ?? 0),
+        currentTasks: tasks,
+        deadline: collab?.deadline || collab?.dueDate || collab?.endDate || new Date().toISOString(),
+        budget: budgetValue !== undefined && budgetValue !== null ? `$${Number(budgetValue).toLocaleString()}` : '$0',
+        unreadMessages: Number(collab?.unreadMessages || 0),
+        lastActivity: collab?.lastActivity || collab?.updatedAt || 'N/A'
+      };
+    });
+  }, [activeInfluencers]);
 
   // Filter logic
   const filteredCollaborations = useMemo(() => {
@@ -266,7 +182,7 @@ function ActiveInfluencers() {
       />
 
       {/* Stats Overview */}
-      <StatsOverview collaborations={activeCollaborations} />
+      {/* <StatsOverview collaborations={activeCollaborations} /> */}
 
       {/* Main Content: Collaboration Board + Chat/Filters */}
       <div className={`grid gap-6 transition-all duration-300 ${
@@ -276,7 +192,27 @@ function ActiveInfluencers() {
       }`}>
         {/* Collaboration Cards Board */}
         <div className="order-2 lg:order-1">
-        {filteredCollaborations.length === 0 ? (
+        {activeInfluencersLoading ? (
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-12 text-center">
+            <div className="flex flex-col items-center gap-4">
+              <Loader className="w-8 h-8 text-white animate-spin" />
+              <p className="text-sm text-gray-400">Loading active collaborations...</p>
+            </div>
+          </div>
+        ) : activeInfluencersError ? (
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-12 text-center">
+            <div className="flex flex-col items-center gap-4">
+              <h3 className="text-lg font-semibold text-white">Failed to load active collaborations</h3>
+              <p className="text-sm text-gray-400">{activeInfluencersError}</p>
+              <button
+                onClick={() => fetchActiveInfluencers()}
+                className="px-4 py-2 bg-[#745CB4] text-white rounded-lg text-sm font-medium hover:bg-[#5D459D] transition-all"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        ) : filteredCollaborations.length === 0 ? (
           <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-12 text-center">
             <div className="flex flex-col items-center gap-4">
               <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">

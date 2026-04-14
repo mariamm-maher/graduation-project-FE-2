@@ -1,7 +1,11 @@
 import { Plus, Star, Zap, MapPin, Instagram, Youtube, Users, Heart, Video, Image as ImageIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import useOwnerStore from '../../../../../../stores/ownerStore';
 
 function InfluencerCard({ influencer }) {
+  const { fetchInfluencerById } = useOwnerStore();
+  const influencerId = influencer?.id ?? influencer?.userId;
+
   const formatFollowers = (count) => {
     if (count >= 1000000) {
       return `${(count / 1000000).toFixed(1)}M`;
@@ -118,13 +122,18 @@ function InfluencerCard({ influencer }) {
           {/* Action Buttons */}
           <div className="flex gap-3">
             <Link 
-              to={`/dashboard/owner/influencers/${influencer.id}/profile`}
+              to={`/dashboard/owner/influencers/${influencerId}/profile`}
+              onClick={() => {
+                if (influencerId) {
+                  fetchInfluencerById(influencerId);
+                }
+              }}
               className="flex-1 px-5 py-3 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/30 rounded-xl text-sm text-white font-semibold hover:shadow-lg transition-all text-center"
             >
               View Profile
             </Link>
             <Link 
-              to={`/dashboard/owner/influencers/${influencer.id}/sendcollbrequest`}
+              to={`/dashboard/owner/influencers/${influencerId}/sendcollbrequest`}
               className="flex-1 px-5 py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl text-sm font-bold hover:shadow-xl hover:shadow-[#C1B6FD]/30 hover:scale-105 transition-all flex items-center justify-center gap-2"
             >
               <Plus className="w-4 h-4" />

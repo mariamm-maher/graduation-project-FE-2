@@ -42,6 +42,26 @@ const ownerService = {
         }
     },
 
+    // Get active influencers
+    getActiveInfluencers: async (page = 1, limit = 10) => {
+        try {
+            const response = await api.get(`/owner/influencers/active?page=${page}&limit=${limit}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data?.message || 'Failed to fetch active influencers';
+        }
+    },
+
+    // Get past influencers
+    getPastInfluencers: async (page = 1, limit = 10) => {
+        try {
+            const response = await api.get(`/owner/influencers/past?page=${page}&limit=${limit}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data?.message || 'Failed to fetch past influencers';
+        }
+    },
+
     // ─── Marketplace ────────────────────────────────────────────────────────
 
     // Get all influencer services (marketplace listing)

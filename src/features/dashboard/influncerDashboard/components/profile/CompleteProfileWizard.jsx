@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check, User, Share2, Users, Briefcase, Save } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, User, Share2, Users, Briefcase } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../../../../stores/authStore';
+import useProfileStore from '../../../../../stores/profileStore';
+import { toast } from 'react-toastify';
 
 // Step Components
 import ProfileHeader from './ProfileHeader';
@@ -24,8 +26,20 @@ const steps = [
 function CompleteProfileWizard() {
     const navigate = useNavigate();
     const { getProfile, isLoading } = useAuthStore();
+    const updateInfluencerProfile = useProfileStore((s) => s.updateInfluencerProfile);
     const [currentStep, setCurrentStep] = useState(0);
     const [isSaving, setIsSaving] = useState(false);
+
+    const hasValue = (value) => {
+        if (Array.isArray(value)) return value.length > 0;
+        return Boolean(value && String(value).trim());
+    };
+
+    const getSocialLinkValue = (platform) => {
+        const data = profileData.socialMediaLinks?.[platform];
+        if (typeof data === 'string') return data;
+        return data?.link || '';
+    };
 
     // Reuse the same profile data structure
     const [profileData, setProfileData] = useState({
@@ -102,7 +116,9 @@ function CompleteProfileWizard() {
             socialMediaLinks: {
                 ...prev.socialMediaLinks,
                 [platform]: {
-                    ...prev.socialMediaLinks?.[platform],
+                    ...(typeof prev.socialMediaLinks?.[platform] === 'object' && prev.socialMediaLinks?.[platform] !== null
+                        ? prev.socialMediaLinks[platform]
+                        : {}),
                     [field]: value
                 }
             }
@@ -110,6 +126,51 @@ function CompleteProfileWizard() {
     };
 
     const handleImageChange = () => console.log('Upload image');
+
+    const stepFieldChecks = {
+        personal: [
+            { label: 'First Name', done: hasValue(profileData.firstName) },
+            { label: 'Last Name', done: hasValue(profileData.lastName) },
+            { label: 'Email', done: hasValue(profileData.email) },
+            { label: 'Location', done: hasValue(profileData.location) },
+        ],
+        professional: [
+            { label: 'Primary Platform', done: hasValue(profileData.primaryPlatform) },
+            { label: 'Followers Count', done: hasValue(profileData.followersCount) },
+            { label: 'Engagement Rate', done: hasValue(profileData.engagementRate) },
+            { label: 'Categories', done: hasValue(profileData.categories) },
+            { label: 'Content Types', done: hasValue(profileData.contentTypes) },
+            { label: 'Collaboration Types', done: hasValue(profileData.collaborationTypes) },
+        ],
+        audience: [
+            { label: 'Age Range', done: hasValue(profileData.audienceAgeRange) },
+            { label: 'Gender Distribution', done: hasValue(profileData.audienceGender) },
+            { label: 'Top Audience Location', done: hasValue(profileData.audienceLocation) },
+            { label: 'Audience Interests', done: hasValue(profileData.interests) },
+        ],
+        social: [
+            { label: 'Instagram Link', done: hasValue(getSocialLinkValue('instagram')) },
+            { label: 'YouTube Link', done: hasValue(getSocialLinkValue('youtube')) },
+            { label: 'TikTok Link', done: hasValue(getSocialLinkValue('tiktok')) },
+            { label: 'Twitter/X Link', done: hasValue(getSocialLinkValue('twitter')) },
+        ]
+    };
+
+    const stepCompletion = steps.map((step) => {
+        const checks = stepFieldChecks[step.id] || [];
+        const completed = checks.filter((f) => f.done).length;
+        return {
+            id: step.id,
+            completed,
+            total: checks.length,
+            missing: checks.filter((f) => !f.done).map((f) => f.label)
+        };
+    });
+
+    const totalFields = stepCompletion.reduce((sum, s) => sum + s.total, 0);
+    const totalCompleted = stepCompletion.reduce((sum, s) => sum + s.completed, 0);
+    const overallPercent = totalFields > 0 ? Math.round((totalCompleted / totalFields) * 100) : 0;
+    const currentStepInfo = stepCompletion[currentStep];
 
     const goToNextStep = () => {
         if (currentStep < steps.length - 1) {
@@ -126,13 +187,28 @@ function CompleteProfileWizard() {
     };
 
     const handleComplete = async () => {
-        setIsSaving(true);
-        // Simulate API call
-        setTimeout(() => {
-            console.log('Profile Completed:', profileData);
+        try {
+            setIsSaving(true);
+            toast.info('Saving profile...', { position: 'top-right' });
+            const res = await updateInfluencerProfile(profileData);
+
+            if (res && res.success) {
+                toast.success('Profile completed successfully', { position: 'top-right' });
+                const p = res.profile || res.data?.profile || res.data;
+                if (p) {
+                    setProfileData(prev => ({ ...prev, ...p }));
+                }
+                navigate('/dashboard/influencer/profile');
+            } else {
+                toast.error(res?.error || 'Failed to complete profile', { position: 'top-right' });
+            }
+        } catch (err) {
+            const msg = typeof err === 'string' ? err : err?.message || 'Failed to complete profile';
+            toast.error(msg, { position: 'top-right' });
+            console.error('Complete profile error:', err);
+        } finally {
             setIsSaving(false);
-            navigate('/dashboard/influencer/profile');
-        }, 1500);
+        }
     };
 
     // Render current step content
@@ -192,6 +268,16 @@ function CompleteProfileWizard() {
                 <h1 className="text-3xl font-bold text-white mb-2">Setup Your Profile</h1>
                 <p className="text-gray-400 mb-8">Complete the steps below to make your profile standout to brands.</p>
 
+                <div className="mb-6 p-4 rounded-xl border border-white/10 bg-white/5">
+                    <div className="flex items-center justify-between gap-4 mb-2">
+                        <p className="text-sm text-gray-300">Overall Completion</p>
+                        <p className="text-sm font-semibold text-white">{overallPercent}%</p>
+                    </div>
+                    <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-[#745CB4] to-[#C1B6FD]" style={{ width: `${overallPercent}%` }} />
+                    </div>
+                </div>
+
                 <div className="flex items-center justify-between relative">
                     {/* Progress Bar Background */}
                     <div className="absolute top-1/2 left-0 w-full h-1 bg-white/10 -z-10 rounded-full" />
@@ -224,10 +310,29 @@ function CompleteProfileWizard() {
                                 <span className={`text-xs font-medium hidden sm:block ${isActive ? 'text-white' : 'text-gray-500'}`}>
                                     {step.title}
                                 </span>
+                                <span className="text-[10px] text-gray-400 hidden sm:block">
+                                    {stepCompletion[index]?.completed}/{stepCompletion[index]?.total}
+                                </span>
                             </div>
                         );
                     })}
                 </div>
+            </div>
+
+            <div className="mb-6 p-4 rounded-xl border border-white/10 bg-[#10121f]/70">
+                <div className="flex items-center justify-between gap-4 mb-2">
+                    <p className="text-sm font-semibold text-white">{steps[currentStep].title} Status</p>
+                    <p className="text-xs text-gray-300">
+                        {currentStepInfo?.completed}/{currentStepInfo?.total} fields completed
+                    </p>
+                </div>
+                {currentStepInfo?.missing?.length ? (
+                    <p className="text-xs text-amber-300">
+                        Missing: {currentStepInfo.missing.join(', ')}
+                    </p>
+                ) : (
+                    <p className="text-xs text-green-400">All required fields in this step are filled.</p>
+                )}
             </div>
 
             {/* Step Content */}

@@ -102,6 +102,94 @@ const useOwnerStore = create((set) => ({
         }
     },
 
+    // Active influencers
+    activeInfluencers: [],
+    activeInfluencersLoading: false,
+    activeInfluencersError: null,
+    activePagination: {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        itemsPerPage: 10
+    },
+
+    fetchActiveInfluencers: async (page = 1, limit = 10) => {
+        set({ activeInfluencersLoading: true, activeInfluencersError: null });
+        try {
+            const response = await ownerService.getActiveInfluencers(page, limit);
+            const payload = response?.data ?? response ?? {};
+            const ok = response?.success === true || payload?.status === 'success' || payload?.success === true;
+
+            if (!ok) {
+                throw new Error(payload?.message || response?.message || 'Failed to fetch active influencers');
+            }
+
+            const influencers = payload?.data?.influencers ?? payload?.influencers ?? payload?.data ?? [];
+            const paginationSource = payload?.data?.pagination ?? payload?.pagination ?? payload?.data ?? {};
+
+            set({
+                activeInfluencers: Array.isArray(influencers) ? influencers : [],
+                activePagination: {
+                    currentPage: paginationSource.currentPage ?? paginationSource.page ?? page,
+                    totalPages: paginationSource.totalPages ?? 1,
+                    totalItems: paginationSource.totalItems ?? paginationSource.total ?? (Array.isArray(influencers) ? influencers.length : 0),
+                    itemsPerPage: paginationSource.itemsPerPage ?? limit
+                },
+                activeInfluencersLoading: false
+            });
+
+            return { success: true, data: Array.isArray(influencers) ? influencers : [] };
+        } catch (error) {
+            const msg = typeof error === 'string' ? error : error.message || 'Failed to fetch active influencers';
+            set({ activeInfluencersError: msg, activeInfluencersLoading: false });
+            return { success: false, error: msg };
+        }
+    },
+
+    // Past influencers
+    pastInfluencers: [],
+    pastInfluencersLoading: false,
+    pastInfluencersError: null,
+    pastPagination: {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        itemsPerPage: 10
+    },
+
+    fetchPastInfluencers: async (page = 1, limit = 10) => {
+        set({ pastInfluencersLoading: true, pastInfluencersError: null });
+        try {
+            const response = await ownerService.getPastInfluencers(page, limit);
+            const payload = response?.data ?? response ?? {};
+            const ok = response?.success === true || payload?.status === 'success' || payload?.success === true;
+
+            if (!ok) {
+                throw new Error(payload?.message || response?.message || 'Failed to fetch past influencers');
+            }
+
+            const influencers = payload?.data?.influencers ?? payload?.influencers ?? payload?.data ?? [];
+            const paginationSource = payload?.data?.pagination ?? payload?.pagination ?? payload?.data ?? {};
+
+            set({
+                pastInfluencers: Array.isArray(influencers) ? influencers : [],
+                pastPagination: {
+                    currentPage: paginationSource.currentPage ?? paginationSource.page ?? page,
+                    totalPages: paginationSource.totalPages ?? 1,
+                    totalItems: paginationSource.totalItems ?? paginationSource.total ?? (Array.isArray(influencers) ? influencers.length : 0),
+                    itemsPerPage: paginationSource.itemsPerPage ?? limit
+                },
+                pastInfluencersLoading: false
+            });
+
+            return { success: true, data: Array.isArray(influencers) ? influencers : [] };
+        } catch (error) {
+            const msg = typeof error === 'string' ? error : error.message || 'Failed to fetch past influencers';
+            set({ pastInfluencersError: msg, pastInfluencersLoading: false });
+            return { success: false, error: msg };
+        }
+    },
+
     // ─── Marketplace ────────────────────────────────────────────────────────
     services: [],
     serviceDetail: null,
@@ -181,7 +269,14 @@ const useOwnerStore = create((set) => ({
     },
 
     // Clear errors
-    clearError: () => set({ error: null, marketplaceError: null, overviewError: null })
+    clearError: () => set({
+        error: null,
+        marketplaceError: null,
+        overviewError: null,
+        influencerError: null,
+        activeInfluencersError: null,
+        pastInfluencersError: null
+    })
 }));
 
 export default useOwnerStore;

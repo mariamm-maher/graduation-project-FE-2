@@ -248,25 +248,6 @@ function Header() {
         <div className="flex items-center gap-2 sm:gap-4 flex-wrap w-full sm:w-auto">
        
 
-          {/* Join as Owner Promotion Button (shows when user is not an owner) */}
-          {/* {!hasOwnerRole && (
-            <motion.button
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.45 }}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setShowOwnerProfileModal(true)}
-              className="relative px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white rounded-lg overflow-hidden group flex-1 sm:flex-initial bg-linear-to-r from-[#FF9A9E] via-[#FECDA5] to-[#FBD786]"
-            >
-              <div className="absolute inset-0 opacity-30"></div>
-              <span className="relative flex items-center justify-center sm:justify-start space-x-2">
-                <span className="hidden sm:inline">Join as Owner — unlock owner features</span>
-                <span className="sm:hidden">Join as Owner</span>
-              </span>
-            </motion.button>
-          )} */}
-
           {/* Notifications */}
           <motion.button 
             onClick={() => setShowNotificationsPanel(!showNotificationsPanel)}
@@ -353,6 +334,7 @@ function Header() {
 
           {/* Messages/Chat */}
           <motion.button 
+            onClick={() => navigate('/dashboard/influencer/messages')}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
@@ -361,7 +343,7 @@ function Header() {
             className="relative p-2 hover:bg-white/5 rounded-lg transition-all duration-200"
           >
             <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-white" />
-            <span className="absolute -top-1 -right-1 bg-[#745CB4] text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold text-[10px] sm:text-xs">7</span>
+            <span className="absolute -top-1 -right-1 bg-[#745CB4] text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold text-[10px] sm:text-xs"></span>
           </motion.button>
 
           <div className="hidden sm:block w-px h-8 bg-white/10"></div>

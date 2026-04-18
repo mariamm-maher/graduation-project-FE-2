@@ -19,7 +19,7 @@ const useProfileStore = create((set, get) => ({
       const payload = res?.data ?? res;
       const userProfile = payload?.profile ?? {};
       const ownerProfileData = userProfile?.ownerProfile ?? {};
-      
+
       // Merge user info with owner profile
       const profile = {
         ...ownerProfileData,

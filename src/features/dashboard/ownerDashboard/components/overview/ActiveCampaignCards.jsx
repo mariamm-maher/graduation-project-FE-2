@@ -1,4 +1,5 @@
 import { TrendingUp, Users, MessageCircle, Target, BarChart3, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 function formatCompact(value = 0) {
   if (value >= 1_000_000) {
@@ -10,9 +11,19 @@ function formatCompact(value = 0) {
   return `${value}`;
 }
 
+function resolveCampaignId(campaign = {}) {
+  return campaign?.id || campaign?.campaignId || campaign?._id || null;
+}
+
 function ActiveCampaignCards({ campaigns = [], kpis, loading }) {
+  const navigate = useNavigate();
   const runningCount = kpis?.activeCampaigns ?? campaigns.filter((campaign) => campaign.status === 'active').length;
-  const pausedCount = kpis?.pausedCampaigns ?? campaigns.filter((campaign) => campaign.status === 'paused').length;
+
+  const openCampaign = (campaign) => {
+    const campaignId = resolveCampaignId(campaign);
+    if (!campaignId) return;
+    navigate(`/dashboard/owner/campaigns/${campaignId}`);
+  };
 
   return (
     <div>
@@ -22,9 +33,7 @@ function ActiveCampaignCards({ campaigns = [], kpis, loading }) {
           <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-medium">
             {runningCount} Running
           </span>
-          <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-medium">
-            {pausedCount} Paused
-          </span>
+       
         </div>
       </div>
 
@@ -50,9 +59,15 @@ function ActiveCampaignCards({ campaigns = [], kpis, loading }) {
                 <Target className="w-7 h-7 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-white mb-1 truncate group-hover:text-[#C1B6FD] transition-colors">
+                <button
+                  type="button"
+                  onClick={() => openCampaign(campaign)}
+                  disabled={!resolveCampaignId(campaign)}
+                  className="font-bold text-white mb-1 truncate group-hover:text-[#C1B6FD] transition-colors hover:underline disabled:opacity-70 disabled:cursor-not-allowed text-left"
+                  title={resolveCampaignId(campaign) ? 'Open campaign details' : 'Campaign id unavailable'}
+                >
                   {campaign.name}
-                </h3>
+                </button>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-400">{campaign.brand}</span>
                   <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${

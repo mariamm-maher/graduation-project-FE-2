@@ -1,6 +1,8 @@
 import { MessageSquare, Mail, Send, CheckCircle2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const statusConfig = {
+  sent: { color: 'bg-indigo-500/20 text-indigo-300', badge: 'Sent' },
   delivered: { color: 'bg-blue-500/20 text-blue-400', badge: 'Delivered' },
   completed: { color: 'bg-green-500/20 text-green-400', badge: 'Done' },
   waiting: { color: 'bg-yellow-500/20 text-yellow-400', badge: 'Pending' },
@@ -12,6 +14,9 @@ function getStatus(status = '') {
   const normalized = status.toLowerCase();
   if (statusConfig[normalized]) {
     return normalized;
+  }
+  if (normalized.includes('sent')) {
+    return 'sent';
   }
   if (normalized.includes('pending')) {
     return 'waiting';
@@ -80,7 +85,30 @@ function avatarFallback(name = '') {
   return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
 }
 
+function resolveInfluencerId(activity = {}) {
+  return activity?.influencerId || activity?.influencer?.id || activity?.influencer?.userId || null;
+}
+
+function formatLabel(value = '') {
+  if (!value) return 'General update';
+  return value
+    .replace(/_/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 function InfluencerActivity({ feed = [], loading }) {
+  const navigate = useNavigate();
+  const safeFeed = Array.isArray(feed) ? feed.filter(Boolean) : [];
+
+  const openInfluencerProfile = (activity) => {
+    const influencerId = resolveInfluencerId(activity);
+    if (!influencerId) return;
+    navigate(`/dashboard/owner/influencers/${encodeURIComponent(String(influencerId))}/profile`);
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -98,15 +126,18 @@ function InfluencerActivity({ feed = [], loading }) {
           </div>
         )}
 
-        {!loading && feed.length === 0 && (
+        {!loading && safeFeed.length === 0 && (
           <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 text-sm text-gray-300">
             No communication activity yet.
           </div>
         )}
 
-        {feed.map((activity) => {
+        {safeFeed.slice(0, 5).map((activity) => {
           const normalizedStatus = getStatus(activity.status);
           const statusUI = statusConfig[normalizedStatus] || statusConfig.default;
+          const influencerId = resolveInfluencerId(activity);
+          const actionLabel = formatLabel(activity.action);
+          const platformLabel = formatLabel(activity.platform);
 
           return (
           <div 
@@ -133,17 +164,27 @@ function InfluencerActivity({ feed = [], loading }) {
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between mb-1">
-                  <h3 className="font-semibold text-white text-sm group-hover:text-[#C1B6FD] transition-colors">
+                  <button
+                    type="button"
+                    onClick={() => openInfluencerProfile(activity)}
+                    disabled={!influencerId}
+                    className="font-semibold text-white text-sm group-hover:text-[#C1B6FD] transition-colors hover:underline disabled:opacity-70 disabled:cursor-not-allowed text-left"
+                    title={influencerId ? 'Open influencer profile' : 'Profile id unavailable'}
+                  >
                     {activity.influencer?.name || 'Unknown Influencer'}
-                  </h3>
+                  </button>
                   <span className="text-xs text-gray-500">{toRelativeTime(activity.occurredAt)}</span>
                 </div>
                 
-                <p className="text-xs text-gray-400 mb-2">{activity.action}</p>
+                <p className="text-xs text-gray-300 mb-1">{actionLabel}</p>
+                <p className="text-xs text-gray-500 mb-2 truncate">
+                  {activity.sender ? `${activity.sender}: ` : ''}
+                  {activity.contentPreview || 'No preview available'}
+                </p>
                 
                 <div className="flex items-center justify-between">
                   <span className="text-xs px-2 py-0.5 bg-white/5 rounded-full text-gray-400">
-                    {activity.platform || 'General'}
+                    {platformLabel}
                   </span>
                   <span className={`text-xs px-2 py-1 rounded-full font-semibold ${statusUI.color}`}>
                     {statusUI.badge}
@@ -168,17 +209,7 @@ function InfluencerActivity({ feed = [], loading }) {
         })}
       </div>
 
-      {/* Quick Actions */}
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <button className="py-2.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg text-sm font-medium text-gray-300 hover:border-purple-400/30 hover:bg-white/10 transition-all">
-          <MessageSquare className="w-4 h-4 inline mr-1" />
-          Bulk Message
-        </button>
-        <button className="py-2.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg text-sm font-medium text-gray-300 hover:border-purple-400/30 hover:bg-white/10 transition-all">
-          <Send className="w-4 h-4 inline mr-1" />
-          Auto Follow-up
-        </button>
-      </div>
+  
     </div>
   );
 }

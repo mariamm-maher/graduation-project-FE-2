@@ -48,43 +48,68 @@ export default function StatisticsChart({ kpis, performanceSeries, communication
   const totalCampaignReach = campaigns.reduce((acc, c) => acc + (c.targetReach || c.projectedReach || 0), 0);
   const costPerReach = totalCampaignReach > 0 ? (totalCampaignBudget / totalCampaignReach) : 0;
 
+  const formatShort = (value) => {
+    if (value == null) return '-';
+    const n = Number(value);
+    if (Number.isNaN(n)) return value;
+    if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+    if (Math.abs(n) >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+    return n.toLocaleString();
+  };
+
+  const formatCurrency = (value) => {
+    if (value == null) return '-';
+    const n = Number(value);
+    if (Number.isNaN(n)) return value;
+    return `$${n.toLocaleString()}`;
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold bg-linear-to-r from-[#C1B6FD] to-[#745CB4] bg-clip-text text-transparent">
-          Campaign Performance
-        </h2>
-        <div className="flex gap-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-1">
-          <button className="px-4 py-2 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] rounded-lg text-white text-sm font-medium transition-all">
-            Days
-          </button>
-          <button className="px-4 py-2 text-gray-400 hover:text-white text-sm font-medium transition-all">
-            Weeks
-          </button>
-          <button className="px-4 py-2 text-gray-400 hover:text-white text-sm font-medium transition-all">
-            Months
-          </button>
+        <div className="w-full">
+          <h2 className="text-2xl font-bold bg-linear-to-r from-[#C1B6FD] to-[#745CB4] bg-clip-text text-transparent">
+            Campaign Performance
+          </h2>
+          <p className="text-sm text-gray-400 mt-2">Displays campaign performance based on influencer collaborations, audience size, and campaign activity.</p>
+
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+            <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5">
+              <p className="text-xs text-gray-400">Engagement</p>
+              <p className="text-lg font-bold text-white">{kpis?.totalEngagement ?? '-'}</p>
+            </div>
+
+            <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5">
+              <p className="text-xs text-gray-400">Reach</p>
+              <p className="text-lg font-bold text-white">{formatShort(kpis?.totalReach)}</p>
+            </div>
+
+            <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5">
+              <p className="text-xs text-gray-400">Active</p>
+              <p className="text-lg font-bold text-white">{kpis?.activeCampaigns ?? 0}</p>
+            </div>
+
+          
+
+            <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5">
+              <p className="text-xs text-gray-400">Pending</p>
+              <p className="text-lg font-bold text-white">{kpis?.pendingCampaigns ?? 0}</p>
+            </div>
+
+            <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5">
+              <p className="text-xs text-gray-400">Avg ROI</p>
+              <p className="text-lg font-bold text-white">{kpis?.avgROI != null ? `${kpis.avgROI}%` : '-'}</p>
+            </div>
+
+            <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5">
+              <p className="text-xs text-gray-400">Spend</p>
+              <p className="text-lg font-bold text-white">{formatCurrency(kpis?.spendToDate)}</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Date Selector */}
-      {/* <div className="flex gap-2 mb-6 overflow-x-auto pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-linear-to-r [&::-webkit-scrollbar-thumb]:from-[#C1B6FD] [&::-webkit-scrollbar-thumb]:to-[#745CB4] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:from-[#745CB4] [&::-webkit-scrollbar-thumb]:hover:to-[#C1B6FD]">
-        {dates.map((item, idx) => (
-          <button
-            key={idx}
-            className={`px-5 py-3 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-300 ${
-              idx === 9 
-                ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg shadow-purple-500/50 scale-105' 
-                : 'bg-white/5 backdrop-blur-sm border border-white/10 text-gray-400 hover:border-purple-400/30 hover:bg-white/10 hover:scale-105'
-            }`}
-          >
-            <div className="text-center">
-              <div className="text-lg font-bold">{item.date}</div>
-              <div className="text-xs opacity-75">{item.day}</div>
-            </div>
-          </button>
-        ))}
-      </div> */}
+   
 
       {/* Main Container */}
       <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-xl hover:border-purple-400/30 transition-all duration-300 group min-h-[360px]">

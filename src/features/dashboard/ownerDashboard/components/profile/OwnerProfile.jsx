@@ -1,24 +1,285 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Image, Edit, CheckCircle2 } from 'lucide-react';
+import {
+  Image,
+  Upload,
+  Edit,
+  Save,
+  X,
+  CheckCircle2,
+  Building2,
+  Mail,
+  MapPin,
+  Phone,
+  Globe,
+  Target,
+  Users,
+  Briefcase,
+  Sparkles,
+  User,
+  CheckCircle,
+  AlertCircle
+} from 'lucide-react';
 import { toast } from 'react-toastify';
 import useProfileStore from '../../../../../stores/profileStore';
+import useUploadStore from '../../../../../stores/UploadStore';
+
+const BUSINESS_TYPE_OPTIONS = [
+  'Startup',
+  'Small Business',
+  'Brand',
+  'Agency',
+  'E-commerce',
+  'Personal Brand'
+];
+
+const INDUSTRY_OPTIONS = [
+  'Fashion',
+  'Food & Beverage',
+  'Technology',
+  'Health & Fitness',
+  'Beauty & Cosmetics',
+  'Education',
+  'Travel & Tourism',
+  'Gaming',
+  'Finance',
+  'Other'
+];
+
+const PLATFORM_OPTIONS = [
+  'Instagram',
+  'Facebook',
+  'TikTok',
+  'YouTube',
+  'Google Ads',
+  'LinkedIn',
+  'Snapchat',
+  'Twitter (X)'
+];
+
+const MARKETING_GOAL_OPTIONS = [
+  'Brand Awareness',
+  'Lead Generation',
+  'Increase Sales',
+  'App Downloads',
+  'Community Growth',
+  'Product Launch Promotion'
+];
+
+const TARGET_GENDER_OPTIONS = ['All', 'Male', 'Female'];
+const TARGET_AGE_OPTIONS = ['18-24', '25-34', '35-44', '45-54', '55+'];
+
+const POPULAR_COUNTRIES = [
+  'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
+  'Italy', 'Spain', 'Netherlands', 'Sweden', 'Norway', 'Denmark', 'Switzerland',
+  'Belgium', 'Austria', 'Ireland', 'Portugal', 'Poland', 'Czech Republic',
+  'Hungary', 'Romania', 'Greece', 'Turkey', 'Russia', 'Ukraine', 'India',
+  'Pakistan', 'Bangladesh', 'China', 'Japan', 'South Korea', 'Indonesia',
+  'Philippines', 'Vietnam', 'Thailand', 'Malaysia', 'Singapore', 'Saudi Arabia',
+  'United Arab Emirates', 'Egypt', 'South Africa', 'Nigeria', 'Kenya', 'Brazil',
+  'Mexico', 'Argentina', 'Chile', 'Colombia', 'Peru', 'New Zealand'
+];
 
 export default function OwnerProfile() {
   const navigate = useNavigate();
   const fetchOwnerProfile = useProfileStore((s) => s.fetchOwnerProfile);
+  const updateOwnerProfile = useProfileStore((s) => s.updateOwnerProfile);
   const ownerProfile = useProfileStore((s) => s.ownerProfile);
   const isLoading = useProfileStore((s) => s.isLoading);
   const fetchOwnerCompletion = useProfileStore((s) => s.fetchOwnerCompletion);
+  const uploadFile = useUploadStore((s) => s.uploadFile);
+  const uploadProgress = useUploadStore((s) => s.uploadProgress);
+  const isUploadingCloud = useUploadStore((s) => s.isLoading);
+  const resetUpload = useUploadStore((s) => s.resetUpload);
+  const [isEditing, setIsEditing] = useState(false);
   const [completion, setCompletion] = useState(null);
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState({
+    business: false,
+    target: false
+  });
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [imageUploaded, setImageUploaded] = useState(false);
+  const [formData, setFormData] = useState({
+    businessName: '',
+    businessType: '',
+    industry: '',
+    location: '',
+    description: '',
+    website: '',
+    phoneNumber: '',
+    platformsUsed: [],
+    primaryMarketingGoal: '',
+    targetAudience: {
+      gender: '',
+      ageRange: '',
+      location: ''
+    }
+  });
+
+  const buildEditableData = (profile) => ({
+    businessName: profile?.businessName || '',
+    businessType: profile?.businessType || '',
+    industry: profile?.industry || '',
+    location: profile?.location || '',
+    description: profile?.description || '',
+    image: profile?.image || '',
+    website: profile?.website || '',
+    phoneNumber: profile?.phoneNumber || '',
+    platformsUsed: Array.isArray(profile?.platformsUsed) ? profile.platformsUsed : [],
+    primaryMarketingGoal: profile?.primaryMarketingGoal || '',
+    targetAudience: {
+      gender: profile?.targetAudience?.gender || '',
+      ageRange: profile?.targetAudience?.ageRange || '',
+      location: profile?.targetAudience?.location || ''
+    }
+  });
+
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleTargetAudienceChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      targetAudience: {
+        ...(prev.targetAudience || {}),
+        [field]: value
+      }
+    }));
+  };
+
+  const handlePlatformToggle = (platform) => {
+    setFormData((prev) => {
+      const current = Array.isArray(prev.platformsUsed) ? prev.platformsUsed : [];
+      const next = current.includes(platform)
+        ? current.filter((item) => item !== platform)
+        : [...current, platform];
+
+      return {
+        ...prev,
+        platformsUsed: next
+      };
+    });
+  };
+
+  const getFilteredCountries = (query) => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return POPULAR_COUNTRIES.slice(0, 12);
+    }
+
+    return POPULAR_COUNTRIES
+      .filter((country) => country.toLowerCase().includes(normalizedQuery))
+      .slice(0, 12);
+  };
+
+  const openCountryDropdown = (key) => {
+    setCountryDropdownOpen((prev) => ({ ...prev, [key]: true }));
+  };
+
+  const closeCountryDropdown = (key) => {
+    setCountryDropdownOpen((prev) => ({ ...prev, [key]: false }));
+  };
+
+  const handleImageSelect = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    setSelectedImageFile(file);
+    setImageUploaded(false);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result || '');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUploadImage = async () => {
+    if (!selectedImageFile) {
+      toast.error('Please choose an image first');
+      return;
+    }
+
+    const result = await uploadFile(selectedImageFile, 'brandLogo');
+    if (!result?.success) {
+      toast.error(result?.error || 'Image upload failed');
+      return;
+    }
+
+    const uploadedUrl =
+      result?.data?.url ||
+      result?.data?.secure_url ||
+      result?.data?.data?.url ||
+      '';
+
+    if (!uploadedUrl) {
+      toast.error('Image uploaded but URL was not returned');
+      return;
+    }
+
+    handleInputChange('image', uploadedUrl);
+    setImagePreview(uploadedUrl);
+    setImageUploaded(true);
+    toast.success('Image uploaded to cloud. Click Save Changes to update profile.');
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImageFile(null);
+    setImagePreview('');
+    setImageUploaded(false);
+    handleInputChange('image', '');
+    resetUpload();
+  };
+
+  const handleSave = async () => {
+    if (selectedImageFile && !imageUploaded) {
+      toast.error('Please upload image to cloud before saving profile');
+      return;
+    }
+
+    const result = await updateOwnerProfile(formData);
+    if (result?.success) {
+      toast.success('Profile updated successfully');
+      setIsEditing(false);
+      setSelectedImageFile(null);
+      setImagePreview('');
+      setImageUploaded(false);
+      resetUpload();
+      await fetchOwnerProfile();
+      const comp = await fetchOwnerCompletion();
+      setCompletion(comp?.data ?? comp);
+    } else {
+      toast.error(result?.error || 'Failed to update profile');
+    }
+  };
+
+  const handleCancel = () => {
+    if (!ownerProfile) {
+      setIsEditing(false);
+      return;
+    }
+    setFormData(buildEditableData(ownerProfile));
+    setSelectedImageFile(null);
+    setImagePreview('');
+    setImageUploaded(false);
+    resetUpload();
+    setIsEditing(false);
+  };
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetchOwnerProfile();
-        console.log('fetchOwnerProfile result:', res);
+        await fetchOwnerProfile();
         const comp = await fetchOwnerCompletion();
-        console.log('fetchOwnerCompletion result:', comp);
         setCompletion(comp?.data ?? comp);
       } catch (err) {
         console.error('fetchOwnerProfile error', err);
@@ -54,84 +315,142 @@ export default function OwnerProfile() {
   }
 
   const {
-    businessName,
-    businessType,
-    industry,
-    location,
-    description,
     image,
-    website,
-    phoneNumber,
-    platformsUsed,
-    primaryMarketingGoal,
-    targetAudience,
     completionPercentage
   } = ownerProfile;
 
+  const profileView = isEditing ? formData : buildEditableData(ownerProfile);
+  const activeImage = isEditing ? (imagePreview || formData.image || image) : image;
+
+  const targetAudienceSummary = profileView.targetAudience
+    ? {
+        gender: profileView.targetAudience.gender || 'N/A',
+        ageRange: profileView.targetAudience.ageRange || 'N/A',
+        location: profileView.targetAudience.location || 'N/A'
+      }
+    : { gender: 'N/A', ageRange: 'N/A', location: 'N/A' };
+
   return (
-    <div className="p-6 w-full">
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-8 relative p-6 w-full">
+      <div className="absolute -top-20 -right-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-40 -left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
         <div>
-          <h1 className="text-2xl font-bold">Owner Profile</h1>
-          <p className="text-sm text-gray-400">Manage and review your business profile</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight"> Profile Settings</h1>
+          <p className="text-gray-400 mt-1">Manage your business information and public profile</p>
         </div>
         <div className="flex items-center gap-3">
           {completion && completion.percentage < 100 && (
             <Link 
               to="/dashboard/owner/profile/complete" 
-              className="px-4 py-2 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] rounded-lg hover:opacity-90 flex items-center gap-2"
+              className="px-5 py-2.5 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all flex items-center gap-2"
             >
               <CheckCircle2 className="w-4 h-4" />
               Complete your profile
             </Link>
           )}
-          <Link 
-            to="/dashboard/owner/profile/edit" 
-            className="px-3 py-2 bg-white/5 rounded-lg hover:bg-white/10 flex items-center gap-2"
-          >
-            <Edit className="w-4 h-4" />
-            Edit
-          </Link>
+          {isEditing ? (
+            <>
+              <button
+                onClick={handleCancel}
+                className="px-5 py-2.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 text-white transition-all flex items-center gap-2"
+              >
+                <X className="w-4 h-4" />
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={isLoading}
+                className="px-5 py-2.5 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all flex items-center gap-2 disabled:opacity-60"
+              >
+                <Save className="w-4 h-4" />
+                {isLoading ? 'Saving...' : 'Save Changes'}
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => {
+                setFormData(buildEditableData(ownerProfile));
+                setSelectedImageFile(null);
+                setImagePreview(ownerProfile?.image || '');
+                setImageUploaded(false);
+                resetUpload();
+                setIsEditing(true);
+              }}
+              className="px-5 py-2.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 text-white transition-all flex items-center gap-2"
+            >
+              <Edit className="w-4 h-4" />
+              Edit
+            </button>
+          )}
           <div className="text-sm text-gray-400">{completionPercentage ?? 0}% complete</div>
         </div>
       </div>
 
-      {/* Owner basic info */}
-      <div className="mb-6 bg-white/3 p-4 rounded-lg flex items-center justify-between">
-        <div>
-          <div className="text-sm text-gray-400">Owner</div>
-          <div className="text-base font-semibold">{ownerProfile.firstName || ''} {ownerProfile.lastName || ''}</div>
-          <div className="text-xs text-gray-400">{ownerProfile.email}</div>
-        </div>
-        <div className="text-right">
-          <div className="text-sm">
-            <span className="inline-block px-2 py-1 text-xs rounded-full bg-white/5">{(ownerProfile.status || '').toUpperCase() || '—'}</span>
+      <div className="rounded-2xl p-6 sm:p-8 bg-white/5 backdrop-blur-md border border-white/10 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#745CB4]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-[#745CB4] to-[#C1B6FD] flex items-center justify-center shadow-lg shadow-purple-500/20">
+              <Building2 className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                
+                <h2 className="text-2xl font-bold text-white">{profileView.businessName || 'Business Name'}</h2>
+              </div>
+              <p className="text-sm text-gray-400">{profileView.businessType || 'N/A'} • {profileView.industry || 'N/A'}</p>
+              <p className="text-sm text-gray-300 mt-2 max-w-2xl">{profileView.description || 'No business description provided.'}</p>
+            </div>
           </div>
-          <div className="text-xs text-gray-400 mt-2">
-            <div>Onboarded: {ownerProfile.isOnboarded ? 'Yes' : 'No'}</div>
-            <div>Completed: {ownerProfile.isCompleted ? 'Yes' : 'No'}</div>
+
+          <div className="flex flex-col items-start md:items-end gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-gray-300">
+              <User className="w-3.5 h-3.5" />
+              {(ownerProfile.status || 'N/A').toUpperCase()}
+            </span>
+            <span className="inline-flex items-center gap-2 text-xs text-gray-400">
+              {ownerProfile.isCompleted ? <CheckCircle className="w-3.5 h-3.5 text-green-400" /> : <AlertCircle className="w-3.5 h-3.5 text-yellow-400" />}
+              Profile {ownerProfile.isCompleted ? 'Completed' : 'Incomplete'}
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs md:text-sm">
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-2xl text-gray-300">
+            <Mail className="w-4 h-4 text-[#C1B6FD]" />
+            <span>{ownerProfile.email || 'N/A'}</span>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-2xl text-gray-300">
+            <MapPin className="w-4 h-4 text-[#C1B6FD]" />
+            <span>{profileView.location || 'N/A'}</span>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-2xl text-gray-300">
+            <Phone className="w-4 h-4 text-[#C1B6FD]" />
+            <span>{profileView.phoneNumber || 'N/A'}</span>
           </div>
         </div>
       </div>
 
-      {/* Completion Summary */}
       {completion && (
-        <div className="mb-6 bg-white/5 p-4 rounded-lg w-full">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6">
           <div className="flex flex-col md:flex-row items-center md:items-stretch justify-between gap-4">
             <div className="flex-1">
               <div className="text-sm text-gray-400">Profile Completion</div>
-              <div className="flex items-center gap-4 mt-2">
-                <div className="w-36">
+              <div className="flex items-center gap-4 mt-3">
+                <div className="w-44">
                   <div className="h-3 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD]" style={{ width: `${completion.percentage ?? 0}%` }} />
+                    <div className="h-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD]" style={{ width: `${completion.percentage ?? 0}%` }} />
                   </div>
                 </div>
-                <div className="text-sm text-gray-200">{completion.percentage ?? 0}%</div>
+                <div className="text-sm text-gray-200 font-semibold">{completion.percentage ?? 0}%</div>
                 <div className="text-xs text-gray-400">{completion.filledFields ?? 0}/{completion.totalFields ?? 0} fields</div>
               </div>
             </div>
 
-            <div className="flex-1 text-right md:text-right">
+            <div className="flex-1 text-right">
               {Array.isArray(completion.missingFields) && completion.missingFields.length > 0 ? (
                 <div>
                   <div className="text-xs text-gray-400">Missing Fields</div>
@@ -149,12 +468,243 @@ export default function OwnerProfile() {
         </div>
       )}
 
-      <div className="bg-white/5 p-6 rounded-2xl w-full">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="col-span-1">
-            <div className="w-full h-44 bg-white/5 rounded-lg flex items-center justify-center overflow-hidden">
-              {image ? (
-                <img src={image} alt="brand" className="object-contain w-full h-full" />
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 relative z-10">
+        <div className="xl:col-span-2 space-y-6">
+          <div className="rounded-2xl p-6 sm:p-8 bg-white/5 backdrop-blur-md border border-white/10">
+            <div className="flex items-center gap-3 mb-4">
+              <Briefcase className="w-5 h-5 text-[#745CB4]" />
+              <h2 className="flex-1 text-[11px] font-medium uppercase tracking-widest text-gray-400 pb-3 border-b border-white/10 mb-4">Business Details</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                <p className="text-xs text-gray-400 mb-1">Business Name</p>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={formData.businessName}
+                    onChange={(e) => handleInputChange('businessName', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                  />
+                ) : (
+                  <p className="text-sm font-semibold text-white">{profileView.businessName || 'N/A'}</p>
+                )}
+              </div>
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                <p className="text-xs text-gray-400 mb-1">Business Type</p>
+                {isEditing ? (
+                  <select
+                    value={formData.businessType}
+                    onChange={(e) => handleInputChange('businessType', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                  >
+                    <option value="" className="bg-[#1A1A24] text-gray-300">Select Business Type</option>
+                    {BUSINESS_TYPE_OPTIONS.map((option) => (
+                      <option key={option} value={option} className="bg-[#1A1A24] text-gray-100">
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-sm font-semibold text-white">{profileView.businessType || 'N/A'}</p>
+                )}
+              </div>
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                <p className="text-xs text-gray-400 mb-1">Industry</p>
+                {isEditing ? (
+                  <select
+                    value={formData.industry}
+                    onChange={(e) => handleInputChange('industry', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                  >
+                    <option value="" className="bg-[#1A1A24] text-gray-300">Select Industry</option>
+                    {INDUSTRY_OPTIONS.map((option) => (
+                      <option key={option} value={option} className="bg-[#1A1A24] text-gray-100">
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-sm font-semibold text-white">{profileView.industry || 'N/A'}</p>
+                )}
+              </div>
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                <p className="text-xs text-gray-400 mb-1">Primary Marketing Goal</p>
+                {isEditing ? (
+                  <select
+                    value={formData.primaryMarketingGoal}
+                    onChange={(e) => handleInputChange('primaryMarketingGoal', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                  >
+                    <option value="" className="bg-[#1A1A24] text-gray-300">Select Marketing Goal</option>
+                    {MARKETING_GOAL_OPTIONS.map((option) => (
+                      <option key={option} value={option} className="bg-[#1A1A24] text-gray-100">
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-sm font-semibold text-white">{profileView.primaryMarketingGoal || 'N/A'}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6 bg-white/5 rounded-xl p-4 border border-white/10">
+              <p className="text-xs text-gray-400 mb-2">Description</p>
+              {isEditing ? (
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  rows={4}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm resize-none"
+                />
+              ) : (
+                <p className="text-sm text-gray-200 leading-relaxed">{profileView.description || 'No description provided.'}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-2xl p-6 sm:p-8 bg-white/5 backdrop-blur-md border border-white/10">
+            <div className="flex items-center gap-3 mb-4">
+              <Target className="w-5 h-5 text-[#745CB4]" />
+              <h2 className="flex-1 text-[11px] font-medium uppercase tracking-widest text-gray-400 pb-3 border-b border-white/10 mb-4">Audience Insights</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                <p className="text-xs text-gray-400 mb-1">Gender</p>
+                {isEditing ? (
+                  <select
+                    value={formData.targetAudience?.gender || ''}
+                    onChange={(e) => handleTargetAudienceChange('gender', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                  >
+                    <option value="" className="bg-[#1A1A24] text-gray-300">Select Gender</option>
+                    {TARGET_GENDER_OPTIONS.map((option) => (
+                      <option key={option} value={option} className="bg-[#1A1A24] text-gray-100">
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-sm font-semibold text-white">{targetAudienceSummary.gender}</p>
+                )}
+              </div>
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                <p className="text-xs text-gray-400 mb-1">Age Range</p>
+                {isEditing ? (
+                  <select
+                    value={formData.targetAudience?.ageRange || ''}
+                    onChange={(e) => handleTargetAudienceChange('ageRange', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                  >
+                    <option value="" className="bg-[#1A1A24] text-gray-300">Select Age Range</option>
+                    {TARGET_AGE_OPTIONS.map((option) => (
+                      <option key={option} value={option} className="bg-[#1A1A24] text-gray-100">
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-sm font-semibold text-white">{targetAudienceSummary.ageRange}</p>
+                )}
+              </div>
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10 md:col-span-2">
+                <p className="text-xs text-gray-400 mb-1">Location</p>
+                {isEditing ? (
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.targetAudience?.location || ''}
+                      onChange={(e) => {
+                        handleTargetAudienceChange('location', e.target.value);
+                        openCountryDropdown('target');
+                      }}
+                      onFocus={() => openCountryDropdown('target')}
+                      onBlur={() => setTimeout(() => closeCountryDropdown('target'), 120)}
+                      placeholder="Search or select a country"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                    />
+
+                    {countryDropdownOpen.target && (
+                      <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                        {getFilteredCountries(formData.targetAudience?.location || '').length > 0 ? (
+                          getFilteredCountries(formData.targetAudience?.location || '').map((country) => (
+                            <button
+                              key={country}
+                              type="button"
+                              onClick={() => {
+                                handleTargetAudienceChange('location', country);
+                                closeCountryDropdown('target');
+                              }}
+                              className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                            >
+                              {country}
+                            </button>
+                          ))
+                        ) : (
+                          <p className="px-4 py-3 text-sm text-gray-400">No countries found</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm font-semibold text-white">{targetAudienceSummary.location}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="rounded-2xl p-6 sm:p-8 bg-white/5 backdrop-blur-md border border-white/10">
+            <div className="flex items-center gap-3 mb-4">
+              <User className="w-5 h-5 text-[#745CB4]" />
+              <h2 className="flex-1 text-[11px] font-medium uppercase tracking-widest text-gray-400 pb-3 border-b border-white/10 mb-4">Personal Info</h2>
+            </div>
+
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between items-center py-2 border-b border-white/5 gap-4">
+                <span className="text-gray-400">First Name</span>
+                <span className="text-white font-medium text-right">{ownerProfile.firstName || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-white/5 gap-4">
+                <span className="text-gray-400">Last Name</span>
+                <span className="text-white font-medium text-right">{ownerProfile.lastName || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-white/5 gap-4">
+                <span className="text-gray-400">Email</span>
+                <span className="text-white font-medium text-right">{ownerProfile.email || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-white/5 gap-4">
+                <span className="text-gray-400">Phone</span>
+                {isEditing ? (
+                  <input
+                    type="tel"
+                    value={formData.phoneNumber}
+                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                    className="w-44 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                  />
+                ) : (
+                  <span className="text-white font-medium text-right">{profileView.phoneNumber || 'N/A'}</span>
+                )}
+              </div>
+              <div className="flex justify-between items-center py-2 gap-4">
+                <span className="text-gray-400">Onboarded</span>
+                <span className="text-white font-medium text-right">{ownerProfile.isOnboarded ? 'Yes' : 'No'}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl p-6 sm:p-8 bg-white/5 backdrop-blur-md border border-white/10">
+            <div className="flex items-center gap-3 mb-4">
+              <Globe className="w-5 h-5 text-[#745CB4]" />
+              <h2 className="flex-1 text-[11px] font-medium uppercase tracking-widest text-gray-400 pb-3 border-b border-white/10 mb-4">Links & Presence</h2>
+            </div>
+
+            <div className="w-full h-44 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center overflow-hidden mb-4">
+              {activeImage ? (
+                <img src={activeImage} alt="brand" className="object-contain w-full h-full" />
               ) : (
                 <div className="text-gray-500 flex flex-col items-center gap-2">
                   <Image className="w-10 h-10" />
@@ -163,78 +713,166 @@ export default function OwnerProfile() {
               )}
             </div>
 
-            <div className="mt-4 space-y-2 text-sm text-gray-300">
+            {isEditing && (
+              <div className="mb-4 space-y-3">
+                <label className="block">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/jpg,image/webp"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                  <span className="inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-white/10 bg-white/5 text-gray-200 hover:bg-white/10 cursor-pointer transition-colors">
+                    <Upload className="w-4 h-4" />
+                    Choose Image
+                  </span>
+                </label>
+
+                {selectedImageFile && !imageUploaded && (
+                  <button
+                    type="button"
+                    onClick={handleUploadImage}
+                    disabled={isUploadingCloud}
+                    className="w-full px-4 py-2.5 rounded-lg bg-[#745CB4] hover:bg-[#9381C4] text-white font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isUploadingCloud ? `Uploading... ${uploadProgress}%` : 'Upload to Cloud'}
+                  </button>
+                )}
+
+                {imageUploaded && (
+                  <div className="flex items-center justify-center gap-2 text-green-300 bg-green-500/10 border border-green-500/30 rounded-lg py-2.5 px-4 text-sm">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Uploaded to cloud. Save profile to apply.
+                  </div>
+                )}
+
+                {(selectedImageFile || formData.image) && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="w-full px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 transition-colors"
+                  >
+                    Remove Image
+                  </button>
+                )}
+              </div>
+            )}
+
+            <div className="space-y-3 text-sm text-gray-300">
               <div>
                 <div className="text-xs text-gray-400">Website</div>
                 <div className="truncate">
-                  {website ? (
-                    <a href={website} target="_blank" rel="noreferrer" className="text-[#C1B6FD] hover:underline">{website}</a>
+                  {isEditing ? (
+                    <input
+                      type="url"
+                      value={formData.website}
+                      onChange={(e) => handleInputChange('website', e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                    />
+                  ) : profileView.website ? (
+                    <a href={profileView.website} target="_blank" rel="noreferrer" className="text-[#C1B6FD] hover:underline">{profileView.website}</a>
                   ) : <span className="text-gray-500">—</span>}
                 </div>
               </div>
 
               <div>
                 <div className="text-xs text-gray-400">Phone</div>
-                <div>{phoneNumber || '—'}</div>
+                {isEditing ? (
+                  <input
+                    type="tel"
+                    value={formData.phoneNumber}
+                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                  />
+                ) : (
+                  <div>{profileView.phoneNumber || '—'}</div>
+                )}
               </div>
 
               <div>
                 <div className="text-xs text-gray-400">Location</div>
-                <div>{location || '—'}</div>
-              </div>
-            </div>
-          </div>
+                {isEditing ? (
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.location}
+                      onChange={(e) => {
+                        handleInputChange('location', e.target.value);
+                        openCountryDropdown('business');
+                      }}
+                      onFocus={() => openCountryDropdown('business')}
+                      onBlur={() => setTimeout(() => closeCountryDropdown('business'), 120)}
+                      placeholder="Search or select a country"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                    />
 
-          <div className="col-span-2">
-            <h2 className="text-lg font-semibold">{businessName || 'Business Name'}</h2>
-            <p className="text-sm text-gray-400 mb-4">{businessType || '—'} • {industry || '—'}</p>
-
-            <div className="text-sm text-gray-200 leading-relaxed mb-4">
-              {description || 'No description provided.'}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white/3 p-4 rounded-lg">
-                <div className="text-xs text-gray-400">Platforms Used</div>
-                <div className="mt-2 text-sm text-gray-200">
-                  {Array.isArray(platformsUsed) && platformsUsed.length > 0 ? (
-                    <ul className="list-disc list-inside">
-                      {platformsUsed.map((p, i) => <li key={i}>{p}</li>)}
-                    </ul>
-                  ) : <span className="text-gray-500">—</span>}
-                </div>
-              </div>
-
-              <div className="bg-white/3 p-4 rounded-lg">
-                <div className="text-xs text-gray-400">Primary Marketing Goal</div>
-                <div className="mt-2 text-sm text-gray-200">{primaryMarketingGoal || '—'}</div>
-              </div>
-
-              <div className="bg-white/3 p-4 rounded-lg md:col-span-2">
-                <div className="text-xs text-gray-400">Target Audience</div>
-                <div className="mt-2 text-sm text-gray-200">
-                  {targetAudience ? (
-                    <div className="space-y-2">
-                      <div>
-                        <div className="text-xs text-gray-400">Gender</div>
-                        <div className="text-sm text-gray-200">{targetAudience.gender || '—'}</div>
+                    {countryDropdownOpen.business && (
+                      <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                        {getFilteredCountries(formData.location).length > 0 ? (
+                          getFilteredCountries(formData.location).map((country) => (
+                            <button
+                              key={country}
+                              type="button"
+                              onClick={() => {
+                                handleInputChange('location', country);
+                                closeCountryDropdown('business');
+                              }}
+                              className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                            >
+                              {country}
+                            </button>
+                          ))
+                        ) : (
+                          <p className="px-4 py-3 text-sm text-gray-400">No countries found</p>
+                        )}
                       </div>
-                      <div>
-                        <div className="text-xs text-gray-400">Age Range</div>
-                        <div className="text-sm text-gray-200">{targetAudience.ageRange || '—'}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-gray-400">Location</div>
-                        <div className="text-sm text-gray-200">{targetAudience.location || '—'}</div>
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="text-gray-500">—</span>
-                  )}
-                </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>{profileView.location || '—'}</div>
+                )}
               </div>
             </div>
 
+            <div className="mt-5 bg-white/5 rounded-xl p-4 border border-white/10">
+              <div className="text-xs text-gray-400 mb-2 inline-flex items-center gap-2">
+                <Users className="w-4 h-4 text-[#745CB4]" />
+                Platforms Used
+              </div>
+              <div className="mt-1 text-sm text-gray-200">
+                {isEditing ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {PLATFORM_OPTIONS.map((platform) => {
+                      const selected = (formData.platformsUsed || []).includes(platform);
+                      return (
+                        <button
+                          key={platform}
+                          type="button"
+                          onClick={() => handlePlatformToggle(platform)}
+                          className={`px-3 py-2 rounded-lg border text-xs text-left transition-all ${
+                            selected
+                              ? 'border-[#C1B6FD] bg-[#C1B6FD]/10 text-white'
+                              : 'border-white/10 bg-white/5 text-gray-300 hover:bg-white/10'
+                          }`}
+                        >
+                          {platform}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : Array.isArray(profileView.platformsUsed) && profileView.platformsUsed.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {profileView.platformsUsed.map((platform, index) => (
+                      <span key={index} className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-200">
+                        {platform}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-gray-500">—</span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

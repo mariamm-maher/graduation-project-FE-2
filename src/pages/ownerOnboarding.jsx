@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Building2, Briefcase, MapPin, FileText, Upload, Globe, 
-  Phone, Target, Users, ArrowRight, ArrowLeft, CheckCircle2,
+  Building2, Briefcase, Upload, Globe, Target, Users, ArrowRight, ArrowLeft, CheckCircle2,
   Image as ImageIcon, X
 } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -19,23 +19,23 @@ export default function OwnerOnboarding() {
   const [currentStep, setCurrentStep] = useState(0);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageUploaded, setImageUploaded] = useState(false);
-  const [countryDropdownOpen, setCountryDropdownOpen] = useState({
-    business: false,
-    target: false
-  });
+  const [targetMarketQuery, setTargetMarketQuery] = useState('');
+  const [isTargetMarketOpen, setIsTargetMarketOpen] = useState(false);
   const [formData, setFormData] = useState({
     businessName: '',
-    businessType: '',
+    productOrService: '',
     industry: '',
-    location: '',
-    description: '',
+    companySize: '',
+    targetMarket: [],
+    uniqueSellingPoint: '',
     image: null,
     imagePreview: null,
     imageUrl: null,
     website: '',
-    phoneNumber: '',
     platformsUsed: [],
-    primaryMarketingGoal: '',
+    competitors: [{ name: '', website: '', notes: '' }],
+    hasPreviousCampaigns: '',
+    previousCampaignDescription: '',
     targetAudience: {
       ageRange: '',
       gender: '',
@@ -43,60 +43,51 @@ export default function OwnerOnboarding() {
     }
   });
 
-  const businessTypes = [
-    'Startup',
-    'Small Business',
-    'Brand',
-    'Agency',
-    'E-commerce',
-    'Personal Brand'
+  const companySizes = [
+    'Solo',
+    'Small',
+    'Mid',
+    'Enterprise'
   ];
 
   const industries = [
-    'Fashion',
+    'E-commerce & Retail',
+    'Fashion & Beauty',
     'Food & Beverage',
-    'Technology',
-    'Health & Fitness',
-    'Beauty & Cosmetics',
-    'Education',
-    'Travel & Tourism',
-    'Gaming',
-    'Finance',
+    'Media & Content Creation',
+    'Fitness & Wellness',
+    'Home & Local Services',
+    'Education & Coaching',
+    'Travel & Hospitality',
+    'Real Estate',
+    'Healthcare & Wellness',
+    'Finance & Business',
+    'Technology & Apps',
     'Other'
+  ];
+
+  const targetMarketOptions = [
+    'Egypt',
+    'Saudi Arabia',
+    'UAE',
+    'GCC',
+    'MENA',
+    'Europe',
+    'USA',
+    'Worldwide'
   ];
 
   const platforms = [
     'Instagram',
-    'Facebook',
     'TikTok',
+    'Facebook',
     'YouTube',
-    'Google Ads',
     'LinkedIn',
-    'Snapchat',
-    'Twitter (X)'
+    'X (Twitter)'
   ];
 
-  const marketingGoals = [
-    'Brand Awareness',
-    'Lead Generation',
-    'Increase Sales',
-    'App Downloads',
-    'Community Growth',
-    'Product Launch Promotion'
-  ];
-
-  const ageRanges = ['18-24', '25-34', '35-44', '45-54', '55+'];
+  const ageRanges = ['13-17', '18-24', '25-34', '35-44', '45+', 'All ages'];
   const genders = ['Male', 'Female', 'All'];
-  const popularCountries = [
-    'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France',
-    'Italy', 'Spain', 'Netherlands', 'Sweden', 'Norway', 'Denmark', 'Switzerland',
-    'Belgium', 'Austria', 'Ireland', 'Portugal', 'Poland', 'Czech Republic',
-    'Hungary', 'Romania', 'Greece', 'Turkey', 'Russia', 'Ukraine', 'India',
-    'Pakistan', 'Bangladesh', 'China', 'Japan', 'South Korea', 'Indonesia',
-    'Philippines', 'Vietnam', 'Thailand', 'Malaysia', 'Singapore', 'Saudi Arabia',
-    'United Arab Emirates', 'Egypt', 'South Africa', 'Nigeria', 'Kenya', 'Brazil',
-    'Mexico', 'Argentina', 'Chile', 'Colombia', 'Peru', 'New Zealand'
-  ];
 
   const handleChange = (field, value) => {
     setFormData(prev => ({
@@ -115,32 +106,60 @@ export default function OwnerOnboarding() {
     }));
   };
 
-  const handlePlatformToggle = (platform) => {
-    setFormData(prev => ({
+  const toggleValueInArray = (list, value) =>
+    list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
+
+  const handleTargetMarketToggle = (market) => {
+    setFormData((prev) => ({
       ...prev,
-      platformsUsed: prev.platformsUsed.includes(platform)
-        ? prev.platformsUsed.filter(p => p !== platform)
-        : [...prev.platformsUsed, platform]
+      targetMarket: toggleValueInArray(prev.targetMarket, market)
     }));
   };
 
-  const getFilteredCountries = (query) => {
-    const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) {
-      return popularCountries.slice(0, 12);
+  const handlePlatformToggle = (platform) => {
+    setFormData(prev => ({
+      ...prev,
+      platformsUsed: toggleValueInArray(prev.platformsUsed, platform)
+    }));
+  };
+
+  const filteredTargetMarkets = targetMarketOptions.filter((market) =>
+    market.toLowerCase().includes(targetMarketQuery.trim().toLowerCase())
+  );
+
+  const addCompetitor = () => {
+    setFormData((prev) => ({
+      ...prev,
+      competitors: [...prev.competitors, { name: '', website: '', notes: '' }]
+    }));
+  };
+
+  const removeCompetitor = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      competitors:
+        prev.competitors.length === 1
+          ? prev.competitors
+          : prev.competitors.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateCompetitor = (index, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      competitors: prev.competitors.map((competitor, i) =>
+        i === index ? { ...competitor, [field]: value } : competitor
+      )
+    }));
+  };
+
+  const isValidUrl = (url) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
     }
-
-    return popularCountries
-      .filter((country) => country.toLowerCase().includes(normalizedQuery))
-      .slice(0, 12);
-  };
-
-  const openCountryDropdown = (key) => {
-    setCountryDropdownOpen((prev) => ({ ...prev, [key]: true }));
-  };
-
-  const closeCountryDropdown = (key) => {
-    setCountryDropdownOpen((prev) => ({ ...prev, [key]: false }));
   };
 
   const handleImageUpload = (e) => {
@@ -205,8 +224,13 @@ export default function OwnerOnboarding() {
   const handleNext = () => {
     // Validate current step
     if (!validateStep(currentStep)) return;
-    
+
     if (currentStep < steps.length - 1) {
+      // Skip previous campaign description step when answer is No.
+      if (currentStep === 10 && formData.hasPreviousCampaigns === false) {
+        setCurrentStep(12);
+        return;
+      }
       setCurrentStep(prev => prev + 1);
     }
   };
@@ -221,6 +245,11 @@ export default function OwnerOnboarding() {
 
   const handleBack = () => {
     if (currentStep > 0) {
+      // Jump back over conditional step when user selected No.
+      if (currentStep === 12 && formData.hasPreviousCampaigns === false) {
+        setCurrentStep(10);
+        return;
+      }
       setCurrentStep(prev => prev - 1);
     }
   };
@@ -229,13 +258,13 @@ export default function OwnerOnboarding() {
     switch (step) {
       case 0:
         if (!formData.businessName.trim()) {
-          toast.error('Please enter your business name');
+          toast.error('Please enter your brand name');
           return false;
         }
         return true;
       case 1:
-        if (!formData.businessType) {
-          toast.error('Please select your business type');
+        if (!formData.productOrService.trim()) {
+          toast.error('Please enter your product or service');
           return false;
         }
         return true;
@@ -246,19 +275,22 @@ export default function OwnerOnboarding() {
         }
         return true;
       case 3:
-        if (!formData.location.trim()) {
-          toast.error('Please enter your business location');
+        if (!formData.companySize) {
+          toast.error('Please select your company size');
           return false;
         }
         return true;
       case 4:
-        if (!formData.description.trim()) {
-          toast.error('Please describe your business');
+        if (formData.targetMarket.length === 0) {
+          toast.error('Please select at least one target market');
           return false;
         }
         return true;
       case 5:
-        // Image upload is optional
+        if (!formData.uniqueSellingPoint.trim()) {
+          toast.error('Please add your unique selling point');
+          return false;
+        }
         return true;
       case 6:
         if (formData.website && !isValidUrl(formData.website)) {
@@ -267,10 +299,7 @@ export default function OwnerOnboarding() {
         }
         return true;
       case 7:
-        if (!formData.phoneNumber.trim()) {
-          toast.error('Please enter your phone number');
-          return false;
-        }
+        // Image upload is optional
         return true;
       case 8:
         if (formData.platformsUsed.length === 0) {
@@ -278,13 +307,32 @@ export default function OwnerOnboarding() {
           return false;
         }
         return true;
-      case 9:
-        if (!formData.primaryMarketingGoal) {
-          toast.error('Please select your primary marketing goal');
+      case 9: {
+        const hasInvalidCompetitorWebsite = formData.competitors.some(
+          (competitor) => competitor.website.trim() && !isValidUrl(competitor.website)
+        );
+        if (hasInvalidCompetitorWebsite) {
+          toast.error('Please enter valid competitor website URLs');
           return false;
         }
         return true;
+      }
       case 10:
+        if (formData.hasPreviousCampaigns === '') {
+          toast.error('Please select Yes or No');
+          return false;
+        }
+        return true;
+      case 11:
+        if (
+          formData.hasPreviousCampaigns === true &&
+          !formData.previousCampaignDescription.trim()
+        ) {
+          toast.error('Please describe your previous campaigns');
+          return false;
+        }
+        return true;
+      case 12:
         if (!formData.targetAudience.ageRange || !formData.targetAudience.gender || !formData.targetAudience.location) {
           toast.error('Please complete all target audience fields');
           return false;
@@ -295,32 +343,31 @@ export default function OwnerOnboarding() {
     }
   };
 
-  const isValidUrl = (url) => {
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
   const handleSubmit = async (skipValidation = false) => {
     if (skipValidation !== true && !validateStep(currentStep)) return;
 
     try {
+      const normalizedTargetMarket = formData.targetMarket
+        .map((item) => String(item).trim())
+        .filter(Boolean);
+
       // Prepare payload with image URL (already uploaded or null)
       const payload = {
         userId,
-        businessName: formData.businessName,
-        businessType: formData.businessType,
+        brand_name: formData.businessName,
+        product_or_service: formData.productOrService,
         industry: formData.industry,
-        location: formData.location,
-        description: formData.description,
-        image: formData.imageUrl,
+        target_market: normalizedTargetMarket,
+        company_size: formData.companySize,
+        unique_selling_point: formData.uniqueSellingPoint,
+        competitors: formData.competitors,
+        has_previous_campaigns: formData.hasPreviousCampaigns,
+        previous_campaign_description:
+          formData.hasPreviousCampaigns === true ? formData.previousCampaignDescription : '',
         website: formData.website,
-        phoneNumber: formData.phoneNumber,
-        platformsUsed: formData.platformsUsed,
-        primaryMarketingGoal: formData.primaryMarketingGoal,
+        platforms: formData.platformsUsed,
+        image: formData.imageUrl,
+        // Keep optional advanced audience details for forward compatibility.
         targetAudience: formData.targetAudience
       };
 
@@ -355,48 +402,38 @@ export default function OwnerOnboarding() {
 
   const steps = [
     {
-      title: 'Business Name',
+      title: 'Brand Name',
       icon: Building2,
       component: (
         <div className="space-y-4">
           <label className="block text-sm font-medium text-gray-300">
-            What is your business name?
+            What is your brand name?
           </label>
           <input
             type="text"
             value={formData.businessName}
             onChange={(e) => handleChange('businessName', e.target.value)}
-            placeholder="Enter your business name"
+            placeholder="Enter your brand name"
             className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
           />
         </div>
       )
     },
     {
-      title: 'Business Type',
-      icon: Briefcase,
+      title: 'Product / Service',
+      icon: Target,
       component: (
         <div className="space-y-4">
           <label className="block text-sm font-medium text-gray-300">
-            What type of business do you run?
+            What product or service do you offer?
           </label>
-          <div className="grid grid-cols-2 gap-3">
-            {businessTypes.map((type) => (
-              <motion.button
-                key={type}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleChange('businessType', type)}
-                className={`p-4 rounded-lg border-2 transition-all duration-300 ${
-                  formData.businessType === type
-                    ? 'border-[#C1B6FD] bg-[#C1B6FD]/10 text-white'
-                    : 'border-white/10 bg-white/5 text-gray-300 hover:border-white/20'
-                }`}
-              >
-                {type}
-              </motion.button>
-            ))}
-          </div>
+          <input
+            type="text"
+            value={formData.productOrService}
+            onChange={(e) => handleChange('productOrService', e.target.value)}
+            placeholder="Describe your product or service"
+            className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+          />
         </div>
       )
     },
@@ -406,22 +443,45 @@ export default function OwnerOnboarding() {
       component: (
         <div className="space-y-4">
           <label className="block text-sm font-medium text-gray-300">
-            What industry are you in?
+            What industry best describes your business?
+          </label>
+          <select
+            value={formData.industry}
+            onChange={(e) => handleChange('industry', e.target.value)}
+            className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+          >
+            <option value="" className="bg-gray-900">Select industry</option>
+            {industries.map((ind) => (
+              <option key={ind} value={ind} className="bg-gray-900">
+                {ind}
+              </option>
+            ))}
+          </select>
+        </div>
+      )
+    },
+    {
+      title: 'Company Size',
+      icon: Briefcase,
+      component: (
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-300">
+            What is your company size?
           </label>
           <div className="grid grid-cols-2 gap-3">
-            {industries.map((ind) => (
+            {companySizes.map((size) => (
               <motion.button
-                key={ind}
+                key={size}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => handleChange('industry', ind)}
+                onClick={() => handleChange('companySize', size)}
                 className={`p-4 rounded-lg border-2 transition-all duration-300 ${
-                  formData.industry === ind
+                  formData.companySize === size
                     ? 'border-[#C1B6FD] bg-[#C1B6FD]/10 text-white'
                     : 'border-white/10 bg-white/5 text-gray-300 hover:border-white/20'
                 }`}
               >
-                {ind}
+                {size}
               </motion.button>
             ))}
           </div>
@@ -429,77 +489,108 @@ export default function OwnerOnboarding() {
       )
     },
     {
-      title: 'Location',
-      icon: MapPin,
+      title: 'Target Market',
+      icon: Users,
       component: (
         <div className="space-y-4">
           <label className="block text-sm font-medium text-gray-300">
-            Where is your business located?
+            Where is your target audience located?
           </label>
           <div className="relative">
             <input
               type="text"
-              value={formData.location}
+              value={targetMarketQuery}
               onChange={(e) => {
-                handleChange('location', e.target.value);
-                openCountryDropdown('business');
+                setTargetMarketQuery(e.target.value);
+                setIsTargetMarketOpen(true);
               }}
-              onFocus={() => openCountryDropdown('business')}
-              onBlur={() => setTimeout(() => closeCountryDropdown('business'), 120)}
-              placeholder="Search or select a country"
+              onFocus={() => setIsTargetMarketOpen(true)}
+              onBlur={() => setTimeout(() => setIsTargetMarketOpen(false), 120)}
+              placeholder="Search target markets"
               className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
             />
-
-            {countryDropdownOpen.business && (
+            {isTargetMarketOpen && (
               <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
-                {getFilteredCountries(formData.location).length > 0 ? (
-                  getFilteredCountries(formData.location).map((country) => (
+                {filteredTargetMarkets.length > 0 ? (
+                  filteredTargetMarkets.map((market) => (
                     <button
-                      key={country}
+                      key={market}
                       type="button"
-                      onClick={() => {
-                        handleChange('location', country);
-                        closeCountryDropdown('business');
-                      }}
+                      onClick={() => handleTargetMarketToggle(market)}
                       className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
                     >
-                      {country}
+                      <span className="flex items-center justify-between">
+                        {market}
+                        {formData.targetMarket.includes(market) && (
+                          <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                        )}
+                      </span>
                     </button>
                   ))
                 ) : (
-                  <p className="px-4 py-3 text-sm text-gray-400">No countries found</p>
+                  <p className="px-4 py-3 text-sm text-gray-400">No options found</p>
                 )}
               </div>
             )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {formData.targetMarket.map((market) => (
+              <button
+                key={market}
+                type="button"
+                onClick={() => handleTargetMarketToggle(market)}
+                className="px-3 py-1.5 rounded-full text-xs border border-[#C1B6FD]/40 bg-[#C1B6FD]/10 text-[#E0DAFF]"
+              >
+                {market} x
+              </button>
+            ))}
           </div>
         </div>
       )
     },
     {
-      title: 'Description',
-      icon: FileText,
+      title: 'Unique Selling Point (USP)',
+      icon: Target,
       component: (
         <div className="space-y-4">
           <label className="block text-sm font-medium text-gray-300">
-            Describe your business
+            What makes your brand unique?
           </label>
           <textarea
-            value={formData.description}
-            onChange={(e) => handleChange('description', e.target.value)}
-            placeholder="Tell us about your business, what you do, and what makes you unique..."
-            rows={6}
+            rows={5}
+            value={formData.uniqueSellingPoint}
+            onChange={(e) => handleChange('uniqueSellingPoint', e.target.value)}
+            placeholder="Tell us what differentiates your brand"
             className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300 resize-none"
           />
         </div>
       )
     },
     {
-      title: 'Brand Image',
+      title: 'Website',
+      icon: Globe,
+      component: (
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-300">
+            What is your website URL?
+          </label>
+          <input
+            type="url"
+            value={formData.website}
+            onChange={(e) => handleChange('website', e.target.value)}
+            placeholder="https://www.yourwebsite.com"
+            className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+          />
+        </div>
+      )
+    },
+    {
+      title: 'Image / Brand Logo',
       icon: ImageIcon,
       component: (
         <div className="space-y-4">
           <label className="block text-sm font-medium text-gray-300">
-            Upload your brand logo or business image
+            Upload your brand logo or image
           </label>
           {!formData.imagePreview ? (
             <label className="block">
@@ -535,8 +626,7 @@ export default function OwnerOnboarding() {
                   </div>
                 )}
               </div>
-              
-              {/* Upload Button */}
+
               {!imageUploaded ? (
                 <motion.button
                   type="button"
@@ -568,42 +658,6 @@ export default function OwnerOnboarding() {
               )}
             </div>
           )}
-        </div>
-      )
-    },
-    {
-      title: 'Website',
-      icon: Globe,
-      component: (
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-gray-300">
-            What is your website URL?
-          </label>
-          <input
-            type="url"
-            value={formData.website}
-            onChange={(e) => handleChange('website', e.target.value)}
-            placeholder="https://www.yourwebsite.com"
-            className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
-          />
-        </div>
-      )
-    },
-    {
-      title: 'Phone Number',
-      icon: Phone,
-      component: (
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-gray-300">
-            What is your business phone number?
-          </label>
-          <input
-            type="tel"
-            value={formData.phoneNumber}
-            onChange={(e) => handleChange('phoneNumber', e.target.value)}
-            placeholder="+1 (555) 123-4567"
-            className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
-          />
         </div>
       )
     },
@@ -641,27 +695,82 @@ export default function OwnerOnboarding() {
       )
     },
     {
-      title: 'Marketing Goal',
+      title: 'Competitors',
+      icon: Users,
+      component: (
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-300">
+            Who are your competitors?
+          </label>
+          {formData.competitors.map((competitor, index) => (
+            <div key={`competitor-${index}`} className="space-y-3 rounded-lg border border-white/10 p-4 bg-white/5">
+              <input
+                type="text"
+                value={competitor.name}
+                onChange={(e) => updateCompetitor(index, 'name', e.target.value)}
+                placeholder="Competitor name"
+                className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
+              />
+              <input
+                type="url"
+                value={competitor.website}
+                onChange={(e) => updateCompetitor(index, 'website', e.target.value)}
+                placeholder="https://competitor.com"
+                className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
+              />
+              <textarea
+                rows={3}
+                value={competitor.notes}
+                onChange={(e) => updateCompetitor(index, 'notes', e.target.value)}
+                placeholder="Notes (optional)"
+                className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 resize-none"
+              />
+              {formData.competitors.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeCompetitor(index)}
+                  className="text-xs text-red-300 hover:text-red-200"
+                >
+                  Remove competitor
+                </button>
+              )}
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addCompetitor}
+            className="px-4 py-2 rounded-lg bg-white/10 text-white hover:bg-white/15 transition-colors duration-200"
+          >
+            Add competitor
+          </button>
+        </div>
+      )
+    },
+    {
+      title: 'Previous Campaigns',
       icon: Target,
       component: (
         <div className="space-y-4">
           <label className="block text-sm font-medium text-gray-300">
-            What is your primary marketing goal?
+            Have you run marketing campaigns before?
           </label>
-          <div className="grid grid-cols-1 gap-3">
-            {marketingGoals.map((goal) => (
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: 'Yes', value: true },
+              { label: 'No', value: false }
+            ].map((answer) => (
               <motion.button
-                key={goal}
+                key={answer.label}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => handleChange('primaryMarketingGoal', goal)}
-                className={`p-4 rounded-lg border-2 transition-all duration-300 text-left ${
-                  formData.primaryMarketingGoal === goal
+                onClick={() => handleChange('hasPreviousCampaigns', answer.value)}
+                className={`p-4 rounded-lg border-2 transition-all duration-300 ${
+                  formData.hasPreviousCampaigns === answer.value
                     ? 'border-[#C1B6FD] bg-[#C1B6FD]/10 text-white'
                     : 'border-white/10 bg-white/5 text-gray-300 hover:border-white/20'
                 }`}
               >
-                {goal}
+                {answer.label}
               </motion.button>
             ))}
           </div>
@@ -669,12 +778,36 @@ export default function OwnerOnboarding() {
       )
     },
     {
-      title: 'Target Audience',
+      title: 'Previous Campaign Description',
+      icon: Target,
+      component: (
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-300">
+            Describe your previous campaigns
+          </label>
+          {formData.hasPreviousCampaigns === false ? (
+            <p className="text-sm text-gray-400 bg-white/5 border border-white/10 rounded-lg px-4 py-3">
+              You selected No in the previous step, so this field is optional.
+            </p>
+          ) : (
+            <textarea
+              rows={5}
+              value={formData.previousCampaignDescription}
+              onChange={(e) => handleChange('previousCampaignDescription', e.target.value)}
+              placeholder="Share campaign goals, channels, and outcomes"
+              className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300 resize-none"
+            />
+          )}
+        </div>
+      )
+    },
+    {
+      title: 'Target Audience (Advanced)',
       icon: Users,
       component: (
         <div className="space-y-6">
           <label className="block text-sm font-medium text-gray-300">
-            Who is your target audience?
+            Describe your ideal audience
           </label>
           
           {/* Age Range */}
@@ -719,42 +852,18 @@ export default function OwnerOnboarding() {
           {/* Location */}
           <div>
             <label className="block text-xs text-gray-400 mb-2">Target Location</label>
-            <div className="relative">
-              <input
-                type="text"
-                value={formData.targetAudience.location}
-                onChange={(e) => {
-                  handleTargetAudienceChange('location', e.target.value);
-                  openCountryDropdown('target');
-                }}
-                onFocus={() => openCountryDropdown('target')}
-                onBlur={() => setTimeout(() => closeCountryDropdown('target'), 120)}
-                placeholder="Search or select a country"
-                className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
-              />
-
-              {countryDropdownOpen.target && (
-                <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
-                  {getFilteredCountries(formData.targetAudience.location).length > 0 ? (
-                    getFilteredCountries(formData.targetAudience.location).map((country) => (
-                      <button
-                        key={country}
-                        type="button"
-                        onClick={() => {
-                          handleTargetAudienceChange('location', country);
-                          closeCountryDropdown('target');
-                        }}
-                        className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
-                      >
-                        {country}
-                      </button>
-                    ))
-                  ) : (
-                    <p className="px-4 py-3 text-sm text-gray-400">No countries found</p>
-                  )}
-                </div>
-              )}
-            </div>
+            <select
+              value={formData.targetAudience.location}
+              onChange={(e) => handleTargetAudienceChange('location', e.target.value)}
+              className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+            >
+              <option value="" className="bg-gray-900">Select location</option>
+              {targetMarketOptions.map((location) => (
+                <option key={location} value={location} className="bg-gray-900">
+                  {location}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       )
@@ -765,7 +874,7 @@ export default function OwnerOnboarding() {
   const progress = ((currentStep + 1) / steps.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#000000] via-[#05060F] to-[#1e1632]  flex flex-col items-center justify-center p-4 font-sans text-gray-100">
+    <div className="min-h-screen bg-linear-to-b from-[#000000] via-[#05060F] to-[#1e1632]  flex flex-col items-center justify-center p-4 font-sans text-gray-100">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -790,7 +899,7 @@ export default function OwnerOnboarding() {
         <div className="mb-8 max-w-2xl mx-auto">
           <div className="h-1.5 bg-gray-900 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-[#745CB4] to-[#C1B6FD]"
+              className="h-full bg-linear-to-r from-[#745CB4] to-[#C1B6FD]"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.5, ease: 'easeOut' }}

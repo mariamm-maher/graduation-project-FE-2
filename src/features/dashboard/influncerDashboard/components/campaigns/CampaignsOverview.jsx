@@ -9,10 +9,10 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useInfluncerStore from '../../../../../stores/influncerStore';
+import useSavedCampaignsStore from '../../../../../stores/savedCampaignsStore';
 
 function CampaignsOverview() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [savedCampaigns, setSavedCampaigns] = useState([]);
   const [filter, setFilter] = useState('all'); // all, fashion, tech, beauty
 
   const {
@@ -24,6 +24,15 @@ function CampaignsOverview() {
     applyToCampaign,
     applyingCampaignId,
   } = useInfluncerStore();
+
+  const {
+    savedCampaigns,
+    saveCampaign,
+    removeCampaign,
+    isCampaignSaved,
+  } = useSavedCampaignsStore();
+
+  const getCampaignId = (campaign) => String(campaign?._id ?? campaign?.id ?? campaign?.campaignId ?? '');
 
   useEffect(() => {
     fetchExploreCampaigns({ page: 1, limit: 20 });
@@ -57,12 +66,19 @@ function CampaignsOverview() {
     return new Date(value).toLocaleDateString();
   };
 
-  const handleSaveCampaign = (campaignId) => {
-    if (savedCampaigns.includes(campaignId)) {
-      setSavedCampaigns(savedCampaigns.filter(id => id !== campaignId));
-    } else {
-      setSavedCampaigns([...savedCampaigns, campaignId]);
+  const handleSaveCampaign = (campaign) => {
+    const campaignId = getCampaignId(campaign);
+    if (!campaignId) return;
+
+    if (isCampaignSaved(campaignId)) {
+      removeCampaign(campaignId);
+      return;
     }
+
+    saveCampaign({
+      ...campaign,
+      id: campaignId,
+    });
   };
 
   const handleRequestCampaign = async (campaignId) => {
@@ -109,19 +125,21 @@ function CampaignsOverview() {
               ))}
             </div>
           </div>
+          <div className="mt-3 text-sm text-gray-400">Showing <span className="font-semibold text-white">{filteredCampaigns.length}</span> results</div>
         </div>
       </div>
-
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 max-w-md">
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-lg px-3 py-2.5 hover:border-[#C1B6FD]/30 transition-all duration-200">
-          <p className="text-[11px] uppercase tracking-wide text-gray-400 mb-1">Available</p>
-          <p className="text-lg sm:text-xl font-bold text-white leading-none">{exploreCampaignsPagination?.totalItems ?? normalizedCampaigns.length}</p>
-        </div>
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-lg px-3 py-2.5 hover:border-[#C1B6FD]/30 transition-all duration-200">
-          <p className="text-[11px] uppercase tracking-wide text-gray-400 mb-1">Saved Local</p>
+      <div className="w-full flex justify-end">
+        <Link
+          to="/dashboard/influencer/campaigns/saved"
+          className="inline-flex items-center justify-between gap-4 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-white hover:bg-white/10 transition-all duration-200"
+        >
+          <div className="flex items-center gap-2">
+            <Bookmark className="w-4 h-4 text-[#C1B6FD]" />
+            <p className="text-[11px] uppercase tracking-wide text-gray-400 mb-0">Saved</p>
+          </div>
           <p className="text-lg sm:text-xl font-bold text-[#C1B6FD] leading-none">{savedCampaigns.length}</p>
-        </div>
+        </Link>
       </div>
 
       {/* Available Campaigns List */}
@@ -144,12 +162,16 @@ function CampaignsOverview() {
           </div>
         )}
 
-        {filteredCampaigns.map((campaign) => (
-          <div
-            key={campaign.id}
-            className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-purple-400/30 transition-all group"
-          >
-            <div className="flex flex-col lg:flex-row gap-6">
+        {filteredCampaigns.map((campaign) => {
+          const campaignId = getCampaignId(campaign);
+          const saved = isCampaignSaved(campaignId);
+
+          return (
+            <div
+              key={campaignId || campaign.name}
+              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-purple-400/30 transition-all group"
+            >
+              <div className="flex flex-col lg:flex-row gap-6">
               {/* Left: Campaign Info */}
               <div className="flex-1">
                 <div className="flex items-start justify-between mb-4">
@@ -166,15 +188,15 @@ function CampaignsOverview() {
                     <p className="text-xs text-gray-500">Start: {formatDate(campaign.startDate)} • End: {formatDate(campaign.endDate)}</p>
                   </div>
                   <button
-                    onClick={() => handleSaveCampaign(campaign.id)}
+                    onClick={() => handleSaveCampaign(campaign)}
                     className={`p-2 rounded-lg transition-all ${
-                      savedCampaigns.includes(campaign.id)
+                      saved
                         ? 'bg-[#745CB4]/20 text-[#C1B6FD]'
                         : 'bg-white/5 text-gray-400 hover:bg-white/10'
                     }`}
-                    title={savedCampaigns.includes(campaign.id) ? 'Remove from saved' : 'Save for later'}
+                    title={saved ? 'Remove from saved' : 'Save for later'}
                   >
-                    {savedCampaigns.includes(campaign.id) ? (
+                    {saved ? (
                       <BookmarkCheck className="w-5 h-5" />
                     ) : (
                       <Bookmark className="w-5 h-5" />
@@ -220,15 +242,15 @@ function CampaignsOverview() {
               {/* Right: Actions */}
               <div className="lg:w-48 flex flex-col gap-3">
                 <button
-                  onClick={() => handleRequestCampaign(campaign.id)}
-                  disabled={campaign.applied || applyingCampaignId === campaign.id}
-                  className={`w-full px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${campaign.applied || applyingCampaignId === campaign.id
+                  onClick={() => handleRequestCampaign(campaignId)}
+                  disabled={campaign.applied || applyingCampaignId === campaignId}
+                  className={`w-full px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${campaign.applied || applyingCampaignId === campaignId
                     ? 'bg-white/10 text-gray-400 cursor-not-allowed'
                     : 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white hover:shadow-lg hover:shadow-purple-500/50'
                   }`}
                 >
                   <Send className="w-4 h-4" />
-                  {campaign.applied ? 'Applied' : applyingCampaignId === campaign.id ? 'Applying...' : 'Send Request'}
+                  {campaign.applied ? 'Applied' : applyingCampaignId === campaignId ? 'Applying...' : 'Send Request'}
                 </button>
                 <button
                   onClick={() => handleContactOwner(campaign.name)}
@@ -238,7 +260,7 @@ function CampaignsOverview() {
                   Contact Owner
                 </button>
                 <Link
-                  to={`/dashboard/influencer/campaigns/${campaign.id}`}
+                  to={`/dashboard/influencer/campaigns/${campaignId}`}
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 text-white rounded-lg font-medium hover:bg-white/10 transition-all flex items-center justify-center gap-2"
                 >
                   <Eye className="w-4 h-4" />
@@ -251,8 +273,9 @@ function CampaignsOverview() {
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
 
  

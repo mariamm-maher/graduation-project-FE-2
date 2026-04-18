@@ -16,6 +16,7 @@ const ownerService = {
                 : '/owner/overview';
 
             const response = await api.get(endpoint);
+            console.log('Owner overview response:', response);
             return response.data;
         } catch (error) {
             throw error.response?.data?.message || 'Failed to fetch owner overview';

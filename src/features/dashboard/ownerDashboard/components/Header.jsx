@@ -5,6 +5,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import useAuthStore from '../../../../stores/authStore';
 import useNotificationsStore from '../../../../stores/NotificationsStore';
+import useCampaignStore from '../../../../stores/campaignStore';
 import CreateInfluencerProfile from './createInfluncerProfile';
 
 function Header() {
@@ -14,6 +15,7 @@ function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
+  const [campaignStats, setCampaignStats] = useState({ total: 0, active: 0 });
   const searchRef = useRef(null);
   const [showInfluencerModal, setShowInfluencerModal] = useState(false);
 
@@ -29,6 +31,8 @@ function Header() {
     initRealtimeNotifications,
     cleanupRealtimeNotifications
   } = useNotificationsStore();
+  const fetchCampaigns = useCampaignStore((s) => s.fetchCampaigns);
+  const fetchActiveCampaigns = useCampaignStore((s) => s.fetchActiveCampaigns);
 
   // Fetch notifications on mount
   useEffect(() => {
@@ -40,6 +44,26 @@ function Header() {
       cleanupRealtimeNotifications();
     };
   }, [fetchNotifications, fetchUnreadCount, initRealtimeNotifications, cleanupRealtimeNotifications]);
+
+  useEffect(() => {
+    const loadCampaignStats = async () => {
+      const [allCampaignsRes, activeCampaignsRes] = await Promise.all([
+        fetchCampaigns({ page: 1, limit: 1 }),
+        fetchActiveCampaigns({ page: 1, limit: 1 })
+      ]);
+
+      const totalCampaigns = allCampaignsRes?.pagination?.total ?? allCampaignsRes?.data?.length ?? 0;
+      const activeCampaigns =
+        activeCampaignsRes?.pagination?.total ??
+        activeCampaignsRes?.trackingTools?.totalActiveCampaigns ??
+        activeCampaignsRes?.data?.length ??
+        0;
+
+      setCampaignStats({ total: totalCampaigns, active: activeCampaigns });
+    };
+
+    loadCampaignStats();
+  }, [fetchCampaigns, fetchActiveCampaigns]);
 
   const handleMarkAsRead = async (notificationId) => {
     const res = await markAsRead(notificationId);
@@ -129,6 +153,10 @@ function Header() {
       navigate('/dashboard/influencer');
     }
   };
+
+  const activeVisualCount = Math.min(campaignStats.active, 3);
+  const activeOverflowCount = Math.max(campaignStats.active - activeVisualCount, 0);
+  const activeDotColors = ['bg-[#745CB4]', 'bg-[#5D459D]', 'bg-[#C1B6FD]'];
 
   return (
     <>
@@ -236,29 +264,6 @@ function Header() {
         </div>
         
         <div className="flex items-center gap-2 sm:gap-4 flex-wrap w-full sm:w-auto">
-    
-
-          {/* Join as Influencer Promotion Button (shows when user is not an influencer) */}
-          {/* {!hasInfluencerRole && (
-            <>
-            <Motion.button
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.45 }}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setShowInfluencerModal(true)}
-              className="relative px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white rounded-lg overflow-hidden group flex-1 sm:flex-initial bg-linear-to-r from-green-400 via-teal-300 to-cyan-400"
-            >
-              <div className="absolute inset-0 opacity-20"></div>
-              <span className="relative flex items-center justify-center sm:justify-start space-x-2">
-                <span className="hidden sm:inline">Join as Influencer — get campaign opportunities</span>
-                <span className="sm:hidden">Become Influencer</span>
-              </span>
-            </Motion.button>
-            </>
-          )} */}
-
           {/* Team Status */}
           <Motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
@@ -267,12 +272,23 @@ function Header() {
             className="hidden items-center gap-2 sm:flex"
           >
             <div className="flex -space-x-2">
-              <div className="w-8 h-8 rounded-full bg-[#745CB4] border-2 border-[#000000]"></div>
-              <div className="w-8 h-8 rounded-full bg-[#5D459D] border-2 border-[#000000]"></div>
-              <div className="w-8 h-8 rounded-full bg-[#C1B6FD] border-2 border-[#000000]"></div>
-              <div className="w-8 h-8 rounded-full bg-[#745CB4] border-2 border-[#000000] flex items-center justify-center text-xs">+9</div>
+              {Array.from({ length: activeVisualCount }).map((_, index) => (
+                <div
+                  key={`active-dot-${index}`}
+                  className={`w-8 h-8 rounded-full border-2 border-[#000000] ${activeDotColors[index]}`}
+                ></div>
+              ))}
+              {activeOverflowCount > 0 && (
+                <div className="w-8 h-8 rounded-full bg-[#745CB4] border-2 border-[#000000] flex items-center justify-center text-xs">
+                  +{activeOverflowCount}
+                </div>
+              )}
             </div>
-            <span className="text-sm"><span className="font-bold">12</span> of <span className="font-bold">15</span> <span className="text-gray-400">active</span></span>
+            <span className="text-sm">
+              <span className="font-bold">{campaignStats.active}</span> of{' '}
+              <span className="font-bold">{campaignStats.total}</span>{' '}
+              <span className="text-gray-400">active</span>
+            </span>
           </Motion.div>
 
           {/* Notifications */}

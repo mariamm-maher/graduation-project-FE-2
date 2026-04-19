@@ -6,8 +6,9 @@ import useCampaignStore from '../../../../../../stores/campaignStore';
 
 function CreateCampaign() {
   const navigate = useNavigate();
-  const { generateCampaignAI, createCampaign, isLoading } = useCampaignStore();
+  const { createCampaign, isLoading } = useCampaignStore();
   const [campaignData, setCampaignData] = useState({
+    campaignName: '',
     campaignGoal: '',
     budget: '',
     currency: '',
@@ -37,7 +38,7 @@ function CreateCampaign() {
       setSubmitMessage({ type: '', text: '' });
 
       // Validate required fields
-      if (!campaignData.campaignGoal || !campaignData.budget || !campaignData.currency || !campaignData.durationWeeks) {
+      if (!campaignData.campaignName || !campaignData.campaignGoal || !campaignData.budget || !campaignData.currency || !campaignData.durationWeeks) {
         setSubmitMessage({ type: 'error', text: 'Please fill in all required fields' });
         toast.error('Please fill in all required fields', {
           position: 'top-right',
@@ -55,40 +56,11 @@ function CreateCampaign() {
         return;
       }
 
-      const { startDate, endDate } = buildCampaignDates(durationWeeks);
-
-      // Format data for API
-      const apiData = {
-        campaignName: campaignData.campaignGoal,
-        userDescription: `Campaign goal: ${campaignData.campaignGoal}`,
-        goalType: campaignData.campaignGoal,
-        totalBudget: parseFloat(campaignData.budget),
-        currency: campaignData.currency,
-        budgetFlexibility: 'strict',
-        startDate,
-        endDate,
-      };
-
-      const result = await generateCampaignAI(apiData);
-
-      if (result.success) {
-        toast.success('AI campaign generated successfully!', {
-          position: 'top-right',
-          autoClose: 3000,
-        });
-        navigate('/dashboard/owner/campaigns/generated', {
-          state: {
-            campaignData: apiData,
-            aiPreview: result.aiPreview,
-          },
-        });
-      } else {
-        setSubmitMessage({ type: 'error', text: result.error || 'Failed to generate campaign' });
-        toast.error(result.error || 'Failed to generate campaign', {
-          position: 'top-right',
-          autoClose: 4000,
-        });
-      }
+      navigate('/dashboard/owner/campaigns/prepare', {
+        state: {
+          campaignData,
+        },
+      });
     } catch (error) {
       setSubmitMessage({ type: 'error', text: 'An unexpected error occurred' });
       toast.error('An unexpected error occurred', {
@@ -102,7 +74,7 @@ function CreateCampaign() {
   const handleSaveAsDraft = async () => {
     try {
       setSubmitMessage({ type: '', text: '' });
-      if (!campaignData.campaignGoal || !campaignData.budget || !campaignData.currency || !campaignData.durationWeeks) {
+      if (!campaignData.campaignName || !campaignData.campaignGoal || !campaignData.budget || !campaignData.currency || !campaignData.durationWeeks) {
         toast.error('Please fill in all required fields', { position: 'top-right', autoClose: 4000 });
         return;
       }
@@ -115,8 +87,8 @@ function CreateCampaign() {
       const { startDate, endDate } = buildCampaignDates(durationWeeks);
 
       const apiData = {
-        campaignName: campaignData.campaignGoal,
-        userDescription: `Campaign goal: ${campaignData.campaignGoal}`,
+        campaignName: campaignData.campaignName,
+        userDescription: `Campaign name: ${campaignData.campaignName} | Campaign goal: ${campaignData.campaignGoal}`,
         goalType: campaignData.campaignGoal,
         totalBudget: parseFloat(campaignData.budget),
         currency: campaignData.currency,
@@ -178,16 +150,34 @@ function CreateCampaign() {
             
             <div className="space-y-6">
               <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Campaign Name</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={campaignData.campaignName}
+                    onChange={(e) => setCampaignData({ ...campaignData, campaignName: e.target.value })}
+                    placeholder="e.g., Summer Growth Push"
+                    className="w-full bg-[#2A2240] border border-white/15 rounded-xl px-4 py-3.5 text-white placeholder:text-gray-400 hover:border-[#C1B6FD]/45 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Campaign Goal</label>
                 <div className="relative">
                   <Target className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
+                  <select
                     value={campaignData.campaignGoal}
                     onChange={(e) => setCampaignData({ ...campaignData, campaignGoal: e.target.value })}
-                    placeholder="e.g., Increase product awareness"
-                    className="w-full bg-[#2A2240] border border-white/15 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder:text-gray-400 hover:border-[#C1B6FD]/45 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all"
-                  />
+                    className="w-full bg-[#2A2240] border border-white/15 rounded-xl pl-12 pr-4 py-3.5 text-white hover:border-[#C1B6FD]/45 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="" className="bg-[#1A1A24] text-gray-300">Select campaign goal</option>
+                    <option value="Awareness" className="bg-[#1A1A24] text-gray-100">Awareness</option>
+                    <option value="Leads" className="bg-[#1A1A24] text-gray-100">Leads</option>
+                    <option value="Sales" className="bg-[#1A1A24] text-gray-100">Sales</option>
+                    <option value="Retention" className="bg-[#1A1A24] text-gray-100">Retention</option>
+                    <option value="Re-engagement" className="bg-[#1A1A24] text-gray-100">Re-engagement</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -277,9 +267,9 @@ function CreateCampaign() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <FileText className="w-3.5 h-3.5 text-gray-500" />
-                  <p className="text-xs text-gray-400">Campaign Goal</p>
+                  <p className="text-xs text-gray-400">Campaign Name</p>
                 </div>
-                <p className="text-sm text-white font-medium truncate">{campaignData.campaignGoal || 'Not set'}</p>
+                <p className="text-sm text-white font-medium truncate">{campaignData.campaignName || 'Not set'}</p>
               </div>
               <div className="pt-3 border-t border-white/5">
                 <div className="flex items-center gap-2 mb-1">
@@ -295,9 +285,9 @@ function CreateCampaign() {
               <div className="pt-3 border-t border-white/5">
                 <div className="flex items-center gap-2 mb-1">
                   <Target className="w-3.5 h-3.5 text-gray-500" />
-                  <p className="text-xs text-gray-400">Currency</p>
+                  <p className="text-xs text-gray-400">Campaign Goal</p>
                 </div>
-                <p className="text-sm text-white">{campaignData.currency || 'Not selected'}</p>
+                <p className="text-sm text-white">{campaignData.campaignGoal || 'Not selected'}</p>
               </div>
               <div className="pt-3 border-t border-white/5">
                 <div className="flex items-center gap-2 mb-1">
@@ -313,33 +303,7 @@ function CreateCampaign() {
             </div>
           </div>
 
-          {/* Quick Tips */}
-          <div className="bg-linear-to-br from-[#C1B6FD]/10 to-[#745CB4]/10 border border-[#C1B6FD]/15 rounded-2xl p-6 relative overflow-hidden backdrop-blur-md">
-            <div className="flex items-center gap-2 mb-5">
-              <Info className="w-4 h-4 text-purple-400" />
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Campaign Tips</h3>
-            </div>
-            <ul className="space-y-4 text-sm text-gray-400">
-              <li className="flex items-start gap-4 p-3 rounded-lg bg-[#120D1E]/60 hover:bg-[#120D1E]/90 transition-colors border border-transparent hover:border-[#C1B6FD]/25 group">
-                <div className="w-8 h-8 rounded-lg bg-[#C1B6FD]/10 flex items-center justify-center shrink-0 group-hover:bg-[#C1B6FD]/20 transition-colors">
-                  <Target className="w-4 h-4 text-[#C1B6FD]" />
-                </div>
-                <span className="leading-snug mt-1.5"><strong className="text-white font-medium">Be precise with goals.</strong> Clear, measurable goals help our AI generate a laser-focused strategy.</span>
-              </li>
-              <li className="flex items-start gap-4 p-3 rounded-lg bg-[#120D1E]/60 hover:bg-[#120D1E]/90 transition-colors border border-transparent hover:border-[#C1B6FD]/25 group">
-                <div className="w-8 h-8 rounded-lg bg-[#C1B6FD]/10 flex items-center justify-center shrink-0 group-hover:bg-[#C1B6FD]/20 transition-colors">
-                  <Layout className="w-4 h-4 text-[#C1B6FD]" />
-                </div>
-                <span className="leading-snug mt-1.5"><strong className="text-white font-medium">Provide ample context.</strong> The User Description is crucial for generating accurate deliverables and messaging angles.</span>
-              </li>
-              <li className="flex items-start gap-4 p-3 rounded-lg bg-[#120D1E]/60 hover:bg-[#120D1E]/90 transition-colors border border-transparent hover:border-[#C1B6FD]/25 group">
-                <div className="w-8 h-8 rounded-lg bg-[#C1B6FD]/10 flex items-center justify-center shrink-0 group-hover:bg-[#C1B6FD]/20 transition-colors">
-                  <DollarSign className="w-4 h-4 text-[#C1B6FD]" />
-                </div>
-                <span className="leading-snug mt-1.5"><strong className="text-white font-medium">Consider budget flexibility.</strong> Allowing flexibility often yields better ROI projections from the AI.</span>
-              </li>
-            </ul>
-          </div>
+        
 
           {/* Submit Message */}
           {submitMessage.text && (

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
@@ -9,11 +9,12 @@ import {
   Edit2, RefreshCw, PlusCircle, X,
 } from 'lucide-react';
 import useCampaignStore from '../../../../../../stores/campaignStore';
+import aiCampaignApi from '../../../../../../api/aiCampaignApi';
 
 function GeneratedCampaign() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { saveDraftCampaign, saveCampaign, saveAndPublishCampaign, generateCampaignAI, isLoading } = useCampaignStore();
+  const { saveDraftCampaign, saveCampaign, saveAndPublishCampaign,  isLoading } = useCampaignStore();
   const [showAllCalendar, setShowAllCalendar] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -22,6 +23,8 @@ function GeneratedCampaign() {
   // Get data from navigation state
   const { campaignData, aiPreview } = location.state || {};
   
+  console.log('Received campaignData:', campaignData);
+  console.log('Received aiPreview:', aiPreview);
   // If no data provided, show fallback
   if (!campaignData || !aiPreview) {
     return (
@@ -45,10 +48,48 @@ function GeneratedCampaign() {
   const calendarItems = execution?.contentCalendar || [];
   const visibleCalendar = showAllCalendar ? calendarItems : calendarItems.slice(0, 7);
 
+  const normalizedInput = useMemo(() => ({
+    brand_name: campaignData.brand_name || campaignData.campaignName || '',
+    product_or_service: campaignData.product_or_service || '',
+    industry: campaignData.industry || '',
+    target_market: Array.isArray(campaignData.target_market) ? campaignData.target_market : [],
+    company_size: campaignData.company_size || '',
+    campaign_goal: campaignData.campaign_goal || campaignData.goalType || '',
+    budget_amount: Number(campaignData.budget_amount ?? campaignData.totalBudget ?? 0),
+    budget_currency: campaignData.budget_currency || campaignData.currency || 'USD',
+    campaign_duration_weeks: Number(campaignData.campaign_duration_weeks || 0),
+    unique_selling_point: campaignData.unique_selling_point || '',
+    current_channels: Array.isArray(campaignData.current_channels) ? campaignData.current_channels : [],
+    competitors: Array.isArray(campaignData.competitors) ? campaignData.competitors : [],
+    has_previous_campaigns: Boolean(campaignData.has_previous_campaigns),
+    previous_campaign_description: campaignData.previous_campaign_description || '',
+    website: campaignData.website || '',
+    platforms: Array.isArray(campaignData.platforms) ? campaignData.platforms : [],
+  }), [campaignData]);
+
+  const campaignDates = useMemo(() => {
+    if (campaignData.startDate && campaignData.endDate) {
+      return { startDate: campaignData.startDate, endDate: campaignData.endDate };
+    }
+
+    const weeks = Number.isFinite(normalizedInput.campaign_duration_weeks) && normalizedInput.campaign_duration_weeks > 0
+      ? normalizedInput.campaign_duration_weeks
+      : 1;
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + (weeks * 7) - 1);
+    end.setHours(23, 59, 59, 999);
+    return {
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+    };
+  }, [campaignData.endDate, campaignData.startDate, normalizedInput.campaign_duration_weeks]);
+
   const campaignDuration = (() => {
-    const start = new Date(campaignData.startDate);
-    const end = new Date(campaignData.endDate);
-    return Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    const start = new Date(campaignDates.startDate);
+    const end = new Date(campaignDates.endDate);
+    return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
   })();
 
   const formatDate = (d) =>
@@ -56,25 +97,42 @@ function GeneratedCampaign() {
 
   // ── Edit / Regenerate helpers ──
   const handleEditToggle = () => {
-    if (!isEditing) setEditData({ ...campaignData });
+    if (!isEditing) setEditData({ ...normalizedInput });
     setIsEditing(v => !v);
   };
 
   const handleRegenerate = async () => {
-    const data = isEditing ? editData : campaignData;
+    const data = isEditing ? editData : normalizedInput;
     setIsEditing(false);
     setIsRegenerating(true);
     try {
-      const result = await generateCampaignAI(data);
-      if (result.success) {
+      // Log selected payload fields for inspection
+      const keysToShow = [
+        'brand_name', 'product_or_service', 'industry', 'target_market', 'company_size',
+        'campaign_goal', 'budget_amount', 'budget_currency', 'campaign_duration_weeks',
+        'unique_selling_point', 'current_channels', 'competitors', 'has_previous_campaigns',
+        'previous_campaign_description', 'website', 'platforms',
+      ];
+
+      const preview = {};
+      keysToShow.forEach((k) => { preview[k] = data?.[k]; });
+      console.log('Regenerate payload preview:', preview);
+      toast.info('Regenerating with payload preview in console', { position: 'top-right', autoClose: 2500 });
+
+      const { response } = await aiCampaignApi.generateWithPayload(data);
+      const success = response?.success || response?.status === 'success';
+      if (success) {
         toast.success('Campaign regenerated!', { position: 'top-right', autoClose: 3000 });
         navigate('/dashboard/owner/campaigns/generated', {
-          state: { campaignData: data, aiPreview: result.aiPreview },
+          state: { campaignData: data, aiPreview: response?.data?.aiPreview },
           replace: true,
         });
       } else {
-        toast.error(result.error || 'Failed to regenerate campaign', { position: 'top-right', autoClose: 4000 });
+        toast.error(response?.message || 'Failed to regenerate campaign', { position: 'top-right', autoClose: 4000 });
       }
+    } catch (err) {
+      console.error('Regenerate error:', err);
+      toast.error(err?.message || 'Failed to regenerate campaign', { position: 'top-right', autoClose: 4000 });
     } finally {
       setIsRegenerating(false);
     }
@@ -83,15 +141,19 @@ function GeneratedCampaign() {
   const handleNewCampaign = () => navigate('/dashboard/owner/campaigns/create');
 
   // ── Save helpers ──
-  const buildPayload = (extra = {}) => ({
-    campaignName: campaignData.campaignName,
-    userDescription: campaignData.userDescription,
-    goalType: campaignData.goalType,
-    totalBudget: campaignData.totalBudget,
-    currency: campaignData.currency,
-    budgetFlexibility: campaignData.budgetFlexibility,
-    startDate: campaignData.startDate,
-    endDate: campaignData.endDate,
+  const buildPayload = (extra = {}) => {
+    const source = isEditing && editData ? editData : normalizedInput;
+    return {
+    campaignName: campaignData.campaignName || source.brand_name || 'Generated Campaign',
+    userDescription:
+      campaignData.userDescription ||
+      `Brand: ${source.brand_name} | Goal: ${source.campaign_goal} | Product/Service: ${source.product_or_service}`,
+    goalType: source.campaign_goal,
+    totalBudget: source.budget_amount,
+    currency: source.budget_currency,
+    budgetFlexibility: campaignData.budgetFlexibility || 'strict',
+    startDate: campaignDates.startDate,
+    endDate: campaignDates.endDate,
     targetAudience: {
       ageRange: campaignData.targetAudience?.ageRange || '',
       gender: campaignData.targetAudience?.gender || 'all',
@@ -110,8 +172,23 @@ function GeneratedCampaign() {
       estimations: estimations || {},
       isActive: true,
     },
+    ownerProfileContext: {
+      brand_name: source.brand_name,
+      product_or_service: source.product_or_service,
+      industry: source.industry,
+      target_market: source.target_market,
+      company_size: source.company_size,
+      unique_selling_point: source.unique_selling_point,
+      current_channels: source.current_channels,
+      competitors: source.competitors,
+      has_previous_campaigns: source.has_previous_campaigns,
+      previous_campaign_description: source.previous_campaign_description,
+      website: source.website,
+      platforms: source.platforms,
+    },
     ...extra,
-  });
+  };
+};
 
   const handleSaveAsDraft = async () => {
     const result = await saveDraftCampaign(buildPayload({ lifecycleStage: 'draft' }));
@@ -275,12 +352,12 @@ function GeneratedCampaign() {
         {!isEditing && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
-              { label: 'Campaign Name', value: campaignData.campaignName },
-              { label: 'Goal', value: campaignData.goalType?.replace('_', ' '), caps: true },
-              { label: 'Budget', value: `${campaignData.currency} ${Number(campaignData.totalBudget).toLocaleString()}` },
-              { label: 'Flexibility', value: campaignData.budgetFlexibility, caps: true },
-              { label: 'Start Date', value: formatDate(campaignData.startDate) },
-              { label: 'End Date', value: formatDate(campaignData.endDate) },
+              { label: 'Brand Name', value: normalizedInput.brand_name || 'Not set' },
+              { label: 'Goal', value: normalizedInput.campaign_goal?.replace('_', ' '), caps: true },
+              { label: 'Budget', value: `${normalizedInput.budget_currency} ${Number(normalizedInput.budget_amount).toLocaleString()}` },
+              { label: 'Company Size', value: normalizedInput.company_size || 'Not set', caps: true },
+              { label: 'Duration', value: `${normalizedInput.campaign_duration_weeks || Math.ceil(campaignDuration / 7)} week(s)` },
+              { label: 'Website', value: normalizedInput.website || 'Not set' },
             ].map((item, i) => (
               <div key={i} className="bg-white/5 rounded-xl px-3 py-2.5 border border-white/5">
                 <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1">{item.label}</p>
@@ -296,42 +373,42 @@ function GeneratedCampaign() {
         {isEditing && editData && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Campaign Name</label>
+              <label className="block text-xs text-gray-400 mb-1">Brand Name</label>
               <input
                 type="text"
-                value={editData.campaignName}
-                onChange={e => setEditData({ ...editData, campaignName: e.target.value })}
+                value={editData.brand_name}
+                onChange={e => setEditData({ ...editData, brand_name: e.target.value })}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
               />
             </div>
             <div>
               <label className="block text-xs text-gray-400 mb-1">Goal Type</label>
               <select
-                value={editData.goalType}
-                onChange={e => setEditData({ ...editData, goalType: e.target.value })}
+                value={editData.campaign_goal}
+                onChange={e => setEditData({ ...editData, campaign_goal: e.target.value })}
                 className="w-full bg-[#1e1632] border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
               >
-                <option value="awareness">Awareness</option>
-                <option value="consideration">Consideration</option>
-                <option value="conversion">Conversion</option>
-                <option value="lead_generation">Lead Generation</option>
-                <option value="retention">Retention</option>
+                <option value="Awareness">Awareness</option>
+                <option value="Leads">Leads</option>
+                <option value="Sales">Sales</option>
+                <option value="Retention">Retention</option>
+                <option value="Re-engagement">Re-engagement</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Total Budget</label>
+              <label className="block text-xs text-gray-400 mb-1">Budget Amount</label>
               <input
                 type="number"
-                value={editData.totalBudget}
-                onChange={e => setEditData({ ...editData, totalBudget: parseFloat(e.target.value) || 0 })}
+                value={editData.budget_amount}
+                onChange={e => setEditData({ ...editData, budget_amount: parseFloat(e.target.value) || 0 })}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Currency</label>
+              <label className="block text-xs text-gray-400 mb-1">Budget Currency</label>
               <select
-                value={editData.currency}
-                onChange={e => setEditData({ ...editData, currency: e.target.value })}
+                value={editData.budget_currency}
+                onChange={e => setEditData({ ...editData, budget_currency: e.target.value })}
                 className="w-full bg-[#1e1632] border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
               >
                 <option value="USD">USD ($)</option>
@@ -343,30 +420,38 @@ function GeneratedCampaign() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Start Date</label>
+              <label className="block text-xs text-gray-400 mb-1">Company Size</label>
               <input
-                type="date"
-                value={editData.startDate?.split('T')[0]}
-                onChange={e => setEditData({ ...editData, startDate: e.target.value })}
+                type="text"
+                value={editData.company_size || ''}
+                onChange={e => setEditData({ ...editData, company_size: e.target.value })}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
-                style={{ colorScheme: 'dark' }}
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">End Date</label>
+              <label className="block text-xs text-gray-400 mb-1">Duration (Weeks)</label>
               <input
-                type="date"
-                value={editData.endDate?.split('T')[0]}
-                onChange={e => setEditData({ ...editData, endDate: e.target.value })}
+                type="number"
+                min="1"
+                value={editData.campaign_duration_weeks || 1}
+                onChange={e => setEditData({ ...editData, campaign_duration_weeks: parseInt(e.target.value || '1', 10) || 1 })}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
-                style={{ colorScheme: 'dark' }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Product / Service</label>
+              <input
+                type="text"
+                value={editData.product_or_service || ''}
+                onChange={e => setEditData({ ...editData, product_or_service: e.target.value })}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
               />
             </div>
             <div className="sm:col-span-2 lg:col-span-3">
-              <label className="block text-xs text-gray-400 mb-1">Description</label>
+              <label className="block text-xs text-gray-400 mb-1">Unique Selling Point</label>
               <textarea
-                value={editData.userDescription}
-                onChange={e => setEditData({ ...editData, userDescription: e.target.value })}
+                value={editData.unique_selling_point || ''}
+                onChange={e => setEditData({ ...editData, unique_selling_point: e.target.value })}
                 rows={2}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] resize-none transition-all"
               />
@@ -391,7 +476,7 @@ function GeneratedCampaign() {
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">{campaignData.campaignName}</h2>
+                <h2 className="text-2xl font-bold text-white mb-2">{normalizedInput.brand_name || 'Generated Campaign'}</h2>
                 <p className="text-gray-300 leading-relaxed">{strategy?.campaignSummary}</p>
               </div>
             </div>
@@ -400,8 +485,8 @@ function GeneratedCampaign() {
           {/* Key Stats Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { icon: <Target className="w-5 h-5 text-[#C1B6FD]" />, bg: 'bg-[#745CB4]/20', label: 'Goal', value: campaignData.goalType?.replace('_', ' '), color: 'text-white' },
-              { icon: <DollarSign className="w-5 h-5 text-emerald-400" />, bg: 'bg-emerald-500/20', label: 'Budget', value: `${campaignData.currency} ${Number(campaignData.totalBudget).toLocaleString()}`, color: 'text-emerald-400' },
+              { icon: <Target className="w-5 h-5 text-[#C1B6FD]" />, bg: 'bg-[#745CB4]/20', label: 'Goal', value: normalizedInput.campaign_goal?.replace('_', ' '), color: 'text-white' },
+              { icon: <DollarSign className="w-5 h-5 text-emerald-400" />, bg: 'bg-emerald-500/20', label: 'Budget', value: `${normalizedInput.budget_currency} ${Number(normalizedInput.budget_amount).toLocaleString()}`, color: 'text-emerald-400' },
               { icon: <Clock className="w-5 h-5 text-blue-400" />, bg: 'bg-blue-500/20', label: 'Duration', value: `${campaignDuration} days`, color: 'text-blue-400' },
               { icon: <Globe className="w-5 h-5 text-amber-400" />, bg: 'bg-amber-500/20', label: 'Platforms', value: `${strategy?.platformSelection?.length || 0} platforms`, color: 'text-amber-400' },
             ].map((item, i) => (
@@ -464,7 +549,7 @@ function GeneratedCampaign() {
               <div className="p-2 rounded-lg bg-emerald-500/20"><PieChart className="w-5 h-5 text-emerald-400" /></div>
               <h3 className="text-xl font-bold text-white">Budget Allocation</h3>
               <span className="ml-auto text-sm text-emerald-400 font-semibold">
-                Total: {strategy?.budgetAllocation?.totalAllocated?.toLocaleString()} {campaignData.currency}
+                Total: {strategy?.budgetAllocation?.totalAllocated?.toLocaleString()} {normalizedInput.budget_currency}
               </span>
             </div>
             <div className="space-y-4">
@@ -473,7 +558,7 @@ function GeneratedCampaign() {
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-gray-200 font-medium capitalize">{item.category.replace('_', ' ')}</span>
                     <span className="text-white font-bold text-sm">
-                      {item.amount.toLocaleString()} {campaignData.currency}
+                      {item.amount.toLocaleString()} {normalizedInput.budget_currency}
                       <span className="text-emerald-400 ml-1">({item.percentage}%)</span>
                     </span>
                   </div>
@@ -490,7 +575,7 @@ function GeneratedCampaign() {
                         <div key={j} className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2 border border-white/5">
                           <span className="text-sm text-gray-300">{pl.platform}</span>
                           <div className="text-right">
-                            <span className="text-white text-sm font-semibold">{pl.amount.toLocaleString()} {campaignData.currency}</span>
+                            <span className="text-white text-sm font-semibold">{pl.amount.toLocaleString()} {normalizedInput.budget_currency}</span>
                             <span className="text-emerald-400 text-xs ml-2">({pl.dailyBudget?.toFixed(2)}/day)</span>
                           </div>
                         </div>
@@ -530,7 +615,7 @@ function GeneratedCampaign() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 mb-0.5">Daily Budget</p>
-                        <p className="text-sm text-emerald-400 font-semibold">{ad.dailyBudget?.toFixed(2)} {campaignData.currency}</p>
+                        <p className="text-sm text-emerald-400 font-semibold">{ad.dailyBudget?.toFixed(2)} {normalizedInput.budget_currency}</p>
                       </div>
                     </div>
                   </div>
@@ -668,12 +753,12 @@ function GeneratedCampaign() {
             </div>
             <div className="space-y-3 text-sm">
               {[
-                { label: 'Name', value: campaignData.campaignName },
-                { label: 'Goal', value: campaignData.goalType?.replace('_', ' '), capitalize: true },
-                { label: 'Budget', value: `${campaignData.currency} ${Number(campaignData.totalBudget).toLocaleString()}` },
-                { label: 'Flexibility', value: campaignData.budgetFlexibility, capitalize: true },
-                { label: 'Start Date', value: formatDate(campaignData.startDate) },
-                { label: 'End Date', value: formatDate(campaignData.endDate) },
+                { label: 'Name', value: normalizedInput.brand_name },
+                { label: 'Goal', value: normalizedInput.campaign_goal?.replace('_', ' '), capitalize: true },
+                { label: 'Budget', value: `${normalizedInput.budget_currency} ${Number(normalizedInput.budget_amount).toLocaleString()}` },
+                { label: 'Company Size', value: normalizedInput.company_size, capitalize: true },
+                { label: 'Start Date', value: formatDate(campaignDates.startDate) },
+                { label: 'End Date', value: formatDate(campaignDates.endDate) },
                 { label: 'Duration', value: `${campaignDuration} days` },
               ].map((row, i) => (
                 <div key={i} className="flex justify-between items-center py-2 border-b border-white/5 last:border-0">

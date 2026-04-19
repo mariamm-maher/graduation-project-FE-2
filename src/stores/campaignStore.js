@@ -86,21 +86,21 @@ const useCampaignStore = create((set) => ({
   },
 
   // Generate Campaign with AI
-  generateCampaignAI: async (aiData) => {
-    set({ isLoading: true, error: null });
-    try {
-      const response = await campaignService.generateCampaignAI(aiData);
-      if (response.success) {
-        set({ isLoading: false, error: null });
-        return { success: true, data: response.data, aiPreview: response.data?.aiPreview };
-      }
-      throw new Error(response.message || 'Failed to generate campaign with AI');
-    } catch (error) {
-      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to generate campaign with AI';
-      set({ error: errorMessage, isLoading: false });
-      return { success: false, error: errorMessage };
-    }
-  },
+  // generateCampaignAI: async (aiData) => {
+  //   set({ isLoading: true, error: null });
+  //   try {
+  //     const response = await campaignService.generateCampaignAI(aiData);
+  //     if (response.success) {
+  //       set({ isLoading: false, error: null });
+  //       return { success: true, data: response.data, aiPreview: response.data?.aiPreview };
+  //     }
+  //     throw new Error(response.message || 'Failed to generate campaign with AI');
+  //   } catch (error) {
+  //     const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to generate campaign with AI';
+  //     set({ error: errorMessage, isLoading: false });
+  //     return { success: false, error: errorMessage };
+  //   }
+  // },
   // Create Campaign
   createCampaign: async (campaignData) => {
     set({ isLoading: true, error: null });

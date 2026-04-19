@@ -90,7 +90,7 @@ export default function Register({ onSwitchToLogin }) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-        <div className="grid grid-cols-2 gap-3 animate-slideUp" style={{ animationDelay: '0.2s' }}>
+        <div className="grid grid-cols-1 gap-3 animate-slideUp" style={{ animationDelay: '0.2s' }}>
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <User className="h-5 w-5 text-gray-400 group-focus-within:text-[#C1B6FD] transition-colors duration-300" />
@@ -121,7 +121,7 @@ export default function Register({ onSwitchToLogin }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 animate-slideUp" style={{ animationDelay: '0.3s' }}>
+        <div className="grid grid-cols-1 gap-3 animate-slideUp" style={{ animationDelay: '0.3s' }}>
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-[#C1B6FD] transition-colors duration-300" />

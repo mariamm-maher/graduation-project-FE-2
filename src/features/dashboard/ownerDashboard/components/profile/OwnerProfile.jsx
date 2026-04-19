@@ -9,13 +9,10 @@ import {
   CheckCircle2,
   Building2,
   Mail,
-  MapPin,
-  Phone,
   Globe,
   Target,
   Users,
   Briefcase,
-  Sparkles,
   User,
   CheckCircle,
   AlertCircle
@@ -24,13 +21,11 @@ import { toast } from 'react-toastify';
 import useProfileStore from '../../../../../stores/profileStore';
 import useUploadStore from '../../../../../stores/UploadStore';
 
-const BUSINESS_TYPE_OPTIONS = [
-  'Startup',
-  'Small Business',
-  'Brand',
-  'Agency',
-  'E-commerce',
-  'Personal Brand'
+const COMPANY_SIZE_OPTIONS = [
+  'Solo',
+  'Small',
+  'Mid',
+  'Enterprise'
 ];
 
 const INDUSTRY_OPTIONS = [
@@ -57,15 +52,6 @@ const PLATFORM_OPTIONS = [
   'Twitter (X)'
 ];
 
-const MARKETING_GOAL_OPTIONS = [
-  'Brand Awareness',
-  'Lead Generation',
-  'Increase Sales',
-  'App Downloads',
-  'Community Growth',
-  'Product Launch Promotion'
-];
-
 const TARGET_GENDER_OPTIONS = ['All', 'Male', 'Female'];
 const TARGET_AGE_OPTIONS = ['18-24', '25-34', '35-44', '45-54', '55+'];
 
@@ -79,6 +65,34 @@ const POPULAR_COUNTRIES = [
   'United Arab Emirates', 'Egypt', 'South Africa', 'Nigeria', 'Kenya', 'Brazil',
   'Mexico', 'Argentina', 'Chile', 'Colombia', 'Peru', 'New Zealand'
 ];
+
+const MISSING_FIELD_LABELS = {
+  brand_name: 'Brand Name',
+  product_or_service: 'Product / Service',
+  industry: 'Industry',
+  target_market: 'Target Market',
+  company_size: 'Company Size',
+  unique_selling_point: 'Unique Selling Point',
+  competitors: 'Competitors',
+  has_previous_campaigns: 'Previous Campaigns',
+  previous_campaign_description: 'Previous Campaign Description',
+  website: 'Website',
+  platforms: 'Platforms',
+  image: 'Brand Image',
+  'targetAudience.gender': 'Audience Gender',
+  'targetAudience.ageRange': 'Audience Age Range',
+  'targetAudience.location': 'Audience Location'
+};
+
+const formatMissingFieldLabel = (field) => {
+  if (!field) return 'Unknown Field';
+  if (MISSING_FIELD_LABELS[field]) return MISSING_FIELD_LABELS[field];
+
+  return String(field)
+    .replace(/[_.]/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
 
 export default function OwnerProfile() {
   const navigate = useNavigate();
@@ -94,22 +108,24 @@ export default function OwnerProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [completion, setCompletion] = useState(null);
   const [countryDropdownOpen, setCountryDropdownOpen] = useState({
-    business: false,
     target: false
   });
   const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [imageUploaded, setImageUploaded] = useState(false);
   const [formData, setFormData] = useState({
-    businessName: '',
-    businessType: '',
+    brand_name: '',
+    product_or_service: '',
     industry: '',
-    location: '',
-    description: '',
+    target_market: [],
+    company_size: '',
+    unique_selling_point: '',
+    competitors: [],
+    has_previous_campaigns: false,
+    previous_campaign_description: '',
+    image: '',
     website: '',
-    phoneNumber: '',
-    platformsUsed: [],
-    primaryMarketingGoal: '',
+    platforms: [],
     targetAudience: {
       gender: '',
       ageRange: '',
@@ -118,16 +134,22 @@ export default function OwnerProfile() {
   });
 
   const buildEditableData = (profile) => ({
-    businessName: profile?.businessName || '',
-    businessType: profile?.businessType || '',
+    brand_name: profile?.brand_name || '',
+    product_or_service: profile?.product_or_service || '',
     industry: profile?.industry || '',
-    location: profile?.location || '',
-    description: profile?.description || '',
+    target_market: Array.isArray(profile?.target_market)
+      ? profile.target_market
+      : typeof profile?.target_market === 'string' && profile.target_market.trim()
+        ? profile.target_market.split(',').map((item) => item.trim()).filter(Boolean)
+        : [],
+    company_size: profile?.company_size || '',
+    unique_selling_point: profile?.unique_selling_point || '',
+    competitors: Array.isArray(profile?.competitors) ? profile.competitors : [],
+    has_previous_campaigns: Boolean(profile?.has_previous_campaigns),
+    previous_campaign_description: profile?.previous_campaign_description || '',
     image: profile?.image || '',
     website: profile?.website || '',
-    phoneNumber: profile?.phoneNumber || '',
-    platformsUsed: Array.isArray(profile?.platformsUsed) ? profile.platformsUsed : [],
-    primaryMarketingGoal: profile?.primaryMarketingGoal || '',
+    platforms: Array.isArray(profile?.platforms) ? profile.platforms : [],
     targetAudience: {
       gender: profile?.targetAudience?.gender || '',
       ageRange: profile?.targetAudience?.ageRange || '',
@@ -151,14 +173,14 @@ export default function OwnerProfile() {
 
   const handlePlatformToggle = (platform) => {
     setFormData((prev) => {
-      const current = Array.isArray(prev.platformsUsed) ? prev.platformsUsed : [];
+      const current = Array.isArray(prev.platforms) ? prev.platforms : [];
       const next = current.includes(platform)
         ? current.filter((item) => item !== platform)
         : [...current, platform];
 
       return {
         ...prev,
-        platformsUsed: next
+        platforms: next
       };
     });
   };
@@ -174,12 +196,12 @@ export default function OwnerProfile() {
       .slice(0, 12);
   };
 
-  const openCountryDropdown = (key) => {
-    setCountryDropdownOpen((prev) => ({ ...prev, [key]: true }));
+  const openCountryDropdown = () => {
+    setCountryDropdownOpen({ target: true });
   };
 
-  const closeCountryDropdown = (key) => {
-    setCountryDropdownOpen((prev) => ({ ...prev, [key]: false }));
+  const closeCountryDropdown = () => {
+    setCountryDropdownOpen({ target: false });
   };
 
   const handleImageSelect = (event) => {
@@ -246,7 +268,17 @@ export default function OwnerProfile() {
       return;
     }
 
-    const result = await updateOwnerProfile(formData);
+    const payload = {
+      ...formData,
+      target_market: Array.isArray(formData.target_market)
+        ? formData.target_market.map((item) => String(item).trim()).filter(Boolean)
+        : [],
+      platforms: Array.isArray(formData.platforms)
+        ? formData.platforms.map((item) => String(item).trim()).filter(Boolean)
+        : []
+    };
+
+    const result = await updateOwnerProfile(payload);
     if (result?.success) {
       toast.success('Profile updated successfully');
       setIsEditing(false);
@@ -330,6 +362,10 @@ export default function OwnerProfile() {
       }
     : { gender: 'N/A', ageRange: 'N/A', location: 'N/A' };
 
+  const missingFields = Array.isArray(completion?.missingFields)
+    ? completion.missingFields
+    : [];
+
   return (
     <div className="space-y-8 relative p-6 w-full">
       <div className="absolute -top-20 -right-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -399,10 +435,10 @@ export default function OwnerProfile() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 
-                <h2 className="text-2xl font-bold text-white">{profileView.businessName || 'Business Name'}</h2>
+                <h2 className="text-2xl font-bold text-white">{profileView.brand_name || 'Brand Name'}</h2>
               </div>
-              <p className="text-sm text-gray-400">{profileView.businessType || 'N/A'} • {profileView.industry || 'N/A'}</p>
-              <p className="text-sm text-gray-300 mt-2 max-w-2xl">{profileView.description || 'No business description provided.'}</p>
+              <p className="text-sm text-gray-400">{profileView.company_size || 'N/A'} • {profileView.industry || 'N/A'}</p>
+              <p className="text-sm text-gray-300 mt-2 max-w-2xl">{profileView.unique_selling_point || 'No unique selling point provided.'}</p>
             </div>
           </div>
 
@@ -424,12 +460,12 @@ export default function OwnerProfile() {
             <span>{ownerProfile.email || 'N/A'}</span>
           </div>
           <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-2xl text-gray-300">
-            <MapPin className="w-4 h-4 text-[#C1B6FD]" />
-            <span>{profileView.location || 'N/A'}</span>
+            <Target className="w-4 h-4 text-[#C1B6FD]" />
+            <span>{Array.isArray(profileView.target_market) && profileView.target_market.length > 0 ? profileView.target_market.join(', ') : 'N/A'}</span>
           </div>
           <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-2xl text-gray-300">
-            <Phone className="w-4 h-4 text-[#C1B6FD]" />
-            <span>{profileView.phoneNumber || 'N/A'}</span>
+            <Globe className="w-4 h-4 text-[#C1B6FD]" />
+            <span>{profileView.website || 'N/A'}</span>
           </div>
         </div>
       </div>
@@ -451,12 +487,12 @@ export default function OwnerProfile() {
             </div>
 
             <div className="flex-1 text-right">
-              {Array.isArray(completion.missingFields) && completion.missingFields.length > 0 ? (
+              {missingFields.length > 0 ? (
                 <div>
                   <div className="text-xs text-gray-400">Missing Fields</div>
                   <div className="mt-2 flex flex-wrap gap-2 justify-end">
-                    {completion.missingFields.map((f, i) => (
-                      <span key={i} className="text-xs px-2 py-1 rounded bg-red-600/20 text-red-300">{f}</span>
+                    {missingFields.map((f, i) => (
+                      <span key={`${f}-${i}`} className="text-xs px-2 py-1 rounded bg-red-600/20 text-red-300">{formatMissingFieldLabel(f)}</span>
                     ))}
                   </div>
                 </div>
@@ -478,35 +514,35 @@ export default function OwnerProfile() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                <p className="text-xs text-gray-400 mb-1">Business Name</p>
+                <p className="text-xs text-gray-400 mb-1">Brand Name</p>
                 {isEditing ? (
                   <input
                     type="text"
-                    value={formData.businessName}
-                    onChange={(e) => handleInputChange('businessName', e.target.value)}
+                    value={formData.brand_name}
+                    onChange={(e) => handleInputChange('brand_name', e.target.value)}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
                   />
                 ) : (
-                  <p className="text-sm font-semibold text-white">{profileView.businessName || 'N/A'}</p>
+                  <p className="text-sm font-semibold text-white">{profileView.brand_name || 'N/A'}</p>
                 )}
               </div>
               <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                <p className="text-xs text-gray-400 mb-1">Business Type</p>
+                <p className="text-xs text-gray-400 mb-1">Company Size</p>
                 {isEditing ? (
                   <select
-                    value={formData.businessType}
-                    onChange={(e) => handleInputChange('businessType', e.target.value)}
+                    value={formData.company_size}
+                    onChange={(e) => handleInputChange('company_size', e.target.value)}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
                   >
-                    <option value="" className="bg-[#1A1A24] text-gray-300">Select Business Type</option>
-                    {BUSINESS_TYPE_OPTIONS.map((option) => (
+                    <option value="" className="bg-[#1A1A24] text-gray-300">Select Company Size</option>
+                    {COMPANY_SIZE_OPTIONS.map((option) => (
                       <option key={option} value={option} className="bg-[#1A1A24] text-gray-100">
                         {option}
                       </option>
                     ))}
                   </select>
                 ) : (
-                  <p className="text-sm font-semibold text-white">{profileView.businessType || 'N/A'}</p>
+                  <p className="text-sm font-semibold text-white">{profileView.company_size || 'N/A'}</p>
                 )}
               </div>
               <div className="bg-white/5 rounded-xl p-4 border border-white/10">
@@ -529,37 +565,55 @@ export default function OwnerProfile() {
                 )}
               </div>
               <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                <p className="text-xs text-gray-400 mb-1">Primary Marketing Goal</p>
+                <p className="text-xs text-gray-400 mb-1">Product / Service</p>
                 {isEditing ? (
-                  <select
-                    value={formData.primaryMarketingGoal}
-                    onChange={(e) => handleInputChange('primaryMarketingGoal', e.target.value)}
+                  <input
+                    type="text"
+                    value={formData.product_or_service}
+                    onChange={(e) => handleInputChange('product_or_service', e.target.value)}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                  >
-                    <option value="" className="bg-[#1A1A24] text-gray-300">Select Marketing Goal</option>
-                    {MARKETING_GOAL_OPTIONS.map((option) => (
-                      <option key={option} value={option} className="bg-[#1A1A24] text-gray-100">
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 ) : (
-                  <p className="text-sm font-semibold text-white">{profileView.primaryMarketingGoal || 'N/A'}</p>
+                  <p className="text-sm font-semibold text-white">{profileView.product_or_service || 'N/A'}</p>
                 )}
               </div>
             </div>
 
             <div className="mt-6 bg-white/5 rounded-xl p-4 border border-white/10">
-              <p className="text-xs text-gray-400 mb-2">Description</p>
+              <p className="text-xs text-gray-400 mb-2">Target Market</p>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={Array.isArray(formData.target_market) ? formData.target_market.join(', ') : ''}
+                  onChange={(e) =>
+                    handleInputChange(
+                      'target_market',
+                      e.target.value.split(',').map((item) => item.trim()).filter(Boolean)
+                    )
+                  }
+                  placeholder="e.g. Egypt, UAE, MENA"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                />
+              ) : (
+                <p className="text-sm text-gray-200 leading-relaxed">
+                  {Array.isArray(profileView.target_market) && profileView.target_market.length > 0
+                    ? profileView.target_market.join(', ')
+                    : 'No target market provided.'}
+                </p>
+              )}
+            </div>
+
+            <div className="mt-6 bg-white/5 rounded-xl p-4 border border-white/10">
+              <p className="text-xs text-gray-400 mb-2">Unique Selling Point</p>
               {isEditing ? (
                 <textarea
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  value={formData.unique_selling_point}
+                  onChange={(e) => handleInputChange('unique_selling_point', e.target.value)}
                   rows={4}
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm resize-none"
                 />
               ) : (
-                <p className="text-sm text-gray-200 leading-relaxed">{profileView.description || 'No description provided.'}</p>
+                <p className="text-sm text-gray-200 leading-relaxed">{profileView.unique_selling_point || 'No unique selling point provided.'}</p>
               )}
             </div>
           </div>
@@ -618,10 +672,10 @@ export default function OwnerProfile() {
                       value={formData.targetAudience?.location || ''}
                       onChange={(e) => {
                         handleTargetAudienceChange('location', e.target.value);
-                        openCountryDropdown('target');
+                        openCountryDropdown();
                       }}
-                      onFocus={() => openCountryDropdown('target')}
-                      onBlur={() => setTimeout(() => closeCountryDropdown('target'), 120)}
+                      onFocus={openCountryDropdown}
+                      onBlur={() => setTimeout(closeCountryDropdown, 120)}
                       placeholder="Search or select a country"
                       className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
                     />
@@ -635,7 +689,7 @@ export default function OwnerProfile() {
                               type="button"
                               onClick={() => {
                                 handleTargetAudienceChange('location', country);
-                                closeCountryDropdown('target');
+                                closeCountryDropdown();
                               }}
                               className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
                             >
@@ -675,19 +729,6 @@ export default function OwnerProfile() {
               <div className="flex justify-between items-center py-2 border-b border-white/5 gap-4">
                 <span className="text-gray-400">Email</span>
                 <span className="text-white font-medium text-right">{ownerProfile.email || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-white/5 gap-4">
-                <span className="text-gray-400">Phone</span>
-                {isEditing ? (
-                  <input
-                    type="tel"
-                    value={formData.phoneNumber}
-                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                    className="w-44 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                  />
-                ) : (
-                  <span className="text-white font-medium text-right">{profileView.phoneNumber || 'N/A'}</span>
-                )}
               </div>
               <div className="flex justify-between items-center py-2 gap-4">
                 <span className="text-gray-400">Onboarded</span>
@@ -776,60 +817,32 @@ export default function OwnerProfile() {
               </div>
 
               <div>
-                <div className="text-xs text-gray-400">Phone</div>
+                <div className="text-xs text-gray-400">Previous Campaigns</div>
                 {isEditing ? (
-                  <input
-                    type="tel"
-                    value={formData.phoneNumber}
-                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                  <select
+                    value={formData.has_previous_campaigns ? 'yes' : 'no'}
+                    onChange={(e) => handleInputChange('has_previous_campaigns', e.target.value === 'yes')}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                  />
+                  >
+                    <option value="no" className="bg-[#1A1A24] text-gray-300">No</option>
+                    <option value="yes" className="bg-[#1A1A24] text-gray-300">Yes</option>
+                  </select>
                 ) : (
-                  <div>{profileView.phoneNumber || '—'}</div>
+                  <div>{profileView.has_previous_campaigns ? 'Yes' : 'No'}</div>
                 )}
               </div>
 
               <div>
-                <div className="text-xs text-gray-400">Location</div>
+                <div className="text-xs text-gray-400">Previous Campaign Description</div>
                 {isEditing ? (
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={formData.location}
-                      onChange={(e) => {
-                        handleInputChange('location', e.target.value);
-                        openCountryDropdown('business');
-                      }}
-                      onFocus={() => openCountryDropdown('business')}
-                      onBlur={() => setTimeout(() => closeCountryDropdown('business'), 120)}
-                      placeholder="Search or select a country"
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                    />
-
-                    {countryDropdownOpen.business && (
-                      <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
-                        {getFilteredCountries(formData.location).length > 0 ? (
-                          getFilteredCountries(formData.location).map((country) => (
-                            <button
-                              key={country}
-                              type="button"
-                              onClick={() => {
-                                handleInputChange('location', country);
-                                closeCountryDropdown('business');
-                              }}
-                              className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
-                            >
-                              {country}
-                            </button>
-                          ))
-                        ) : (
-                          <p className="px-4 py-3 text-sm text-gray-400">No countries found</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  <textarea
+                    value={formData.previous_campaign_description}
+                    onChange={(e) => handleInputChange('previous_campaign_description', e.target.value)}
+                    rows={3}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm resize-none"
+                  />
                 ) : (
-                  <div>{profileView.location || '—'}</div>
+                  <div>{profileView.previous_campaign_description || '—'}</div>
                 )}
               </div>
             </div>
@@ -843,7 +856,7 @@ export default function OwnerProfile() {
                 {isEditing ? (
                   <div className="grid grid-cols-2 gap-2">
                     {PLATFORM_OPTIONS.map((platform) => {
-                      const selected = (formData.platformsUsed || []).includes(platform);
+                      const selected = (formData.platforms || []).includes(platform);
                       return (
                         <button
                           key={platform}
@@ -860,9 +873,9 @@ export default function OwnerProfile() {
                       );
                     })}
                   </div>
-                ) : Array.isArray(profileView.platformsUsed) && profileView.platformsUsed.length > 0 ? (
+                ) : Array.isArray(profileView.platforms) && profileView.platforms.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {profileView.platformsUsed.map((platform, index) => (
+                    {profileView.platforms.map((platform, index) => (
                       <span key={index} className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-200">
                         {platform}
                       </span>

@@ -4,6 +4,7 @@ import CampaignsOverview from './CampaignsOverview';
 import AllCampaigns from './All/AllCampaigns';
 import ActiveCampaigns from './Active/ActiveCampaigns';
 import CreateCampaign from './create/CreateCampaign';
+import PrepareCampaign from './create/PrepareCampaign';
 import GeneratedCampaign from './create/GeneratedCampaign';
 import CompletedCampaigns from './completed/CompletedCampaigns';
 import DraftCampaigns from './draft/DraftCampaigns';
@@ -20,6 +21,8 @@ function CampaignsLayout() {
         <Route path="all" element={<AllCampaigns />} />
         <Route path="active" element={<ActiveCampaigns />} />
         <Route path="create" element={<CreateCampaign />} />
+        <Route path="prepare" element={<PrepareCampaign />} />
+        <Route path="prepar" element={<Navigate to="/dashboard/owner/campaigns/prepare" replace />} />
         <Route path="completed" element={<CompletedCampaigns />} />
         <Route path="draft" element={<DraftCampaigns />} />
         <Route path="analytics" element={<CampaignAnalytics />} />

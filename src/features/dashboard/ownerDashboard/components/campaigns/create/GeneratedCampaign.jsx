@@ -23,8 +23,7 @@ function GeneratedCampaign() {
   // Get data from navigation state
   const { campaignData, aiPreview } = location.state || {};
   
-  console.log('Received campaignData:', campaignData);
-  console.log('Received aiPreview:', aiPreview);
+  
   // If no data provided, show fallback
   if (!campaignData || !aiPreview) {
     return (
@@ -49,7 +48,8 @@ function GeneratedCampaign() {
   const visibleCalendar = showAllCalendar ? calendarItems : calendarItems.slice(0, 7);
 
   const normalizedInput = useMemo(() => ({
-    brand_name: campaignData.brand_name || campaignData.campaignName || '',
+    campaign_name: campaignData.campaignName || campaignData.campaign_name || '',
+    brand_name: campaignData.brand_name || '',
     product_or_service: campaignData.product_or_service || '',
     industry: campaignData.industry || '',
     target_market: Array.isArray(campaignData.target_market) ? campaignData.target_market : [],
@@ -108,7 +108,7 @@ function GeneratedCampaign() {
     try {
       // Log selected payload fields for inspection
       const keysToShow = [
-        'brand_name', 'product_or_service', 'industry', 'target_market', 'company_size',
+        'campaign_name', 'brand_name', 'product_or_service', 'industry', 'target_market', 'company_size',
         'campaign_goal', 'budget_amount', 'budget_currency', 'campaign_duration_weeks',
         'unique_selling_point', 'current_channels', 'competitors', 'has_previous_campaigns',
         'previous_campaign_description', 'website', 'platforms',
@@ -144,7 +144,7 @@ function GeneratedCampaign() {
   const buildPayload = (extra = {}) => {
     const source = isEditing && editData ? editData : normalizedInput;
     return {
-    campaignName: campaignData.campaignName || source.brand_name || 'Generated Campaign',
+    campaignName: source.campaign_name || campaignData.campaignName || source.brand_name || 'Generated Campaign',
     userDescription:
       campaignData.userDescription ||
       `Brand: ${source.brand_name} | Goal: ${source.campaign_goal} | Product/Service: ${source.product_or_service}`,
@@ -352,7 +352,7 @@ function GeneratedCampaign() {
         {!isEditing && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
-              { label: 'Brand Name', value: normalizedInput.brand_name || 'Not set' },
+              { label: 'Campaign Name', value: normalizedInput.campaign_name || 'Not set' },
               { label: 'Goal', value: normalizedInput.campaign_goal?.replace('_', ' '), caps: true },
               { label: 'Budget', value: `${normalizedInput.budget_currency} ${Number(normalizedInput.budget_amount).toLocaleString()}` },
               { label: 'Company Size', value: normalizedInput.company_size || 'Not set', caps: true },
@@ -372,6 +372,15 @@ function GeneratedCampaign() {
         {/* Editable fields */}
         {isEditing && editData && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Campaign Name</label>
+              <input
+                type="text"
+                value={editData.campaign_name || ''}
+                onChange={e => setEditData({ ...editData, campaign_name: e.target.value })}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
+              />
+            </div>
             <div>
               <label className="block text-xs text-gray-400 mb-1">Brand Name</label>
               <input
@@ -476,7 +485,7 @@ function GeneratedCampaign() {
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">{normalizedInput.brand_name || 'Generated Campaign'}</h2>
+                <h2 className="text-2xl font-bold text-white mb-2">{normalizedInput.campaign_name || 'Generated Campaign'}</h2>
                 <p className="text-gray-300 leading-relaxed">{strategy?.campaignSummary}</p>
               </div>
             </div>
@@ -753,7 +762,8 @@ function GeneratedCampaign() {
             </div>
             <div className="space-y-3 text-sm">
               {[
-                { label: 'Name', value: normalizedInput.brand_name },
+                { label: 'Campaign Name', value: normalizedInput.campaign_name || normalizedInput.brand_name },
+                { label: 'Brand Name', value: normalizedInput.brand_name },
                 { label: 'Goal', value: normalizedInput.campaign_goal?.replace('_', ' '), capitalize: true },
                 { label: 'Budget', value: `${normalizedInput.budget_currency} ${Number(normalizedInput.budget_amount).toLocaleString()}` },
                 { label: 'Company Size', value: normalizedInput.company_size, capitalize: true },

@@ -979,10 +979,14 @@ export default function OwnerOnboarding() {
           </div>
         </div>
 
+
         {/* Global Skip Link */}
         <div className="text-center mt-8">
           <button
-            onClick={() => navigate('/dashboard/owner')}
+               onClick={() => {
+              logout();
+              navigate('/login');
+            }}
             className="text-gray-500 hover:text-gray-300 transition-colors duration-200 text-xs font-medium"
           >
             Skip all onboarding and go to dashboard

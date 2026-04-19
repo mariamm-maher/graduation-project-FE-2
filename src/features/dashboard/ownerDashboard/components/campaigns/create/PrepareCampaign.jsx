@@ -10,6 +10,7 @@ function PrepareCampaign() {
   const location = useLocation();
   const { campaignData } = location.state || {};
 
+ 
   const fetchOwnerProfile = useProfileStore((s) => s.fetchOwnerProfile);
   const ownerProfile = useProfileStore((s) => s.ownerProfile);
 
@@ -23,7 +24,8 @@ function PrepareCampaign() {
 
   const ownerBase = useMemo(
     () => ({
-      brand_name: ownerProfile?.brand_name || ownerProfile?.companyName || '',
+      brand_name: ownerProfile?.brand_name || '',
+       campaign_name: campaignData.campaignName || campaignData.campaign_name || '',
       unique_selling_point: ownerProfile?.unique_selling_point || '',
       product_or_service: ownerProfile?.product_or_service || '',
       company_size: ownerProfile?.company_size || '',
@@ -61,6 +63,28 @@ function PrepareCampaign() {
   );
 
   const parsedWeeks = Number.parseInt(campaignData?.durationWeeks, 10);
+
+  const companySizeOptions = ['Solo', 'Small', 'Mid', 'Enterprise'];
+
+  const industryOptions = [
+    'E-commerce & Retail',
+    'Fashion & Beauty',
+    'Food & Beverage',
+    'Media & Content Creation',
+    'Fitness & Wellness',
+    'Home & Local Services',
+    'Education & Coaching',
+    'Travel & Hospitality',
+    'Real Estate',
+    'Healthcare & Wellness',
+    'Finance & Business',
+    'Technology & Apps',
+    'Other',
+  ];
+
+  const targetMarketOptions = ['Egypt', 'Saudi Arabia', 'UAE', 'GCC', 'MENA', 'Europe', 'USA', 'Worldwide'];
+
+  const platformOptions = ['Instagram', 'TikTok', 'Facebook', 'YouTube', 'LinkedIn', 'X (Twitter)'];
 
 
 
@@ -102,6 +126,20 @@ function PrepareCampaign() {
         [field]: value,
       },
     }));
+  };
+
+  const toggleOwnerArrayValue = (field, value) => {
+    setOwnerEdits((prev) => {
+      const current = Array.isArray(ownerDraft[field]) ? ownerDraft[field] : [];
+      const next = current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value];
+
+      return {
+        ...prev,
+        [field]: next,
+      };
+    });
   };
 
   const addCompetitor = () => {
@@ -160,9 +198,6 @@ function PrepareCampaign() {
         ? `Previous campaigns: ${ownerDraft.previous_campaign_description}`
         : null,
       ownerDraft.website ? `Website: ${ownerDraft.website}` : null,
-      Array.isArray(ownerDraft.current_channels) && ownerDraft.current_channels.length
-        ? `Current channels: ${ownerDraft.current_channels.join(', ')}`
-        : null,
       platforms ? `Platforms: ${platforms}` : null,
       ownerDraft.targetAudience?.gender ? `Audience gender: ${ownerDraft.targetAudience.gender}` : null,
       ownerDraft.targetAudience?.ageRange ? `Audience age: ${ownerDraft.targetAudience.ageRange}` : null,
@@ -173,9 +208,54 @@ function PrepareCampaign() {
   };
 
   const handleGenerate = async () => {
-    if (!campaignData?.campaignName || !campaignData?.campaignGoal || !campaignData?.budget || !campaignData?.currency || !campaignData?.durationWeeks) {
-      toast.error('Campaign data is missing. Please go back and fill the form first.');
-      navigate('/dashboard/owner/campaigns/create');
+    const requiredCampaignFields = [
+      { key: 'campaignName', label: 'Campaign name', value: campaignData?.campaignName },
+      { key: 'campaignGoal', label: 'Campaign goal', value: campaignData?.campaignGoal },
+      { key: 'budget', label: 'Budget', value: campaignData?.budget },
+      { key: 'currency', label: 'Currency', value: campaignData?.currency },
+      { key: 'durationWeeks', label: 'Campaign weeks', value: campaignData?.durationWeeks },
+    ];
+
+    const requiredOwnerFields = [
+      { key: 'brand_name', label: 'Brand name', value: ownerDraft.brand_name },
+      { key: 'product_or_service', label: 'Product or service', value: ownerDraft.product_or_service },
+      { key: 'industry', label: 'Industry', value: ownerDraft.industry },
+      {
+        key: 'target_market',
+        label: 'Target market',
+        value: Array.isArray(ownerDraft.target_market) ? ownerDraft.target_market : [],
+      },
+      { key: 'company_size', label: 'Campaign size', value: ownerDraft.company_size },
+      { key: 'unique_selling_point', label: 'USP', value: ownerDraft.unique_selling_point },
+    ];
+
+    const isMissingValue = (value) => {
+      if (Array.isArray(value)) {
+        return value.length === 0;
+      }
+
+      if (typeof value === 'string') {
+        return value.trim().length === 0;
+      }
+
+      return value === null || value === undefined;
+    };
+
+    const missingCampaignField = requiredCampaignFields.find((field) => isMissingValue(field.value));
+    if (missingCampaignField) {
+      toast.warn(`You must add (${missingCampaignField.label}) for more personalized campaign plan.`, {
+        position: 'top-right',
+        autoClose: 3500,
+      });
+      return;
+    }
+
+    const missingOwnerField = requiredOwnerFields.find((field) => isMissingValue(field.value));
+    if (missingOwnerField) {
+      toast.warn(`You must add (${missingOwnerField.label}) for more personalized campaign plan.`, {
+        position: 'top-right',
+        autoClose: 3500,
+      });
       return;
     }
 
@@ -311,41 +391,70 @@ function PrepareCampaign() {
             <h2 className="text-xl font-semibold text-white">Offer & Positioning</h2>
             <p className="text-sm text-gray-400">{steps[1].description}</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                type="text"
-                value={ownerDraft.product_or_service}
-                onChange={(e) => updateOwnerField('product_or_service', e.target.value)}
-                placeholder="Product or service"
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
-              />
-              <input
-                type="text"
-                value={ownerDraft.brand_name}
-                onChange={(e) => updateOwnerField('brand_name', e.target.value)}
-                placeholder="Brand name"
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
-              />
-              <input
-                type="text"
-                value={ownerDraft.industry}
-                onChange={(e) => updateOwnerField('industry', e.target.value)}
-                placeholder="Industry"
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
-              />
-              <input
-                type="text"
-                value={ownerDraft.company_size}
-                onChange={(e) => updateOwnerField('company_size', e.target.value)}
-                placeholder="Company size"
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
-              />
-              <textarea
-                value={ownerDraft.unique_selling_point}
-                onChange={(e) => updateOwnerField('unique_selling_point', e.target.value)}
-                placeholder="Unique selling point"
-                rows={3}
-                className="md:col-span-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white resize-none"
-              />
+              <div>
+                <label className="block text-sm text-gray-300 mb-2">Product or Service</label>
+                <input
+                  type="text"
+                  value={ownerDraft.product_or_service}
+                  onChange={(e) => updateOwnerField('product_or_service', e.target.value)}
+                  placeholder="Product or service"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-300 mb-2">Brand Name</label>
+                <input
+                  type="text"
+                  value={ownerDraft.brand_name}
+                  onChange={(e) => updateOwnerField('brand_name', e.target.value)}
+                  placeholder="Brand name"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-300 mb-2">Industry</label>
+                <select
+                  value={ownerDraft.industry}
+                  onChange={(e) => updateOwnerField('industry', e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+                >
+                  <option value="" className="bg-[#1A1A24] text-gray-300">Select Industry</option>
+                  {industryOptions.map((option) => (
+                    <option key={option} value={option} className="bg-[#1A1A24] text-white">
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-300 mb-2">Company Size</label>
+                <select
+                  value={ownerDraft.company_size}
+                  onChange={(e) => updateOwnerField('company_size', e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+                >
+                  <option value="" className="bg-[#1A1A24] text-gray-300">Select Company Size</option>
+                  {companySizeOptions.map((option) => (
+                    <option key={option} value={option} className="bg-[#1A1A24] text-white">
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-300 mb-2">Unique Selling Point</label>
+                <textarea
+                  value={ownerDraft.unique_selling_point}
+                  onChange={(e) => updateOwnerField('unique_selling_point', e.target.value)}
+                  placeholder="Unique selling point"
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white resize-none"
+                />
+              </div>
             </div>
           </div>
         )}
@@ -355,31 +464,54 @@ function PrepareCampaign() {
             <h2 className="text-xl font-semibold text-white">Market & Competitors</h2>
             <p className="text-sm text-gray-400">{steps[2].description}</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-              <input
-                type="text"
-                value={Array.isArray(ownerDraft.target_market) ? ownerDraft.target_market.join(', ') : ''}
-                onChange={(e) => updateOwnerField('target_market', e.target.value.split(',').map((v) => v.trim()).filter(Boolean))}
-                placeholder="Target market (comma separated)"
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
-              />
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-300 mb-2">Target Market</label>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <div className="flex flex-wrap gap-2">
+                    {targetMarketOptions.map((market) => {
+                      const selected = (ownerDraft.target_market || []).includes(market);
+                      return (
+                        <button
+                          key={market}
+                          type="button"
+                          onClick={() => toggleOwnerArrayValue('target_market', market)}
+                          className={`px-3 py-1.5 rounded-full text-xs border transition ${
+                            selected
+                              ? 'bg-[#C1B6FD]/20 border-[#C1B6FD]/60 text-[#E9E3FF]'
+                              : 'bg-white/5 border-white/15 text-gray-300 hover:bg-white/10'
+                          }`}
+                        >
+                          {market}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
 
-              <select
-                value={ownerDraft.has_previous_campaigns ? 'yes' : 'no'}
-                onChange={(e) => updateOwnerField('has_previous_campaigns', e.target.value === 'yes')}
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
-              >
-                <option value="no" className="bg-[#1A1A24]">No previous campaigns</option>
-                <option value="yes" className="bg-[#1A1A24]">Has previous campaigns</option>
-              </select>
+              <div>
+                <label className="block text-sm text-gray-300 mb-2">Previous Campaigns</label>
+                <select
+                  value={ownerDraft.has_previous_campaigns ? 'yes' : 'no'}
+                  onChange={(e) => updateOwnerField('has_previous_campaigns', e.target.value === 'yes')}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+                >
+                  <option value="no" className="bg-[#1A1A24]">No previous campaigns</option>
+                  <option value="yes" className="bg-[#1A1A24]">Has previous campaigns</option>
+                </select>
+              </div>
 
               {ownerDraft.has_previous_campaigns && (
-                <textarea
-                  value={ownerDraft.previous_campaign_description}
-                  onChange={(e) => updateOwnerField('previous_campaign_description', e.target.value)}
-                  rows={3}
-                  placeholder="Describe your previous campaigns"
-                  className="md:col-span-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white resize-none"
-                />
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-300 mb-2">Previous Campaign Description</label>
+                  <textarea
+                    value={ownerDraft.previous_campaign_description}
+                    onChange={(e) => updateOwnerField('previous_campaign_description', e.target.value)}
+                    rows={3}
+                    placeholder="Describe your previous campaigns"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white resize-none"
+                  />
+                </div>
               )}
 
               <div className="md:col-span-2 space-y-3">
@@ -396,32 +528,41 @@ function PrepareCampaign() {
 
                 {(Array.isArray(ownerDraft.competitors) ? ownerDraft.competitors : []).map((competitor, index) => (
                   <div key={`competitor-${index}`} className="grid grid-cols-1 md:grid-cols-3 gap-2 bg-white/5 border border-white/10 rounded-xl p-3">
-                    <input
-                      type="text"
-                      value={competitor?.name || ''}
-                      onChange={(e) => updateCompetitor(index, 'name', e.target.value)}
-                      placeholder="Name"
-                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                    />
-                    <input
-                      type="text"
-                      value={competitor?.website || ''}
-                      onChange={(e) => updateCompetitor(index, 'website', e.target.value)}
-                      placeholder="Website"
-                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                    />
-                    <div className="flex gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-300 mb-1">Competitor Name</label>
                       <input
                         type="text"
-                        value={competitor?.notes || ''}
-                        onChange={(e) => updateCompetitor(index, 'notes', e.target.value)}
-                        placeholder="Notes"
-                        className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                        value={competitor?.name || ''}
+                        onChange={(e) => updateCompetitor(index, 'name', e.target.value)}
+                        placeholder="Name"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-300 mb-1">Competitor Website</label>
+                      <input
+                        type="text"
+                        value={competitor?.website || ''}
+                        onChange={(e) => updateCompetitor(index, 'website', e.target.value)}
+                        placeholder="Website"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <label className="block text-xs text-gray-300 mb-1">Notes</label>
+                        <input
+                          type="text"
+                          value={competitor?.notes || ''}
+                          onChange={(e) => updateCompetitor(index, 'notes', e.target.value)}
+                          placeholder="Notes"
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                        />
+                      </div>
                       <button
                         type="button"
                         onClick={() => removeCompetitor(index)}
-                        className="px-3 py-2 rounded-lg bg-red-500/20 text-red-200 hover:bg-red-500/30 text-xs"
+                        className="mt-6 px-3 py-2 rounded-lg bg-red-500/20 text-red-200 hover:bg-red-500/30 text-xs"
                       >
                         Remove
                       </button>
@@ -438,48 +579,70 @@ function PrepareCampaign() {
             <h2 className="text-xl font-semibold text-white">Channels & Audience</h2>
             <p className="text-sm text-gray-400">{steps[3].description}</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                type="text"
-                value={ownerDraft.website || ''}
-                onChange={(e) => updateOwnerField('website', e.target.value)}
-                placeholder="Website"
-                className="md:col-span-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
-              />
-              <input
-                type="text"
-                value={Array.isArray(ownerDraft.platforms) ? ownerDraft.platforms.join(', ') : ''}
-                onChange={(e) => updateOwnerField('platforms', e.target.value.split(',').map((v) => v.trim()).filter(Boolean))}
-                placeholder="Platforms (comma separated)"
-                className="md:col-span-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
-              />
-              <input
-                type="text"
-                value={Array.isArray(ownerDraft.current_channels) ? ownerDraft.current_channels.join(', ') : ''}
-                onChange={(e) => updateOwnerField('current_channels', e.target.value.split(',').map((v) => v.trim()).filter(Boolean))}
-                placeholder="Current channels (comma separated)"
-                className="md:col-span-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
-              />
-              <input
-                type="text"
-                value={ownerDraft.targetAudience?.gender || ''}
-                onChange={(e) => updateAudience('gender', e.target.value)}
-                placeholder="Audience gender"
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
-              />
-              <input
-                type="text"
-                value={ownerDraft.targetAudience?.ageRange || ''}
-                onChange={(e) => updateAudience('ageRange', e.target.value)}
-                placeholder="Audience age range"
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
-              />
-              <input
-                type="text"
-                value={ownerDraft.targetAudience?.location || ''}
-                onChange={(e) => updateAudience('location', e.target.value)}
-                placeholder="Audience location"
-                className="md:col-span-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
-              />
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-300 mb-2">Website</label>
+                <input
+                  type="text"
+                  value={ownerDraft.website || ''}
+                  onChange={(e) => updateOwnerField('website', e.target.value)}
+                  placeholder="Website"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-300 mb-2">Platforms</label>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <div className="flex flex-wrap gap-2">
+                    {platformOptions.map((platform) => {
+                      const selected = (ownerDraft.platforms || []).includes(platform);
+                      return (
+                        <button
+                          key={platform}
+                          type="button"
+                          onClick={() => toggleOwnerArrayValue('platforms', platform)}
+                          className={`px-3 py-1.5 rounded-full text-xs border transition ${
+                            selected
+                              ? 'bg-[#C1B6FD]/20 border-[#C1B6FD]/60 text-[#E9E3FF]'
+                              : 'bg-white/5 border-white/15 text-gray-300 hover:bg-white/10'
+                          }`}
+                        >
+                          {platform}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-300 mb-2">Audience Gender</label>
+                <input
+                  type="text"
+                  value={ownerDraft.targetAudience?.gender || ''}
+                  onChange={(e) => updateAudience('gender', e.target.value)}
+                  placeholder="Audience gender"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-300 mb-2">Audience Age Range</label>
+                <input
+                  type="text"
+                  value={ownerDraft.targetAudience?.ageRange || ''}
+                  onChange={(e) => updateAudience('ageRange', e.target.value)}
+                  placeholder="Audience age range"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-300 mb-2">Audience Location</label>
+                <input
+                  type="text"
+                  value={ownerDraft.targetAudience?.location || ''}
+                  onChange={(e) => updateAudience('location', e.target.value)}
+                  placeholder="Audience location"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+                />
+              </div>
             </div>
           </div>
         )}
@@ -488,8 +651,11 @@ function PrepareCampaign() {
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-white">Review & Generate</h2>
             <p className="text-sm text-gray-400">{steps[4].description}</p>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 leading-7">
-              {buildAiDescription()}
+            <div>
+              <label className="block text-sm text-gray-300 mb-2">AI Input Summary</label>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 leading-7">
+                {buildAiDescription()}
+              </div>
             </div>
           </div>
         )}

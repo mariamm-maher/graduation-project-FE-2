@@ -15,6 +15,9 @@ function DraftCampaigns() {
   const totalPages = pagination?.totalPages || 1;
   const totalItems = pagination?.total || 0;
 
+  console.log('DraftCampaigns - campaigns:', campaigns);
+  console.log('DraftCampaigns - totalItems:', totalItems);
+
   useEffect(() => {
     fetchCampaigns({ page, limit: LIMIT, lifecycleStage: 'draft' });
   }, [page, fetchCampaigns]);

@@ -46,6 +46,7 @@ export const buildAiGeneratePayload = ({ campaignData, ownerProfile }) => {
   const profile = ownerProfile || {};
 
   return {
+    campaign_name: toTrimmedString(campaignData?.campaignName || campaignData?.campaign_name),
     brand_name: toTrimmedString(profile.brand_name),
     product_or_service: toTrimmedString(profile.product_or_service),
     industry: toTrimmedString(profile.industry),

@@ -15,6 +15,8 @@ function CreateCampaign() {
     durationWeeks: '',
   });
 
+
+
   const [submitMessage, setSubmitMessage] = useState({ type: '', text: '' });
 
   const durationWeeks = Number.parseInt(campaignData.durationWeeks, 10);

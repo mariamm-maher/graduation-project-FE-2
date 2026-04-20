@@ -1,82 +1,135 @@
-import { Search, CheckCircle, Calendar, Users, Target, Clock } from 'lucide-react';
-import { useState } from 'react';
+import { Search, CheckCircle, Calendar, Users, Target, Clock, Loader2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useCollaborationStore from '../../src/stores/collaborationStore';
 
 function ActiveCollaborations() {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
-  // Mock data - Filter: Collaboration.status = 'active'
-  const activeCollaborations = [
-    {
-      id: 1,
-      campaignId: 1,
-      campaignName: 'Summer Fashion Launch',
-      influencerId: 2,
-      influencerName: 'Sarah Johnson',
-      influencerImage: null,
-      contractId: 1,
-      status: 'active',
-      budget: 5000,
-      startDate: '2026-01-15',
-      endDate: '2026-03-15',
-      // Task metrics (from CollaborationTask table)
-      totalTasks: 12,
-      completedTasks: 7,
-      // Content metrics (from ContentCalendar table)
-      scheduledContent: 8,
-      postedContent: 5,
-      createdAt: '2026-01-10'
-    },
-    {
-      id: 5,
-      campaignId: 4,
-      campaignName: 'Tech Product Launch Q1',
-      influencerId: 6,
-      influencerName: 'Alex Rivera',
-      influencerImage: null,
-      contractId: 5,
-      status: 'active',
-      budget: 7500,
-      startDate: '2026-01-20',
-      endDate: '2026-04-20',
-      totalTasks: 15,
-      completedTasks: 3,
-      scheduledContent: 10,
-      postedContent: 2,
-      createdAt: '2026-01-15'
-    }
-  ];
+  const {
+    ownerCollaborations,
+    isOwnerCollaborationsLoading,
+    ownerCollaborationsError,
+    getMyOwnerCollaborations,
+  } = useCollaborationStore();
 
-  const filteredCollaborations = activeCollaborations.filter(collab =>
-    searchQuery === '' ||
-    collab.campaignName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    collab.influencerName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    getMyOwnerCollaborations({ status: 'active' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Calculate time progress
+  const activeCollaborations = useMemo(() => {
+    const activeStatuses = new Set(['active', 'in-progress', 'in_progress']);
+
+    return (ownerCollaborations || [])
+      .filter((collab) => activeStatuses.has((collab?.status || '').toLowerCase()))
+      .map((collab, index) => {
+        const influencer = collab?.influencer || collab?.influencerId || {};
+        const influencerName =
+          `${influencer?.firstName || influencer?.user?.firstName || ''} ${
+            influencer?.lastName || influencer?.user?.lastName || ''
+          }`.trim() || collab?.influencerName || 'Unknown Influencer';
+
+        const tasks = collab?.tasks || [];
+        const totalTasks = Number(collab?.totalTasks ?? tasks.length ?? 0);
+        const completedTasks = Number(
+          collab?.completedTasks ??
+            tasks.filter((task) => task?.completed || task?.status === 'completed').length
+        );
+
+        const fallbackId = `${
+          collab?._id || collab?.id || collab?.campaign?._id || collab?.campaignId || 'collab'
+        }-${index}`;
+
+        return {
+          id: collab?._id || collab?.id || fallbackId,
+          campaignName:
+            collab?.campaign?.campaignName ||
+            collab?.campaign?.name ||
+            collab?.campaignName ||
+            'Untitled Campaign',
+          influencerName,
+          budget: Number(
+            collab?.agreedBudget ??
+              collab?.budget ??
+              collab?.proposedBudget ??
+              collab?.campaign?.totalBudget ??
+              0
+          ),
+          startDate:
+            collab?.startDate || collab?.campaign?.startDate || collab?.createdAt || new Date().toISOString(),
+          endDate:
+            collab?.endDate || collab?.campaign?.endDate || collab?.updatedAt || new Date().toISOString(),
+          totalTasks,
+          completedTasks,
+          scheduledContent: Number(collab?.scheduledContent ?? 0),
+          postedContent: Number(collab?.postedContent ?? 0),
+        };
+      });
+  }, [ownerCollaborations]);
+
+  const filteredCollaborations = activeCollaborations.filter((collab) => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return true;
+
+    return (
+      collab.campaignName?.toLowerCase().includes(query) ||
+      collab.influencerName?.toLowerCase().includes(query)
+    );
+  });
+
   const getTimeProgress = (startDate, endDate) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const now = new Date();
     const total = end - start;
     const elapsed = now - start;
-    const percentage = Math.min(100, Math.max(0, (elapsed / total) * 100));
-    return Math.round(percentage);
+    return Math.round(Math.min(100, Math.max(0, (elapsed / total) * 100)));
   };
 
-  // Get days remaining
   const getDaysRemaining = (endDate) => {
     const end = new Date(endDate);
     const now = new Date();
-    const diff = end - now;
-    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-    return days > 0 ? days : 0;
+    return Math.ceil((end - now) / (1000 * 60 * 60 * 24));
   };
+
+  if (isOwnerCollaborationsLoading) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white">Active Collaborations</h1>
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-12 text-center">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-8 h-8 text-green-400 animate-spin" />
+            <p className="text-sm text-gray-400">Loading active collaborations...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (ownerCollaborationsError) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white">Active Collaborations</h1>
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-12 text-center">
+          <div className="flex flex-col items-center gap-4">
+            <h3 className="text-xl font-bold text-white">Failed to load active collaborations</h3>
+            <p className="text-gray-400">{ownerCollaborationsError}</p>
+            <button
+              onClick={() => getMyOwnerCollaborations({ status: 'active' })}
+              className="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-white font-medium transition-all"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white">Active Collaborations</h1>
@@ -86,33 +139,25 @@ function ActiveCollaborations() {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-green-500/10 to-green-600/5 backdrop-blur-md border border-green-500/20 rounded-xl p-4">
+        <div className="bg-linear-to-br from-green-500/10 to-green-600/5 backdrop-blur-md border border-green-500/20 rounded-xl p-4">
           <p className="text-gray-400 text-sm mb-1">Active Now</p>
           <p className="text-2xl font-bold text-green-400">{activeCollaborations.length}</p>
         </div>
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
           <p className="text-gray-400 text-sm mb-1">Total Tasks</p>
-          <p className="text-2xl font-bold text-white">
-            {activeCollaborations.reduce((sum, c) => sum + c.totalTasks, 0)}
-          </p>
+          <p className="text-2xl font-bold text-white">{activeCollaborations.reduce((sum, c) => sum + c.totalTasks, 0)}</p>
         </div>
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
           <p className="text-gray-400 text-sm mb-1">Completed Tasks</p>
-          <p className="text-2xl font-bold text-white">
-            {activeCollaborations.reduce((sum, c) => sum + c.completedTasks, 0)}
-          </p>
+          <p className="text-2xl font-bold text-white">{activeCollaborations.reduce((sum, c) => sum + c.completedTasks, 0)}</p>
         </div>
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
           <p className="text-gray-400 text-sm mb-1">Content Posted</p>
-          <p className="text-2xl font-bold text-white">
-            {activeCollaborations.reduce((sum, c) => sum + c.postedContent, 0)}
-          </p>
+          <p className="text-2xl font-bold text-white">{activeCollaborations.reduce((sum, c) => sum + c.postedContent, 0)}</p>
         </div>
       </div>
 
-      {/* Search */}
       <div className="flex-1 relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
         <input
@@ -124,7 +169,6 @@ function ActiveCollaborations() {
         />
       </div>
 
-      {/* Collaborations List */}
       {filteredCollaborations.length === 0 ? (
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-12 text-center">
           <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -138,16 +182,13 @@ function ActiveCollaborations() {
           {filteredCollaborations.map((collab) => {
             const timeProgress = getTimeProgress(collab.startDate, collab.endDate);
             const daysRemaining = getDaysRemaining(collab.endDate);
-            const taskProgress = collab.totalTasks > 0 
-              ? Math.round((collab.completedTasks / collab.totalTasks) * 100) 
-              : 0;
+            const taskProgress = collab.totalTasks > 0 ? Math.round((collab.completedTasks / collab.totalTasks) * 100) : 0;
 
             return (
               <div
                 key={collab.id}
                 className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300"
               >
-                {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-5">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
@@ -157,9 +198,7 @@ function ActiveCollaborations() {
                       >
                         {collab.campaignName}
                       </h3>
-                      <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-bold animate-pulse">
-                        ● Active
-                      </span>
+                      <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-bold">● Active</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
                       <div className="flex items-center gap-2">
@@ -168,13 +207,18 @@ function ActiveCollaborations() {
                       </div>
                       <div className="flex items-center gap-2 text-amber-400">
                         <Clock className="w-4 h-4" />
-                        <span className="font-semibold">{daysRemaining} days remaining</span>
+                        <span className="font-semibold">
+                          {daysRemaining > 0
+                            ? `${daysRemaining} days remaining`
+                            : daysRemaining === 0
+                              ? 'Ends today'
+                              : `${Math.abs(daysRemaining)} days overdue`}
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Timeline Progress */}
                 <div className="mb-5">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-gray-400">Timeline Progress</span>
@@ -182,15 +226,13 @@ function ActiveCollaborations() {
                   </div>
                   <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all duration-700"
+                      className="h-full bg-linear-to-r from-green-400 to-green-600 rounded-full transition-all duration-700"
                       style={{ width: `${timeProgress}%` }}
                     />
                   </div>
                 </div>
 
-                {/* Metrics */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-                  {/* Tasks */}
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                     <div className="flex items-center gap-2 mb-2">
                       <CheckCircle className="w-4 h-4 text-green-400" />
@@ -199,13 +241,12 @@ function ActiveCollaborations() {
                     <p className="text-2xl font-bold text-white">{collab.completedTasks}/{collab.totalTasks}</p>
                     <div className="mt-2 h-1.5 bg-white/10 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full"
+                        className="h-full bg-linear-to-r from-green-400 to-green-600 rounded-full"
                         style={{ width: `${taskProgress}%` }}
                       />
                     </div>
                   </div>
 
-                  {/* Content Posted */}
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                     <div className="flex items-center gap-2 mb-2">
                       <Target className="w-4 h-4 text-purple-400" />
@@ -215,7 +256,6 @@ function ActiveCollaborations() {
                     <p className="text-xs text-gray-400 mt-1">{collab.scheduledContent} scheduled</p>
                   </div>
 
-                  {/* Budget */}
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                     <div className="flex items-center gap-2 mb-2">
                       <Calendar className="w-4 h-4 text-blue-400" />
@@ -224,7 +264,6 @@ function ActiveCollaborations() {
                     <p className="text-2xl font-bold text-white">${collab.budget.toLocaleString()}</p>
                   </div>
 
-                  {/* Duration */}
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                     <div className="flex items-center gap-2 mb-2">
                       <Clock className="w-4 h-4 text-amber-400" />
@@ -236,11 +275,10 @@ function ActiveCollaborations() {
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <button
                     onClick={() => navigate(`/dashboard/owner/collaborations/${collab.id}/workspace`)}
-                    className="px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:shadow-lg hover:shadow-green-500/30 rounded-xl text-white font-medium transition-all"
+                    className="px-4 py-3 bg-linear-to-r from-green-500 to-green-600 hover:shadow-lg hover:shadow-green-500/30 rounded-xl text-white font-medium transition-all"
                   >
                     Open Workspace
                   </button>

@@ -4,8 +4,10 @@ import useOwnerStore from '../../../../../../stores/ownerStore';
 
 function InfluencerCard({ influencer }) {
   const { fetchInfluencerById } = useOwnerStore();
-  const influencerId = influencer?.id ?? influencer?.userId;
 
+  const influencerId = influencer?.id ?? influencer?.userId;
+  const categories = influencer?.categories?.length ? influencer.categories : ['General'];
+  console.log('Influencer Card Data:', influencer);
   const formatFollowers = (count) => {
     if (count >= 1000000) {
       return `${(count / 1000000).toFixed(1)}M`;
@@ -33,11 +35,7 @@ function InfluencerCard({ influencer }) {
       {/* Gradient Overlay */}
       <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-[#C1B6FD]/10 via-transparent to-[#745CB4]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
 
-      {/* Match Score Badge */}
-      <div className="absolute top-4 right-4 z-10 px-3 py-1.5 bg-linear-to-r from-[#C1B6FD] to-[#745CB4] rounded-full flex items-center gap-1.5 shadow-lg">
-        <Zap className="w-3.5 h-3.5 text-white fill-white" />
-        <span className="text-xs font-bold text-white">{influencer.matchScore}% Match</span>
-      </div>
+   
 
       <div className="relative z-10 flex flex-col lg:flex-row gap-6">
         {/* Left: Image + Basic Info */}
@@ -49,7 +47,16 @@ function InfluencerCard({ influencer }) {
           />
           <div className="flex-1 min-w-0">
             <h3 className="text-xl font-bold text-white mb-1 group-hover:text-[#C1B6FD] transition-colors">{influencer.name}</h3>
-            <p className="text-sm text-gray-400 mb-2">{influencer.niche}</p>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {categories.map((category, idx) => (
+                <span
+                  key={idx}
+                  className="px-2 py-0.5 bg-white/10 border border-white/15 rounded-md text-xs text-gray-200"
+                >
+                  {category}
+                </span>
+              ))}
+            </div>
             <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
               <MapPin className="w-3.5 h-3.5" />
               <span>{influencer.location}</span>

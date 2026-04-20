@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
-import { UserCheck, UserPlus, History, ArrowRight } from 'lucide-react';
+import { UserCheck, History, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useInfluncerStore from '../../../../../stores/influncerStore';
-import InfluencersHistory from './pastCollborators/InfluencersHistory';
 import DiscoverInfluencers from './DiscoverCollborators/DiscoverInfluencers';
 
 function InfluencersOverview() {
@@ -25,8 +24,14 @@ function InfluencersOverview() {
       {/* Header & Navigation Container */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Discover Talent</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Discover Collaborators</h1>
           <p className="text-gray-400 text-sm sm:text-base">Find influencers that match your campaign goals</p>
+          {overviewLoading && (
+            <p className="text-xs text-gray-500 mt-2">Loading collaborator overview...</p>
+          )}
+          {overviewError && (
+            <p className="text-xs text-red-300 mt-2">Failed to load overview: {overviewError}</p>
+          )}
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
@@ -47,7 +52,7 @@ function InfluencersOverview() {
           </div>
           
           <div className="flex items-center gap-2 border-l border-white/10 pl-3 ml-1">
-            <span className="text-sm font-bold text-white">{activeCollaboratorNow}</span>
+            <span className="text-sm font-bold text-white">{overviewLoading ? '...' : activeCollaboratorNow}</span>
             <ArrowRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-[#C1B6FD] group-hover:translate-x-0.5 transition-all" />
           </div>
         </Link>
@@ -65,7 +70,7 @@ function InfluencersOverview() {
           </div>
           
           <div className="flex items-center gap-2 border-l border-white/10 pl-3 ml-1">
-            <span className="text-sm font-bold text-white">{pastCollaboratingNumber}</span>
+            <span className="text-sm font-bold text-white">{overviewLoading ? '...' : pastCollaboratingNumber}</span>
             <ArrowRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-[#C1B6FD] group-hover:translate-x-0.5 transition-all" />
           </div>
         </Link>

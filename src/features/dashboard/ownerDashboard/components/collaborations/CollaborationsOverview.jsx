@@ -21,7 +21,7 @@ function CollaborationsOverview() {
   const completedCollabs = overview?.completedCollabs ?? 0;
   const pendingContractSignCollabs =
     overview?.pending_contract_signCollab ?? overview?.pendingContractSignCollab ?? 0;
-  const totalMessages = overview?.totalMessages ?? 0;
+  // const totalMessages = overview?.totalMessages ?? 0;
 
   return (
     <div className="space-y-6">
@@ -39,45 +39,72 @@ function CollaborationsOverview() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div className="bg-linear-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 hover:border-indigo-400/30 transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center">
-              <Users className="w-6 h-6 text-indigo-400" />
-            </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+        <div className="relative bg-white/5 backdrop-blur-md border border-white/10 rounded-lg px-3.5 py-2.5 flex items-center gap-3 hover:bg-white/10 hover:border-indigo-400/40 hover:shadow-md hover:shadow-indigo-500/10 hover:-translate-y-0.5 transition-all duration-300 group">
+          <div className="flex items-center justify-center w-7 h-7 rounded shrink-0 bg-linear-to-br from-indigo-500/20 to-indigo-600/20 border border-indigo-400/30 group-hover:scale-105 transition-transform">
+            <Users className="w-3.5 h-3.5 text-indigo-300" />
           </div>
-          <p className="text-3xl font-bold text-white mb-1">{totalCollaborations}</p>
-          <p className="text-sm text-gray-400">Total Collaborations</p>
+
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-200 group-hover:text-indigo-300 transition-colors">Total</p>
+            <p className="text-xs text-gray-400 truncate">All collaborations</p>
+          </div>
+
+          <div className="flex items-center gap-2 border-l border-white/10 pl-3 ml-1">
+            <span className="text-sm font-bold text-white">{totalCollaborations}</span>
+            <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-indigo-300 group-hover:translate-x-0.5 transition-all" />
+          </div>
         </div>
 
-        <div className="bg-linear-to-br from-green-500/10 to-green-500/5 backdrop-blur-md border border-green-500/20 rounded-xl p-5 hover:border-green-400/40 transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-green-400" />
-            </div>
+        <div className="relative bg-white/5 backdrop-blur-md border border-white/10 rounded-lg px-3.5 py-2.5 flex items-center gap-3 hover:bg-white/10 hover:border-green-400/40 hover:shadow-md hover:shadow-green-500/10 hover:-translate-y-0.5 transition-all duration-300 group">
+          <div className="flex items-center justify-center w-7 h-7 rounded shrink-0 bg-linear-to-br from-green-500/20 to-emerald-500/20 border border-green-400/30 group-hover:scale-105 transition-transform">
+            <CheckCircle className="w-3.5 h-3.5 text-green-300" />
           </div>
-          <p className="text-3xl font-bold text-white mb-1">{activeCollabs}</p>
-          <p className="text-sm text-gray-400">Active</p>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-200 group-hover:text-green-300 transition-colors">Active</span>
+            <span className="flex h-1.5 w-1.5 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 border-l border-white/10 pl-3 ml-auto">
+            <span className="text-sm font-bold text-white">{activeCollabs}</span>
+            <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-green-300 group-hover:translate-x-0.5 transition-all" />
+          </div>
         </div>
 
-        <div className="bg-linear-to-br from-blue-500/10 to-blue-500/5 backdrop-blur-md border border-blue-500/20 rounded-xl p-5 hover:border-blue-400/40 transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
-              <Star className="w-6 h-6 text-blue-400" />
-            </div>
+        <div className="relative bg-white/5 backdrop-blur-md border border-white/10 rounded-lg px-3.5 py-2.5 flex items-center gap-3 hover:bg-white/10 hover:border-blue-400/40 hover:shadow-md hover:shadow-blue-500/10 hover:-translate-y-0.5 transition-all duration-300 group">
+          <div className="flex items-center justify-center w-7 h-7 rounded shrink-0 bg-linear-to-br from-blue-500/20 to-cyan-500/20 border border-blue-400/30 group-hover:scale-105 transition-transform">
+            <Star className="w-3.5 h-3.5 text-blue-300" />
           </div>
-          <p className="text-3xl font-bold text-white mb-1">{completedCollabs}</p>
-          <p className="text-sm text-gray-400">Completed</p>
+
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-200 group-hover:text-blue-300 transition-colors">Completed</p>
+            <p className="text-xs text-gray-400 truncate">Finished collaborations</p>
+          </div>
+
+          <div className="flex items-center gap-2 border-l border-white/10 pl-3 ml-1">
+            <span className="text-sm font-bold text-white">{completedCollabs}</span>
+            <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-blue-300 group-hover:translate-x-0.5 transition-all" />
+          </div>
         </div>
 
-        <div className="bg-linear-to-br from-amber-500/10 to-amber-500/5 backdrop-blur-md border border-amber-500/20 rounded-xl p-5 hover:border-amber-400/40 transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
-              <FileText className="w-6 h-6 text-amber-400" />
-            </div>
+        <div className="relative bg-white/5 backdrop-blur-md border border-white/10 rounded-lg px-3.5 py-2.5 flex items-center gap-3 hover:bg-white/10 hover:border-amber-400/40 hover:shadow-md hover:shadow-amber-500/10 hover:-translate-y-0.5 transition-all duration-300 group">
+          <div className="flex items-center justify-center w-7 h-7 rounded shrink-0 bg-linear-to-br from-amber-500/20 to-orange-500/20 border border-amber-400/30 group-hover:scale-105 transition-transform">
+            <FileText className="w-3.5 h-3.5 text-amber-300" />
           </div>
-          <p className="text-3xl font-bold text-white mb-1">{pendingContractSignCollabs}</p>
-          <p className="text-sm text-gray-400">Pending Contract Sign</p>
+
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-200 group-hover:text-amber-300 transition-colors">Pending</p>
+            <p className="text-xs text-gray-400 truncate">Contract sign</p>
+          </div>
+
+          <div className="flex items-center gap-2 border-l border-white/10 pl-3 ml-1">
+            <span className="text-sm font-bold text-white">{pendingContractSignCollabs}</span>
+            <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-amber-300 group-hover:translate-x-0.5 transition-all" />
+          </div>
         </div>
       </div>
 
@@ -116,55 +143,7 @@ function CollaborationsOverview() {
             </div>
           </Link>
 
-          {/* LIVE COLLABORATION */}
-          <Link
-            to="/dashboard/owner/collaborations/active"
-            className="group relative overflow-hidden bg-white/5 hover:bg-linear-to-br hover:from-green-500/10 hover:to-green-600/5 border border-white/5 hover:border-green-500/30 rounded-2xl p-5 transition-all duration-500 hover:shadow-[0_8px_30px_rgba(34,197,94,0.15)] hover:-translate-y-1"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-2xl -mr-10 -mt-10 transition-all duration-500 group-hover:bg-green-500/20"></div>
-            <div className="relative z-10 flex items-start justify-between mb-4">
-              <div className="w-12 h-12 bg-green-500/10 border border-green-500/20 group-hover:bg-green-500/20 group-hover:scale-110 rounded-xl flex items-center justify-center transition-all duration-300 shadow-inner">
-                <Activity className="w-6 h-6 text-green-400" />
-              </div>
-              <span className="flex h-3 w-3 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-              </span>
-            </div>
-            <div className="relative z-10">
-              <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-green-300 transition-colors">Live Collaboration</h3>
-              <p className="text-sm text-gray-400">Currently running</p>
-            </div>
-            <div className="relative z-10 mt-5 flex items-center justify-between">
-              <span className="text-xs font-medium text-green-400/0 group-hover:text-green-400/90 transition-colors duration-300">Track progress</span>
-              <span className="opacity-0 group-hover:opacity-100 transform -translate-x-4 group-hover:translate-x-0 transition-all duration-300 bg-green-500/20 p-1.5 rounded-lg">
-                <ChevronRight className="w-4 h-4 text-green-300" />
-              </span>
-            </div>
-          </Link>
-
-          {/* COMPLETED */}
-          <Link
-            to="/dashboard/owner/collaborations/completed"
-            className="group relative overflow-hidden bg-white/5 hover:bg-linear-to-br hover:from-blue-500/10 hover:to-blue-600/5 border border-white/5 hover:border-blue-500/30 rounded-2xl p-5 transition-all duration-500 hover:shadow-[0_8px_30px_rgba(59,130,246,0.15)] hover:-translate-y-1"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl -mr-10 -mt-10 transition-all duration-500 group-hover:bg-blue-500/20"></div>
-            <div className="relative z-10 flex items-start justify-between mb-4">
-              <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/20 group-hover:bg-blue-500/20 group-hover:scale-110 rounded-xl flex items-center justify-center transition-all duration-300 shadow-inner">
-                <Award className="w-6 h-6 text-blue-400" />
-              </div>
-            </div>
-            <div className="relative z-10">
-              <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-blue-300 transition-colors">Completed</h3>
-              <p className="text-sm text-gray-400">Finished projects</p>
-            </div>
-            <div className="relative z-10 mt-5 flex items-center justify-between">
-              <span className="text-xs font-medium text-blue-400/0 group-hover:text-blue-400/90 transition-colors duration-300">Review results</span>
-              <span className="opacity-0 group-hover:opacity-100 transform -translate-x-4 group-hover:translate-x-0 transition-all duration-300 bg-blue-500/20 p-1.5 rounded-lg">
-                <ChevronRight className="w-4 h-4 text-blue-300" />
-              </span>
-            </div>
-          </Link>
+      
 
           {/* WAITING CONTRACT SIGN */}
           <Link
@@ -252,7 +231,7 @@ function CollaborationsOverview() {
               </div>
             </div>
             <div className="relative z-10">
-              <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-cyan-300 transition-colors">Collaborations Analytics</h3>
+              <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-cyan-300 transition-colors"> Analytics</h3>
               <p className="text-sm text-gray-400">Performance insights</p>
             </div>
             <div className="relative z-10 mt-5 flex items-center justify-between">
@@ -263,33 +242,7 @@ function CollaborationsOverview() {
             </div>
           </Link>
 
-          {/* CHAT ROOMS */}
-          <Link
-            to="/dashboard/owner/collaborations/chat-rooms"
-            className="group relative overflow-hidden bg-white/5 hover:bg-linear-to-br hover:from-emerald-500/10 hover:to-emerald-600/5 border border-white/5 hover:border-emerald-500/30 rounded-2xl p-5 transition-all duration-500 hover:shadow-[0_8px_30px_rgba(16,185,129,0.15)] hover:-translate-y-1"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -mr-10 -mt-10 transition-all duration-500 group-hover:bg-emerald-500/20"></div>
-            <div className="relative z-10 flex items-start justify-between mb-4">
-              <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 group-hover:bg-emerald-500/20 group-hover:scale-110 rounded-xl flex items-center justify-center transition-all duration-300 shadow-inner">
-                <MessageSquare className="w-6 h-6 text-emerald-400" />
-              </div>
-              {totalMessages > 0 && (
-                <span className="bg-emerald-500 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]">
-                  {totalMessages}
-                </span>
-              )}
-            </div>
-            <div className="relative z-10">
-              <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-emerald-300 transition-colors">Collaboration Messaging</h3>
-              <p className="text-sm text-gray-400">Communication hub</p>
-            </div>
-            <div className="relative z-10 mt-5 flex items-center justify-between">
-              <span className="text-xs font-medium text-emerald-400/0 group-hover:text-emerald-400/90 transition-colors duration-300">Open messages</span>
-              <span className="opacity-0 group-hover:opacity-100 transform -translate-x-4 group-hover:translate-x-0 transition-all duration-300 bg-emerald-500/20 p-1.5 rounded-lg">
-                <ChevronRight className="w-4 h-4 text-emerald-300" />
-              </span>
-            </div>
-          </Link>
+   
 
           {/* BOARD */}
           <Link
@@ -303,7 +256,7 @@ function CollaborationsOverview() {
               </div>
             </div>
             <div className="relative z-10">
-              <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-violet-300 transition-colors">Collaboration Tasks Board</h3>
+              <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-violet-300 transition-colors">Tasks Board</h3>
               <p className="text-sm text-gray-400">Task management</p>
             </div>
             <div className="relative z-10 mt-5 flex items-center justify-between">

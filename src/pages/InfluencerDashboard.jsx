@@ -4,7 +4,7 @@ import CampaignsLayout from '../features/dashboard/influncerDashboard/components
 import CollaborationsLayout from '../features/dashboard/influncerDashboard/components/collaborations/CollaborationsLayout';
 import Profile from '../features/dashboard/influncerDashboard/components/profile/Profile';
 import CompleteProfileWizard from '../features/dashboard/influncerDashboard/components/profile/CompleteProfileWizard';
-import Messages from '../features/dashboard/shared/messages/Messages';
+// import Messages from '../features/dashboard/shared/messages/Messages';
 
 function InfluencerDashboard() {
   return (
@@ -20,7 +20,7 @@ function InfluencerDashboard() {
           <Route path="complete-profile" element={<CompleteProfileWizard />} />
           <Route path="social-media/*" element={<div>Social Media Content</div>} />
           <Route path="analytics/*" element={<div>Performance Analytics</div>} />
-          <Route path="messages/*" element={<Messages userRole="influencer" />} />
+          {/* <Route path="messages/*" element={<Messages userRole="influencer" />} /> */}
         </Routes>
       </div>
     </div>

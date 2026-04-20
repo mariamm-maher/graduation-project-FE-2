@@ -9,7 +9,7 @@ import useCollaborationRequestsStore from '../../../../../../stores/Collaboratio
 function SendCollabRequest() {
   const { influencerId } = useParams();
   const navigate = useNavigate();
-
+console.log('Influencer ID from URL:', influencerId);
   // Campaign Store
   const { campaigns, fetchCampaigns, isLoading: isLoadingCampaigns } = useCampaignStore();
   // Collaboration Requests Store

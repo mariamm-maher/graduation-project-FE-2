@@ -330,17 +330,11 @@ function CreateCampaign() {
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 text-purple-100 group-hover:scale-110 transition-transform" />
-                  Generate Strategy with AI
+                  Generate Compagin Plan with AI
                 </>
               )}
             </button>
-            <button
-              onClick={handleSaveAsDraft}
-              disabled={isLoading}
-              className="w-full px-6 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Save as Draft
-            </button>
+         
           </div>
         </div>
       </div>

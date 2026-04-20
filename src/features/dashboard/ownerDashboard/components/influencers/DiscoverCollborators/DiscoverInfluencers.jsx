@@ -6,13 +6,23 @@ import Pagination from './Pagination';
 import useOwnerStore from '../../../../../../stores/ownerStore';
 
 function DiscoverInfluencers() {
+  const initialFilters = {
+    categories: [],
+    location: '',
+    platform: '',
+    minFollowers: '',
+    minEngagement: '',
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState(initialFilters);
 
   // Use store
   const { influencers, pagination, isLoading, getInfluencers } = useOwnerStore();
   const { currentPage, totalPages, totalItems, itemsPerPage } = pagination;
 
+  console.log('Influencers Data:', influencers[0]?.id ,influencers[0]?.userId);
   useEffect(() => {
     getInfluencers(currentPage);
   }, [getInfluencers, currentPage]);
@@ -23,12 +33,12 @@ function DiscoverInfluencers() {
 
   // Map API data to component props
   const mappedInfluencers = influencers.map(inf => ({
-    id: inf.id ?? inf.userId,
-    userId: inf.userId ?? inf.user?.id ?? null,
+    profileId: inf.id || null,
+    userId: inf.userId || null,
     name: `${inf.user?.firstName || 'Unknown'} ${inf.user?.lastName || ''}`,
     image: inf.image || null,
     location: inf.location || 'Unknown Location',
-    niche: inf.categories ? inf.categories[0] : 'General',
+    categories: Array.isArray(inf.categories) && inf.categories.length > 0 ? inf.categories : ['General'],
     primaryPlatform: inf.primaryPlatform || 'Instagram',
     followersCount: inf.followersCount || 0,
     engagementRate: inf.engagementRate || 0,
@@ -40,6 +50,60 @@ function DiscoverInfluencers() {
     email: inf.user?.email,
     completionPercentage: inf.completionPercentage
   }));
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const filteredInfluencers = mappedInfluencers.filter((influencer) => {
+    const matchesSearch =
+      !normalizedQuery ||
+      [
+        influencer.name,
+        ...(influencer.categories || []),
+        influencer.location,
+        influencer.primaryPlatform,
+        ...(influencer.contentTypes || []),
+        ...(influencer.collaborationTypes || []),
+      ]
+        .join(' ')
+        .toLowerCase()
+        .includes(normalizedQuery);
+
+    const selectedCategories = (filters.categories || []).map((category) => category.toLowerCase());
+
+    const matchesCategories =
+      selectedCategories.length === 0 ||
+      (influencer.categories || []).some((category) =>
+        selectedCategories.includes((category || '').toLowerCase())
+      );
+
+    const matchesLocation =
+      !filters.location ||
+      (influencer.location || '').toLowerCase().includes(filters.location.toLowerCase());
+
+    const matchesPlatform =
+      !filters.platform ||
+      (influencer.primaryPlatform || '').toLowerCase() === filters.platform.toLowerCase();
+
+    const matchesMinFollowers =
+      !filters.minFollowers || influencer.followersCount >= Number(filters.minFollowers);
+
+    const matchesMinEngagement =
+      !filters.minEngagement || influencer.engagementRate >= Number(filters.minEngagement);
+
+    return (
+      matchesSearch &&
+      matchesCategories &&
+      matchesLocation &&
+      matchesPlatform &&
+      matchesMinFollowers &&
+      matchesMinEngagement
+    );
+  });
+
+  const handleClearFilters = () => {
+    setFilters(initialFilters);
+    setSearchQuery('');
+  };
 
   if (isLoading && influencers.length === 0) {
     return (
@@ -62,32 +126,33 @@ function DiscoverInfluencers() {
         setSearchQuery={setSearchQuery}
         showFilters={showFilters}
         setShowFilters={setShowFilters}
+        filters={filters}
+        setFilters={setFilters}
+        onClearFilters={handleClearFilters}
       />
 
-      {/* Info Banner */}
-      <div className="bg-gradient-to-r from-[#745CB4]/10 to-[#C1B6FD]/10 border border-[#C1B6FD]/30 rounded-xl p-4 flex items-start gap-3 shadow-lg shadow-[#745CB4]/5">
-        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center shrink-0">
-          <Zap className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <p className="text-white font-bold mb-1">Smart AI Recommendations</p>
-          <p className="text-sm text-gray-300">Showing {totalItems} influencers matched to your campaign history and target audience</p>
-        </div>
-      </div>
+
 
       {/* Influencers List */}
       <div className="space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <p className="text-sm text-gray-300">
+            Showing <span className="font-semibold text-white">{filteredInfluencers.length}</span>
+            {' '}of <span className="font-semibold text-white">{mappedInfluencers.length}</span> influencers
+          </p>
+        </div>
+
         {isLoading ? (
           <div className="flex items-center justify-center py-10">
             <Loader className="w-8 h-8 text-white animate-spin" />
           </div>
-        ) : mappedInfluencers.length > 0 ? (
-          mappedInfluencers.map((influencer, index) => (
+        ) : filteredInfluencers.length > 0 ? (
+          filteredInfluencers.map((influencer, index) => (
             <InfluencerCard key={index} influencer={influencer} />
           ))
         ) : (
           <div className="text-center py-10 text-gray-400">
-            No influencers found.
+            No influencers found for the selected search and filters.
           </div>
         )}
       </div>

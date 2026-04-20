@@ -151,6 +151,18 @@ const collaborationService = {
     }
   },
 
+  // GET /api/collaborations/{id}/workspace
+  // Get aggregated one-page collaboration workspace payload
+  getCollaborationWorkspace: async (id) => {
+    try {
+      const response = await api.get(`/collaborations/${id}/workspace`);
+      return response.data;
+    } catch (error) {
+      console.error('Get collaboration workspace error:', error);
+      throw error.response?.data?.message || 'Failed to fetch collaboration workspace';
+    }
+  },
+
   // PATCH /api/collaborations/{id}/cancel
   // Cancel a collaboration
   cancelCollaboration: async (id) => {

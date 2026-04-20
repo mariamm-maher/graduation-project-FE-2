@@ -8,7 +8,7 @@ function Pagination({ currentPage, setCurrentPage, totalPages, totalItems, start
       </p>
       <div className="flex items-center gap-2">
         <button
-          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
           className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#C1B6FD]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center group"
         >
@@ -28,7 +28,7 @@ function Pagination({ currentPage, setCurrentPage, totalPages, totalItems, start
           </button>
         ))}
         <button
-          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages}
           className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#C1B6FD]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center group"
         >

@@ -4,11 +4,18 @@ import campaignService from '../api/campaign';
 
 const useCampaignStore = create((set) => ({
   // State
-  campaigns: [],
+  campaigns: [],           // all-campaigns list (AllCampaigns)
+  activeCampaigns: [],     // active-campaigns list (ActiveCampaigns)
+  draftCampaigns: [],      // draft-campaigns list (DraftCampaigns)
+  completedCampaigns: [],  // completed-campaigns list (CompletedCampaigns)
   currentCampaign: null,
   campaignsOverview: null,
   activeTrackingTools: null,
   pagination: { total: 0, page: 1, limit: 10, totalPages: 0 },
+  activePagination: { total: 0, page: 1, limit: 10, totalPages: 0 },
+  draftPagination: { total: 0, page: 1, limit: 10, totalPages: 0 },
+  completedPagination: { total: 0, page: 1, limit: 10, totalPages: 0 },
+  campaignAnalytics: null,
   isLoading: false,
   error: null,
 
@@ -130,17 +137,24 @@ const useCampaignStore = create((set) => ({
     }
   },
 
-  // Fetch Campaigns
+  // Fetch Campaigns (all — used by AllCampaigns page)
   fetchCampaigns: async ({ page = 1, limit = 10, lifecycleStage } = {}) => {
     set({ isLoading: true, error: null });
     try {
       const response = await campaignService.getCampaigns({ page, limit, lifecycleStage });
 
-      // response shape: { status, message, data: { campaigns, pagination } }
       if (response.status === 'success' || response.success) {
         const campaigns = response.data?.campaigns || [];
         const pagination = response.data?.pagination || { total: 0, page, limit, totalPages: 0 };
-        set({ campaigns, pagination, isLoading: false, error: null });
+
+        // Route to the right slice based on the lifecycle filter
+        if (lifecycleStage === 'draft') {
+          set({ draftCampaigns: campaigns, draftPagination: pagination, isLoading: false, error: null });
+        } else if (lifecycleStage === 'completed') {
+          set({ completedCampaigns: campaigns, completedPagination: pagination, isLoading: false, error: null });
+        } else {
+          set({ campaigns, pagination, isLoading: false, error: null });
+        }
         return { success: true, data: campaigns, pagination };
       }
 
@@ -169,15 +183,15 @@ const useCampaignStore = create((set) => ({
 
         const totalPages = response.data?.pagination?.totalPages ?? Math.max(1, Math.ceil(total / limit));
 
-        const pagination = {
+        const activePagination = {
           total,
           page: response.data?.pagination?.page ?? page,
           limit: response.data?.pagination?.limit ?? limit,
           totalPages,
         };
 
-        set({ campaigns, activeTrackingTools: trackingTools, pagination, isLoading: false, error: null });
-        return { success: true, data: campaigns, trackingTools, pagination };
+        set({ activeCampaigns: campaigns, activeTrackingTools: trackingTools, activePagination, isLoading: false, error: null });
+        return { success: true, data: campaigns, trackingTools, pagination: activePagination };
       }
 
       throw new Error(response.message || 'Failed to fetch active campaigns');
@@ -274,6 +288,23 @@ const useCampaignStore = create((set) => ({
       throw new Error(response.message || 'Failed to delete campaign');
     } catch (error) {
       const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to delete campaign';
+      set({ error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Fetch Campaign Analytics
+  fetchCampaignAnalytics: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await campaignService.getCampaignAnalytics();
+      if (response.status === 'success' || response.success) {
+        set({ campaignAnalytics: response.data, isLoading: false, error: null });
+        return { success: true, data: response.data };
+      }
+      throw new Error(response.message || 'Failed to fetch campaign analytics');
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch campaign analytics';
       set({ error: errorMessage, isLoading: false });
       return { success: false, error: errorMessage };
     }

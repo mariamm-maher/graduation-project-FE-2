@@ -152,6 +152,18 @@ const campaignService = {
     }
   },
 
+  // Get Campaign Analytics
+  getCampaignAnalytics: async () => {
+    try {
+      const response = await api.get('/campaigns/analytics');
+      console.log('Campaign analytics response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Campaign analytics error:', error);
+      throw error.response?.data?.message || 'Failed to fetch campaign analytics';
+    }
+  },
+
   // Cancel Campaign
   // POST /api/campaigns/{id}/cancel
   cancelCampaign: async (id) => {

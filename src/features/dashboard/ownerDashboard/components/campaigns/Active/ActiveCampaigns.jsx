@@ -1,4 +1,4 @@
-import { Search, Filter, Calendar, Users, CheckCircle, FileText, AlertCircle, MoreVertical, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Filter, Calendar, CheckCircle, FileText, AlertCircle, MoreVertical, Clock, ChevronLeft, ChevronRight, DollarSign, Target, TrendingUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useCampaignStore from '../../../../../../stores/campaignStore';
@@ -10,15 +10,15 @@ function ActiveCampaigns() {
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
-  const { campaigns: campaignsRaw, activeTrackingTools, pagination, isLoading, error, fetchActiveCampaigns } = useCampaignStore();
+  const { activeCampaigns: campaignsRaw, activeTrackingTools, activePagination, isLoading, error, fetchActiveCampaigns } = useCampaignStore();
   const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
-  const totalPages = pagination?.totalPages || 1;
-  const totalItems = pagination?.total || activeTrackingTools?.totalActiveCampaigns || 0;
-
+  const totalPages = activePagination?.totalPages || 1;
+  const totalItems = activePagination?.total || activeTrackingTools?.totalActiveCampaigns || 0;
   useEffect(() => {
     fetchActiveCampaigns({ page, limit: LIMIT });
   }, [page, fetchActiveCampaigns]);
 
+  console.log("Active campaigns:", campaigns);
   // Client-side search filter only
   const activeCampaigns = campaigns.filter(campaign =>
     searchQuery === '' || campaign.campaignName?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -103,152 +103,163 @@ function ActiveCampaigns() {
         {/* Campaign Cards */}
         {!isLoading && !error && activeCampaigns.length > 0 && (
           activeCampaigns.map((campaign) => {
-            const durationTracking = campaign.tracking?.duration || {};
-            const kpisTracking = campaign.tracking?.kpis || {};
-            const contentTracking = campaign.tracking?.content || {};
+            const dur = campaign.tracking?.duration || {};
+            const kpi = campaign.tracking?.kpis || {};
+            const cnt = campaign.tracking?.content || {};
+            const platforms = campaign.targetAudience?.platformsUsed || [];
 
-            const timeProgress = durationTracking.progressPercent ?? 0;
-            const daysRemaining = durationTracking.remainingDurationDays ?? 0;
-            const totalTasks = kpisTracking.totalKpis ?? 0;
-            const completedTasks = Math.max(0, durationTracking.elapsedDurationDays ?? 0);
-            const taskProgress = totalTasks > 0 ? Math.min(100, Math.round((completedTasks / totalTasks) * 100)) : 0;
-            const scheduledContent = contentTracking.scheduledContentCount ?? 0;
-            const postedContent = contentTracking.postedContentCount ?? 0;
-            const failedContent = contentTracking.failedContentCount ?? 0;
-            const totalContent = contentTracking.totalItems ?? 0;
+            const timeProgress = dur.progressPercent ?? 0;
+            const elapsed = dur.elapsedDurationDays ?? 0;
+            const totalDays = dur.totalDurationDays ?? 0;
+            const remaining = dur.remainingDurationDays ?? 0;
+            const posted   = cnt.postedContentCount ?? 0;
+            const scheduled = cnt.scheduledContentCount ?? 0;
+            const failed   = cnt.failedContentCount ?? 0;
+            const totalContent = cnt.totalItems ?? 0;
+            const postedPct  = totalContent > 0 ? Math.round((posted    / totalContent) * 100) : 0;
+            const schedPct   = totalContent > 0 ? Math.round((scheduled / totalContent) * 100) : 0;
+            const failedPct  = totalContent > 0 ? Math.round((failed    / totalContent) * 100) : 0;
 
             return (
               <div
                 key={campaign.id}
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300"
+                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-[#C1B6FD]/30 transition-all duration-300"
               >
-                {/* Top Section */}
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-5">
-                  <div className="flex-1">
-                    <div className="flex flex-wrap items-center gap-3 mb-2">
-                      <h3 
+                {/* ── Header ── */}
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                      <h3
                         onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}`)}
-                        className="text-xl font-bold text-white cursor-pointer hover:text-[#C1B6FD] transition-colors"
+                        className="text-lg font-bold text-white cursor-pointer hover:text-[#C1B6FD] transition-colors truncate"
                       >
-                        {campaign.campaignName || campaign.name}
+                        {campaign.campaignName}
                       </h3>
-                      <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-bold whitespace-nowrap animate-pulse">
+                      <span className="px-2.5 py-0.5 bg-green-500/20 text-green-400 rounded-full text-[11px] font-bold whitespace-nowrap animate-pulse">
                         ● Active
                       </span>
                     </div>
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 shrink-0" />
-                        <span>{new Date(campaign.startDate).toLocaleDateString()} - {new Date(campaign.endDate).toLocaleDateString()}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-amber-400">
-                        <Clock className="w-4 h-4 shrink-0" />
-                        <span className="font-semibold">{daysRemaining} days remaining</span>
-                      </div>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5" />
+                        {new Date(campaign.startDate).toLocaleDateString()} – {new Date(campaign.endDate).toLocaleDateString()}
+                      </span>
+                      <span className="flex items-center gap-1 text-amber-400 font-semibold">
+                        <Clock className="w-3.5 h-3.5" />
+                        {remaining} days left
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Target className="w-3.5 h-3.5 text-[#C1B6FD]" />
+                        {campaign.campaign_goal}
+                      </span>
+                      <span className="flex items-center gap-1 text-emerald-400 font-semibold">
+                        <DollarSign className="w-3.5 h-3.5" />
+                        {campaign.budget_currency} {Number(campaign.budget_amount).toLocaleString()}
+                      </span>
                     </div>
                   </div>
-                  <button className="w-10 h-10 rounded-xl hover:bg-white/10 flex items-center justify-center transition-all">
-                    <MoreVertical className="w-5 h-5 text-gray-400" />
+                  <button
+                    onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}`)}
+                    className="w-9 h-9 rounded-xl hover:bg-white/10 flex items-center justify-center transition-all shrink-0"
+                  >
+                    <MoreVertical className="w-4 h-4 text-gray-400" />
                   </button>
                 </div>
 
-                {/* Time Progress Bar */}
-                <div className="mb-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-400">Campaign Timeline</span>
-                    <span className="text-sm font-semibold text-white">{timeProgress}%</span>
+                {/* ── Timeline bar ── */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-1.5 text-xs">
+                    <span className="text-gray-400">Timeline — Day {elapsed} of {totalDays}</span>
+                    <span className="font-bold text-white">{timeProgress}%</span>
                   </div>
                   <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-linear-to-r from-blue-400 to-blue-600 rounded-full transition-all duration-700"
+                      className="h-full bg-linear-to-r from-blue-400 to-[#C1B6FD] rounded-full transition-all duration-700"
                       style={{ width: `${timeProgress}%` }}
                     />
                   </div>
                 </div>
 
-                {/* Execution Metrics Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-                  {/* Active Influencers */}
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Users className="w-4 h-4 text-blue-400" />
-                      <p className="text-xs text-gray-400">Total KPIs</p>
-                    </div>
-                    <p className="text-2xl font-bold text-white">{totalTasks}</p>
-                    <p className="text-xs text-gray-400 mt-1">Tracked KPI metrics</p>
+                {/* ── 4-stat row ── */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                  <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                    <p className="text-[11px] text-gray-400 mb-1 flex items-center gap-1">
+                      <TrendingUp className="w-3.5 h-3.5 text-[#C1B6FD]" /> KPIs Tracked
+                    </p>
+                    <p className="text-2xl font-bold text-white">{kpi.totalKpis ?? 0}</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5 truncate">{(kpi.metrics || []).join(', ') || '—'}</p>
                   </div>
 
-                  {/* Tasks Progress */}
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle className="w-4 h-4 text-green-400" />
-                      <p className="text-xs text-gray-400">Duration Progress</p>
-                    </div>
-                    <p className="text-2xl font-bold text-white">{durationTracking.elapsedDurationDays ?? 0}/{durationTracking.totalDurationDays ?? 0}</p>
-                    <div className="mt-2 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-linear-to-r from-green-400 to-green-600 rounded-full"
-                        style={{ width: `${taskProgress}%` }}
-                      />
-                    </div>
+                  <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                    <p className="text-[11px] text-gray-400 mb-1 flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-amber-400" /> Days Elapsed
+                    </p>
+                    <p className="text-2xl font-bold text-amber-400">{elapsed}</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5">{remaining} remaining</p>
                   </div>
 
-                  {/* Content Scheduled */}
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Calendar className="w-4 h-4 text-purple-400" />
-                      <p className="text-xs text-gray-400">Content Scheduled</p>
-                    </div>
-                    <p className="text-2xl font-bold text-purple-400">{scheduledContent}</p>
-                    <p className="text-xs text-gray-400 mt-1">{postedContent} posted</p>
+                  <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                    <p className="text-[11px] text-gray-400 mb-1 flex items-center gap-1">
+                      <CheckCircle className="w-3.5 h-3.5 text-green-400" /> Posted
+                    </p>
+                    <p className="text-2xl font-bold text-green-400">{posted}</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5">of {totalContent} items</p>
                   </div>
 
-                  {/* Content Status */}
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <div className="flex items-center gap-2 mb-2">
-                      <FileText className="w-4 h-4 text-indigo-400" />
-                      <p className="text-xs text-gray-400">Content Status</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-green-400 font-semibold">{postedContent}</span>
-                      <span className="text-gray-500">|</span>
-                      <span className="text-purple-400 font-semibold">{scheduledContent}</span>
-                      {failedContent > 0 && (
-                        <>
-                          <span className="text-gray-500">|</span>
-                          <span className="text-red-400 font-semibold">{failedContent}</span>
-                        </>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1">{totalContent} total items</p>
+                  <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                    <p className="text-[11px] text-gray-400 mb-1 flex items-center gap-1">
+                      <FileText className="w-3.5 h-3.5 text-purple-400" /> Scheduled
+                    </p>
+                    <p className="text-2xl font-bold text-purple-400">{scheduled}</p>
+                    <p className={`text-[11px] mt-0.5 ${failed > 0 ? 'text-red-400' : 'text-gray-500'}`}>{failed} failed</p>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row sm:justify-end gap-3 items-center">
-                  <div className="w-full sm:w-auto">
-                    <button
-                      onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}`)}
-                      className="w-full sm:w-auto px-5 py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
-                    >
-                      <span>View Details</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
+                {/* ── Content breakdown bar ── */}
+                {totalContent > 0 && (
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between text-[11px] text-gray-400 mb-1.5">
+                      <span>Content Breakdown</span>
+                      <span>{totalContent} total items</span>
+                    </div>
+                    <div className="flex h-2 rounded-full overflow-hidden bg-white/10">
+                      {posted    > 0 && <div className="bg-green-400"  style={{ width: `${postedPct}%`  }} />}
+                      {scheduled > 0 && <div className="bg-purple-400" style={{ width: `${schedPct}%`  }} />}
+                      {failed    > 0 && <div className="bg-red-400"    style={{ width: `${failedPct}%` }} />}
+                    </div>
+                    <div className="flex gap-4 mt-1 text-[11px]">
+                      <span className="text-green-400">{posted} posted</span>
+                      <span className="text-purple-400">{scheduled} scheduled</span>
+                      {failed > 0 && <span className="text-red-400">{failed} failed</span>}
+                    </div>
                   </div>
+                )}
 
-                  <button
-                    onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}/content`)}
-                    className="px-4 py-3 bg-transparent hover:bg-white/5 border border-white/10 rounded-xl text-white font-medium transition-all"
-                  >
-                    Content Calendar
-                  </button>
+                {/* ── KPI metric tags ── */}
+                {(kpi.metrics || []).length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {kpi.metrics.map(m => (
+                      <span key={m} className="px-2.5 py-0.5 bg-[#745CB4]/20 border border-[#C1B6FD]/20 rounded-full text-[11px] font-semibold text-[#C1B6FD] uppercase tracking-wide">
+                        {m}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
+                {/* ── Platform badges + action ── */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-white/5">
+                  <div className="flex flex-wrap gap-1.5">
+                    {platforms.map(p => (
+                      <span key={p} className="px-2.5 py-0.5 bg-white/5 border border-white/10 rounded-full text-[11px] text-gray-300">
+                        {p}
+                      </span>
+                    ))}
+                  </div>
                   <button
-                    onClick={() => { /* placeholder for quick actions/menu */ }}
-                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all"
-                    aria-label="More"
+                    onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}`)}
+                    className="px-4 py-2 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 shrink-0"
                   >
-                    <MoreVertical className="w-4 h-4 text-gray-300" />
+                    View Details <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>

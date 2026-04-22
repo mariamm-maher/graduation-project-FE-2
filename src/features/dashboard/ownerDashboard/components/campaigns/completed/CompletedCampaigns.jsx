@@ -10,10 +10,10 @@ function CompletedCampaigns() {
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
-  const { campaigns: campaignsRaw, pagination, isLoading, error, fetchCampaigns } = useCampaignStore();
+  const { completedCampaigns: campaignsRaw, completedPagination, isLoading, error, fetchCampaigns } = useCampaignStore();
   const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
-  const totalPages = pagination?.totalPages || 1;
-  const totalItems = pagination?.total || 0;
+  const totalPages = completedPagination?.totalPages || 1;
+  const totalItems = completedPagination?.total || 0;
 
   useEffect(() => {
     fetchCampaigns({ page, limit: LIMIT, lifecycleStage: 'completed' });

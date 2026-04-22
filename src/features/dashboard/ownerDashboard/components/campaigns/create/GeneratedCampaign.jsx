@@ -197,7 +197,7 @@ function GeneratedCampaign() {
         handleSaveAndPublish={handleSaveAndPublish}
         navigate={navigate}
       />
-
+{/* 
       <GeneratedCampaignInputPanel
         isEditing={isEditing}
         handleEditToggle={handleEditToggle}
@@ -208,7 +208,7 @@ function GeneratedCampaign() {
         campaignDuration={campaignDuration}
         editData={editData}
         setEditData={setEditData}
-      />
+      /> */}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <GeneratedCampaignStrategy

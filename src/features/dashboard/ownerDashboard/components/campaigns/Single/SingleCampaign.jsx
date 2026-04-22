@@ -20,18 +20,21 @@ import {
   Share2,
   Instagram,
   Youtube,
-  Facebook
+  Facebook,
+  PlayCircle,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import useCampaignStore from '../../../../../../stores/campaignStore';
 
 function SingleCampaign() {
   const { campaignId } = useParams();
+  const navigate = useNavigate();
   const [showAllCalendar, setShowAllCalendar] = useState(false);
   
   const fetchCampaignById = useCampaignStore((s) => s.fetchCampaignById);
   const currentCampaign = useCampaignStore((s) => s.currentCampaign);
+  const isLoading = useCampaignStore((s) => s.isLoading);
 
   useEffect(() => {
     if (campaignId) fetchCampaignById(campaignId).catch(() => {});
@@ -41,7 +44,7 @@ function SingleCampaign() {
   // derive normalized campaign object from store response
   const campaign = currentCampaign?.data?.campaign || currentCampaign?.campaign || currentCampaign;
   const _motionRef = motion;
-
+console.log("campaign", campaign)
   const formatDate = (value) => {
     if (!value) return '—';
     const date = new Date(value);
@@ -82,6 +85,16 @@ function SingleCampaign() {
     const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
     return Number.isNaN(days) ? 0 : Math.max(days, 0);
   };
+  // Loading state — campaign not yet fetched
+  if (isLoading && !campaign) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C1B6FD]" />
+        <p className="text-gray-400 text-sm">Loading campaign...</p>
+      </div>
+    );
+  }
+
   // Campaign not found fallback
   if (!campaign) {
     return (
@@ -141,42 +154,28 @@ function SingleCampaign() {
     }
   };
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'completed':
-        return (
-          <span className="px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-xs font-semibold text-green-400 flex items-center gap-1">
-            <CheckCircle className="w-3 h-3" />
-            Completed
-          </span>
-        );
-      case 'in_progress':
-        return (
-          <span className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-xs font-semibold text-yellow-400 flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            In Progress
-          </span>
-        );
-      case 'pending':
-        return (
-          <span className="px-3 py-1 bg-gray-500/20 border border-gray-500/30 rounded-full text-xs font-semibold text-gray-400 flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
-            Pending
-          </span>
-        );
-      case 'scheduled':
-        return (
-          <span className="px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-xs font-semibold text-blue-400 flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            Scheduled
-          </span>
-        );
-      default:
-        return null;
-    }
+  const LIFECYCLE_BADGE = {
+    draft:        { bg: 'bg-gray-500/20',    border: 'border-gray-500/30',    text: 'text-gray-400',    icon: <AlertCircle className="w-3 h-3" />,  label: 'Draft' },
+    ai_generated: { bg: 'bg-[#745CB4]/20',   border: 'border-[#C1B6FD]/30',   text: 'text-[#C1B6FD]',   icon: <Sparkles className="w-3 h-3" />,     label: 'AI Generated' },
+    saved:        { bg: 'bg-blue-500/20',     border: 'border-blue-500/30',     text: 'text-blue-400',    icon: <CheckCircle className="w-3 h-3" />,   label: 'Saved' },
+    completed:    { bg: 'bg-green-500/20',    border: 'border-green-500/30',    text: 'text-green-400',   icon: <CheckCircle className="w-3 h-3" />,   label: 'Completed' },
+    cancelled:    { bg: 'bg-red-500/20',      border: 'border-red-500/30',      text: 'text-red-400',     icon: <AlertCircle className="w-3 h-3" />,  label: 'Cancelled' },
+    in_progress:  { bg: 'bg-yellow-500/20',   border: 'border-yellow-500/30',   text: 'text-yellow-400',  icon: <Clock className="w-3 h-3" />,         label: 'In Progress' },
+    pending:      { bg: 'bg-gray-500/20',     border: 'border-gray-500/30',     text: 'text-gray-400',    icon: <AlertCircle className="w-3 h-3" />,  label: 'Pending' },
+    scheduled:    { bg: 'bg-blue-500/20',     border: 'border-blue-500/30',     text: 'text-blue-400',    icon: <Clock className="w-3 h-3" />,         label: 'Scheduled' },
   };
 
-  const lifecycleStage = campaign.lifecycleStage ?? (campaign.isPublished ? 'published' : 'draft');
+  const getStatusBadge = (status) => {
+    const cfg = LIFECYCLE_BADGE[status];
+    if (!cfg) return null;
+    return (
+      <span className={`px-3 py-1 ${cfg.bg} border ${cfg.border} rounded-full text-xs font-semibold ${cfg.text} flex items-center gap-1`}>
+        {cfg.icon}{cfg.label}
+      </span>
+    );
+  };
+
+  const lifecycleStage = campaign.lifecycleStage ?? 'draft';
   const activeAiVersion = (campaign.aiVersions || []).find((version) => version.isActive) || (campaign.aiVersions || [])[0] || null;
   const strategy = activeAiVersion?.strategy || {};
   const execution = activeAiVersion?.execution || {};
@@ -210,19 +209,62 @@ function SingleCampaign() {
                   {campaign.campaignName}
                 </h1>
               </div>
-              <p className="text-sm text-gray-400">{campaign.UserDescription || 'No description provided'}</p>
+              <p className="text-sm text-gray-400">{campaign.campaign_goal ? `Goal: ${campaign.campaign_goal}` : 'No description provided'}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1.5 bg-[#745CB4]/20 border border-[#C1B6FD]/30 rounded-full text-xs font-semibold text-[#C1B6FD] flex items-center gap-1 capitalize">
-              <div className="w-1.5 h-1.5 bg-[#C1B6FD] rounded-full animate-pulse"></div>
-              {lifecycleStage}
-            </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            {(() => {
+              const cfg = LIFECYCLE_BADGE[lifecycleStage];
+              return cfg ? (
+                <span className={`px-3 py-1.5 ${cfg.bg} border ${cfg.border} rounded-full text-xs font-semibold ${cfg.text} flex items-center gap-1`}>
+                  <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${cfg.text.replace('text-', 'bg-')}`}></div>
+                  {cfg.label}
+                </span>
+              ) : (
+                <span className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-full text-xs font-semibold text-gray-300 capitalize">{lifecycleStage}</span>
+              );
+            })()}
             {activeAiVersion && (
               <span className="px-3 py-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-full text-xs font-semibold text-emerald-400">
                 AI v{activeAiVersion.versionNumber}
               </span>
+            )}
+            {(lifecycleStage === 'draft' || lifecycleStage === 'ai_generated') && activeAiVersion && (
+              <motion.button
+                whileHover={{ scale: 1.03, boxShadow: '0 6px 24px rgba(193,182,253,0.35)' }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() =>
+                  navigate('/dashboard/owner/campaigns/generated', {
+                    state: {
+                      campaignData: {
+                        campaignName: campaign.campaignName,
+                        campaign_name: campaign.campaignName,
+                        goalType: campaign.campaign_goal,
+                        campaign_goal: campaign.campaign_goal,
+                        totalBudget: campaign.budget_amount,
+                        budget_amount: campaign.budget_amount,
+                        currency: campaign.budget_currency,
+                        budget_currency: campaign.budget_currency,
+                        campaign_duration_weeks: campaign.campaign_duration_weeks,
+                        startDate: campaign.startDate,
+                        endDate: campaign.endDate,
+                        targetAudience: campaign.targetAudience,
+                      },
+                      aiPreview: {
+                        strategy: activeAiVersion.strategy,
+                        execution: activeAiVersion.execution,
+                        estimations: activeAiVersion.estimations,
+                        generatedAt: activeAiVersion.generatedAt,
+                      },
+                    },
+                  })
+                }
+                className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] rounded-xl text-white text-xs font-bold shadow-lg shadow-[#745CB4]/30 transition-all"
+              >
+                <PlayCircle className="w-4 h-4" />
+                Continue Campaign
+              </motion.button>
             )}
           </div>
         </div>
@@ -249,8 +291,8 @@ function SingleCampaign() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { icon: <Target className="w-5 h-5 text-[#C1B6FD]" />, bg: 'bg-[#745CB4]/20', label: 'Goal', value: formatLabel(campaign.goalType), color: 'text-white' },
-              { icon: <DollarSign className="w-5 h-5 text-emerald-400" />, bg: 'bg-emerald-500/20', label: 'Budget', value: `${campaign.currency || ''} ${formatNumber(campaign.totalBudget)}`, color: 'text-emerald-400' },
+              { icon: <Target className="w-5 h-5 text-[#C1B6FD]" />, bg: 'bg-[#745CB4]/20', label: 'Goal', value: formatLabel(campaign.campaign_goal), color: 'text-white' },
+              { icon: <DollarSign className="w-5 h-5 text-emerald-400" />, bg: 'bg-emerald-500/20', label: 'Budget', value: `${campaign.budget_currency || ''} ${formatNumber(campaign.budget_amount)}`, color: 'text-emerald-400' },
               { icon: <Clock className="w-5 h-5 text-blue-400" />, bg: 'bg-blue-500/20', label: 'Duration', value: `${campaignDuration} days`, color: 'text-blue-400' },
               { icon: <Globe className="w-5 h-5 text-amber-400" />, bg: 'bg-amber-500/20', label: 'Platforms', value: `${strategy?.platformSelection?.length || campaign.targetAudience?.platformsUsed?.length || 0} platforms`, color: 'text-amber-400' },
             ].map((item, i) => (
@@ -356,7 +398,7 @@ function SingleCampaign() {
               <div className="p-2 rounded-lg bg-emerald-500/20"><PieChart className="w-5 h-5 text-emerald-400" /></div>
               <h3 className="text-xl font-bold text-white">Budget Allocation</h3>
               <span className="ml-auto text-sm text-emerald-400 font-semibold">
-                Total: {formatNumber(strategy?.budgetAllocation?.totalAllocated)} {campaign.currency || ''}
+                Total: {formatNumber(strategy?.budgetAllocation?.totalAllocated)} {campaign.budget_currency || ''}
               </span>
             </div>
             <div className="space-y-4">
@@ -365,7 +407,7 @@ function SingleCampaign() {
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-gray-200 font-medium capitalize">{formatLabel(item.category)}</span>
                     <span className="text-white font-bold text-sm">
-                      {formatNumber(item.amount)} {campaign.currency || ''}
+                      {formatNumber(item.amount)} {campaign.budget_currency || ''}
                       <span className="text-emerald-400 ml-1">({item.percentage || 0}%)</span>
                     </span>
                   </div>
@@ -383,7 +425,7 @@ function SingleCampaign() {
                         <div key={`${platform.platform}-${j}`} className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2 border border-white/5">
                           <span className="text-sm text-gray-300">{formatLabel(platform.platform)}</span>
                           <div className="text-right">
-                            <span className="text-white text-sm font-semibold">{formatNumber(platform.amount)} {campaign.currency || ''}</span>
+                            <span className="text-white text-sm font-semibold">{formatNumber(platform.amount)} {campaign.budget_currency || ''}</span>
                             <span className="text-emerald-400 text-xs ml-2">({formatNumber(platform.dailyBudget)}/day)</span>
                           </div>
                         </div>
@@ -424,7 +466,7 @@ function SingleCampaign() {
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 mb-0.5">Daily Budget</p>
-                      <p className="text-sm text-emerald-400 font-semibold">{formatNumber(ad.dailyBudget)} {campaign.currency || ''}</p>
+                      <p className="text-sm text-emerald-400 font-semibold">{formatNumber(ad.dailyBudget)} {campaign.budget_currency || ''}</p>
                     </div>
                   </div>
                 </div>
@@ -602,9 +644,9 @@ function SingleCampaign() {
             <div className="space-y-3 text-sm">
               {[
                 { label: 'Name', value: campaign.campaignName },
-                { label: 'Goal', value: formatLabel(campaign.goalType) },
-                { label: 'Budget', value: `${campaign.currency || ''} ${formatNumber(campaign.totalBudget)}` },
-                { label: 'Flexibility', value: formatLabel(campaign.budgetFlexibility) },
+                { label: 'Goal', value: formatLabel(campaign.campaign_goal) },
+                { label: 'Budget', value: `${campaign.budget_currency || ''} ${formatNumber(campaign.budget_amount)}` },
+                { label: 'Duration (weeks)', value: campaign.campaign_duration_weeks ? `${campaign.campaign_duration_weeks} weeks` : '—' },
                 { label: 'Start Date', value: formatDate(campaign.startDate) },
                 { label: 'End Date', value: formatDate(campaign.endDate) },
                 { label: 'Duration', value: `${campaignDuration} days` },

@@ -10,10 +10,10 @@ function DraftCampaigns() {
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
-  const { campaigns: campaignsRaw, pagination, isLoading, error, fetchCampaigns, deleteCampaign } = useCampaignStore();
+  const { draftCampaigns: campaignsRaw, draftPagination, isLoading, error, fetchCampaigns, deleteCampaign } = useCampaignStore();
   const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
-  const totalPages = pagination?.totalPages || 1;
-  const totalItems = pagination?.total || 0;
+  const totalPages = draftPagination?.totalPages || 1;
+  const totalItems = draftPagination?.total || 0;
 
   console.log('DraftCampaigns - campaigns:', campaigns);
   console.log('DraftCampaigns - totalItems:', totalItems);

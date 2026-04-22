@@ -1,4 +1,4 @@
-import { Search, Filter, Calendar, Users, DollarSign, TrendingUp, MoreVertical, Grid3x3, Eye, Settings, Target, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Grid3x3, Target, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useCampaignStore from '../../../../../../stores/campaignStore';
@@ -17,6 +17,7 @@ function AllCampaigns() {
   const totalPages = pagination?.totalPages || 1;
   const totalItems = pagination?.total || 0;
 
+  console.log('Campaigns Data:', campaigns);
   useEffect(() => {
     fetchCampaigns({
       page,
@@ -33,6 +34,7 @@ function AllCampaigns() {
 
   const getStatusBadge = (lifecycleStage) => {
     const statusStyles = {
+      saved: 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30',
       draft: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
       active: 'bg-green-500/20 text-green-400 border border-green-500/30',
       paused: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
@@ -47,18 +49,11 @@ function AllCampaigns() {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const getDuration = (startDate, endDate) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-    return `${days} days`;
-  };
-
   // Client-side filter for search and goal only (lifecycleStage is handled server-side)
   const filteredCampaigns = campaigns.filter(campaign => {
     const matchesSearch = !searchQuery || 
       (campaign.campaignName || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesGoal = filterGoal === 'all' || campaign.goalType === filterGoal;
+    const matchesGoal = filterGoal === 'all' || (campaign.campaign_goal || '').toLowerCase() === filterGoal.toLowerCase();
     return matchesSearch && matchesGoal;
   });
 
@@ -132,9 +127,8 @@ function AllCampaigns() {
             style={{ colorScheme: 'dark' }}
           >
             <option value="all">All Status</option>
+            <option value="saved">Saved</option>
             <option value="draft">Draft</option>
-            <option value="active">Active</option>
-            <option value="paused">Paused</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
           </select>
@@ -200,36 +194,40 @@ function AllCampaigns() {
             <table className="w-full">
               <thead className="bg-[#120D1E]/80 border-b border-white/10">
                 <tr>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">ID</th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Campaign Name</th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Status</th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Goal</th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Budget</th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Duration</th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-400">Created</th>
-                  <th className="text-right px-6 py-4 text-sm font-semibold text-gray-400">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {filteredCampaigns.map((campaign) => (
                 <tr 
                   key={campaign.id}
-                  className="hover:bg-[#C1B6FD]/5 transition-colors group/row"
+                  className="hover:bg-[#C1B6FD]/5 transition-colors group/row cursor-pointer"
+                  onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      navigate(`/dashboard/owner/campaigns/${campaign.id}`);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                 >
+                  <td className="px-6 py-4">
+                    <span className="text-sm text-white">{campaign.id}</span>
+                  </td>
+
                   {/* Campaign Name */}
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-linear-to-br from-[#745CB4] to-[#C1B6FD] shadow-lg shadow-purple-500/20 flex items-center justify-center shrink-0">
-                        <Target className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <h3 
-                          onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}`)}
-                          className="text-white font-semibold cursor-pointer hover:text-[#C1B6FD] transition-colors"
-                        >
-                          {campaign.campaignName}
-                        </h3>
-                        <p className="text-xs text-gray-400">ID: {campaign.id}</p>
-                      </div>
+                    <div>
+                      <h3 className="text-white font-semibold group-hover/row:text-[#C1B6FD] transition-colors">
+                        {campaign.campaignName}
+                      </h3>
+                      <p className="text-xs text-gray-400">ID: {campaign.id}</p>
                     </div>
                   </td>
 
@@ -242,66 +240,19 @@ function AllCampaigns() {
 
                   {/* Goal (goalType) */}
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-gray-400" />
-                      <span className="text-white text-sm capitalize">
-                        {campaign.goalType || 'N/A'}
-                      </span>
-                    </div>
+                    <span className="text-white text-sm">{campaign.campaign_goal || 'N/A'}</span>
                   </td>
 
-                  {/* Budget (totalBudget + currency) */}
+                  {/* Budget (budget_amount + budget_currency) */}
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 text-green-400" />
-                      <span className="text-white font-semibold">
-                        {campaign.currency || '$'}{parseFloat(campaign.totalBudget || 0).toLocaleString()}
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* Duration (startDate - endDate) */}
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-gray-400" />
-                      <div className="text-sm">
-                        <p className="text-white">{getDuration(campaign.startDate, campaign.endDate)}</p>
-                        <p className="text-xs text-gray-400">
-                          {formatDate(campaign.startDate)} - {formatDate(campaign.endDate)}
-                        </p>
-                      </div>
-                    </div>
+                    <span className="text-white font-semibold">
+                      {(campaign.budget_currency || 'USD')} {Number(campaign.budget_amount || 0).toLocaleString()}
+                    </span>
                   </td>
 
                   {/* Created At */}
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-400">{formatDate(campaign.createdAt)}</span>
-                    </div>
-                  </td>
-
-                  {/* Actions */}
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}`)}
-                        className="p-2 hover:bg-white/10 rounded-lg transition-all group"
-                        title="View Details"
-                      >
-                        <Eye className="w-5 h-5 text-gray-400 group-hover:text-[#C1B6FD]" />
-                      </button>
-                      <button
-                        onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}/edit`)}
-                        className="p-2 hover:bg-white/10 rounded-lg transition-all group"
-                        title="Manage Campaign"
-                      >
-                        <Settings className="w-5 h-5 text-gray-400 group-hover:text-[#C1B6FD]" />
-                      </button>
-                      <button className="p-2 hover:bg-white/10 rounded-lg transition-all group">
-                        <MoreVertical className="w-5 h-5 text-gray-400 group-hover:text-white" />
-                      </button>
-                    </div>
+                    <span className="text-sm text-gray-400">{formatDate(campaign.createdAt)}</span>
                   </td>
                 </tr>
               ))}

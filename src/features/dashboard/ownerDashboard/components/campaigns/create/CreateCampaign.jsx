@@ -1,4 +1,4 @@
-import { Calendar, DollarSign, Target, FileText, Sparkles, Layout, Info } from 'lucide-react';
+import { Calendar, DollarSign, Target, FileText, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -6,13 +6,15 @@ import useCampaignStore from '../../../../../../stores/campaignStore';
 
 function CreateCampaign() {
   const navigate = useNavigate();
-  const { createCampaign, isLoading } = useCampaignStore();
+  const { isLoading } = useCampaignStore();
   const [campaignData, setCampaignData] = useState({
     campaignName: '',
     campaignGoal: '',
     budget: '',
     currency: '',
     durationWeeks: '',
+    startDate: '',
+    endDate: '',
   });
 
 
@@ -21,18 +23,53 @@ function CreateCampaign() {
 
   const durationWeeks = Number.parseInt(campaignData.durationWeeks, 10);
 
-  const buildCampaignDates = (weeks) => {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
+  const formatDateForInput = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const computeEndDateFromStart = (startDateString, weeks) => {
+    if (!startDateString || !Number.isFinite(weeks) || weeks < 1) return '';
+
+    const start = new Date(`${startDateString}T00:00:00`);
+    if (Number.isNaN(start.getTime())) return '';
 
     const end = new Date(start);
-    end.setDate(end.getDate() + Math.max(1, weeks) * 7 - 1);
-    end.setHours(23, 59, 59, 999);
+    end.setDate(end.getDate() + weeks * 7);
+    return formatDateForInput(end);
+  };
 
-    return {
-      startDate: start.toISOString(),
-      endDate: end.toISOString(),
-    };
+  const hasWeeks = Number.isFinite(durationWeeks) && durationWeeks > 0;
+  const hasStartDate = Boolean(campaignData.startDate);
+  const autoCalculatedEndDate = hasWeeks && hasStartDate
+    ? computeEndDateFromStart(campaignData.startDate, durationWeeks)
+    : '';
+
+  const validateTimeline = () => {
+    const hasWeeks = campaignData.durationWeeks !== '';
+    const hasStart = Boolean(campaignData.startDate);
+
+    // Entire timeline can be skipped.
+    if (!hasWeeks && !hasStart) {
+      return { valid: true, message: '' };
+    }
+
+    if (hasWeeks && (!Number.isFinite(durationWeeks) || durationWeeks < 1)) {
+      return { valid: false, message: 'Campaign duration must be at least 1 week' };
+    }
+
+    // Weeks-only mode is valid when start date is left unset.
+    if (!hasStart) {
+      return { valid: true, message: '' };
+    }
+
+    if (!hasWeeks) {
+      return { valid: false, message: 'Choose number of weeks before setting date range' };
+    }
+
+    return { valid: true, message: '' };
   };
 
   const handleGenerateAI = async () => {
@@ -40,7 +77,7 @@ function CreateCampaign() {
       setSubmitMessage({ type: '', text: '' });
 
       // Validate required fields
-      if (!campaignData.campaignName || !campaignData.campaignGoal || !campaignData.budget || !campaignData.currency || !campaignData.durationWeeks) {
+      if (!campaignData.campaignName || !campaignData.campaignGoal || !campaignData.budget || !campaignData.currency) {
         setSubmitMessage({ type: 'error', text: 'Please fill in all required fields' });
         toast.error('Please fill in all required fields', {
           position: 'top-right',
@@ -49,18 +86,26 @@ function CreateCampaign() {
         return;
       }
 
-      if (!Number.isFinite(durationWeeks) || durationWeeks < 1) {
-        setSubmitMessage({ type: 'error', text: 'Campaign duration must be at least 1 week' });
-        toast.error('Campaign duration must be at least 1 week', {
+      const timelineValidation = validateTimeline();
+      if (!timelineValidation.valid) {
+        setSubmitMessage({ type: 'error', text: timelineValidation.message });
+        toast.error(timelineValidation.message, {
           position: 'top-right',
           autoClose: 4000,
         });
         return;
       }
 
+      const preparedCampaignData = {
+        ...campaignData,
+        durationWeeks: Number.isFinite(durationWeeks) && durationWeeks > 0 ? durationWeeks : null,
+        startDate: campaignData.startDate || null,
+        endDate: autoCalculatedEndDate || null,
+      };
+
       navigate('/dashboard/owner/campaigns/prepare', {
         state: {
-          campaignData,
+          campaignData: preparedCampaignData,
         },
       });
     } catch (error) {
@@ -73,43 +118,6 @@ function CreateCampaign() {
     }
   };
 
-  const handleSaveAsDraft = async () => {
-    try {
-      setSubmitMessage({ type: '', text: '' });
-      if (!campaignData.campaignName || !campaignData.campaignGoal || !campaignData.budget || !campaignData.currency || !campaignData.durationWeeks) {
-        toast.error('Please fill in all required fields', { position: 'top-right', autoClose: 4000 });
-        return;
-      }
-
-      if (!Number.isFinite(durationWeeks) || durationWeeks < 1) {
-        toast.error('Campaign duration must be at least 1 week', { position: 'top-right', autoClose: 4000 });
-        return;
-      }
-
-      const { startDate, endDate } = buildCampaignDates(durationWeeks);
-
-      const apiData = {
-        campaignName: campaignData.campaignName,
-        userDescription: `Campaign name: ${campaignData.campaignName} | Campaign goal: ${campaignData.campaignGoal}`,
-        goalType: campaignData.campaignGoal,
-        totalBudget: parseFloat(campaignData.budget),
-        currency: campaignData.currency,
-        budgetFlexibility: 'strict',
-        startDate,
-        endDate,
-        lifecycleStage: 'draft',
-      };
-      const result = await createCampaign(apiData);
-      if (result.success) {
-        toast.success('Campaign saved as draft!', { position: 'top-right', autoClose: 3000 });
-        navigate('/dashboard/owner/campaigns/all');
-      } else {
-        toast.error(result.error || 'Failed to save draft', { position: 'top-right', autoClose: 4000 });
-      }
-    } catch {
-      toast.error('An unexpected error occurred', { position: 'top-right', autoClose: 4000 });
-    }
-  };
 
   return (
         <>
@@ -221,9 +229,9 @@ function CreateCampaign() {
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
                     <option value="GBP">GBP (£)</option>
-                    <option value="JPY">JPY (¥)</option>
-                    <option value="CAD">CAD ($)</option>
-                    <option value="AUD">AUD ($)</option>
+                    <option value="EGP">EGP (E£)</option>
+                    <option value="SAR">SAR (SR)</option>
+                    <option value="AED">AED (د.إ)</option>
                   </select>
                 </div>
               </div>
@@ -234,24 +242,78 @@ function CreateCampaign() {
                   type="number"
                   min="1"
                   value={campaignData.durationWeeks}
-                  onChange={(e) => setCampaignData({ ...campaignData, durationWeeks: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const nextWeeks = Number.parseInt(value, 10);
+                    const nextData = { ...campaignData, durationWeeks: value };
+
+                    if (campaignData.startDate && Number.isFinite(nextWeeks) && nextWeeks > 0) {
+                      nextData.endDate = computeEndDateFromStart(campaignData.startDate, nextWeeks);
+                    } else {
+                      nextData.endDate = '';
+                    }
+
+                    setCampaignData(nextData);
+                  }}
                   placeholder="e.g., 4"
                   className="w-full bg-[#2A2240] border border-white/15 rounded-xl px-4 py-3.5 text-white placeholder:text-gray-400 hover:border-[#C1B6FD]/45 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all"
                 />
+
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {[1, 2, 4, 8, 12].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => {
+                        const nextData = { ...campaignData, durationWeeks: String(preset) };
+                        if (campaignData.startDate) {
+                          nextData.endDate = computeEndDateFromStart(campaignData.startDate, preset);
+                        } else {
+                          nextData.endDate = '';
+                        }
+                        setCampaignData(nextData);
+                      }}
+                      className={`px-2.5 py-1 text-xs rounded-full border transition-all ${
+                        durationWeeks === preset
+                          ? 'bg-[#C1B6FD]/20 text-[#C1B6FD] border-[#C1B6FD]/40'
+                          : 'bg-[#2A2240] text-gray-300 border-white/10 hover:border-[#C1B6FD]/35'
+                      }`}
+                    >
+                      {preset}w
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {Number.isFinite(durationWeeks) && durationWeeks > 0 && (
-                <div className="sm:col-span-2 p-4 bg-linear-to-r from-[#C1B6FD]/12 to-[#745CB4]/12 border border-[#C1B6FD]/25 rounded-xl flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#C1B6FD]/20 flex items-center justify-center">
-                    <Calendar className="w-4 h-4 text-[#C1B6FD]" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-[#C1B6FD] font-medium">
-                      Campaign Duration: <span className="text-white font-bold">{durationWeeks} {durationWeeks === 1 ? 'week' : 'weeks'}</span>
-                    </p>
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Start Date (Optional)</label>
+                <input
+                  type="date"
+                  value={campaignData.startDate}
+                  onChange={(e) => {
+                    const startDate = e.target.value;
+                    const nextData = { ...campaignData, startDate };
+
+                    if (startDate && hasWeeks) {
+                      nextData.endDate = computeEndDateFromStart(startDate, durationWeeks);
+                    } else {
+                      nextData.endDate = '';
+                    }
+
+                    setCampaignData(nextData);
+                  }}
+                  className="w-full bg-[#2A2240] border border-white/15 rounded-xl px-4 py-3.5 text-white hover:border-[#C1B6FD]/45 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">End Date (Auto Calculated)</label>
+                <div className="w-full bg-[#2A2240]/70 border border-white/15 rounded-xl px-4 py-3.5 text-white">
+                  {autoCalculatedEndDate || 'Set weeks and start date to auto-calculate'}
                 </div>
-              )}
+              </div>
+
+            
             </div>
           </div>
         </div>
@@ -299,6 +361,18 @@ function CreateCampaign() {
                 <p className="text-sm text-white">
                   {Number.isFinite(durationWeeks) && durationWeeks > 0
                     ? `${durationWeeks} ${durationWeeks === 1 ? 'week' : 'weeks'}`
+                    : 'Not set'}
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-white/5">
+                <div className="flex items-center gap-2 mb-1">
+                  <Calendar className="w-3.5 h-3.5 text-gray-500" />
+                  <p className="text-xs text-gray-400">Date Range</p>
+                </div>
+                <p className="text-sm text-white">
+                  {campaignData.startDate && autoCalculatedEndDate
+                    ? `${campaignData.startDate} → ${autoCalculatedEndDate}`
                     : 'Not set'}
                 </p>
               </div>

@@ -1,4 +1,4 @@
-import api from '../config/axios';
+import axios from 'axios';
 
 const toTrimmedString = (value) => String(value || '').trim();
 
@@ -46,7 +46,7 @@ export const buildAiGeneratePayload = ({ campaignData, ownerProfile }) => {
   const profile = ownerProfile || {};
 
   return {
-    campaign_name: toTrimmedString(campaignData?.campaignName || campaignData?.campaign_name),
+    campaignName: toTrimmedString(campaignData?.campaignName || campaignData?.campaign_name),
     brand_name: toTrimmedString(profile.brand_name),
     product_or_service: toTrimmedString(profile.product_or_service),
     industry: toTrimmedString(profile.industry),
@@ -65,13 +65,17 @@ export const buildAiGeneratePayload = ({ campaignData, ownerProfile }) => {
       : '',
     website: toTrimmedString(profile.website),
     platforms: toArray(profile.platforms),
+    startDate: toTrimmedString(campaignData?.startDate),
+    endDate: toTrimmedString(campaignData?.endDate),
   };
 };
 
 const aiCampaignApi = {
   generateCampaignWithProfileContext: async ({ campaignData, ownerProfile }) => {
     const payload = buildAiGeneratePayload({ campaignData, ownerProfile });
-    const response = await api.post('/campaigns/ai/generate', payload);
+    console.log("Sending AI Campaign Payload:", payload);
+    const response = await axios.post('http://localhost:5001/api/campaigns/ai/generate', payload);
+    console.log("AI Campaign Response from the aiCompagin Api:", response.data.data.aiPreview);
     return {
       payload,
       response: response.data,
@@ -79,7 +83,10 @@ const aiCampaignApi = {
   },
   // Send an already-built payload directly to the AI generate endpoint
   generateWithPayload: async (payload) => {
-    const response = await api.post('/campaigns/ai/generate', payload);
+    console.log("Sending AI Campaign Payload (direct):", payload);
+    const response = await axios.post('http://localhost:5001/api/campaigns/ai/generate', payload);
+    console.log("AI Campaign Response from the aiCompagin Api:", response.data.data.aiPreview);
+
     return {
       payload,
       response: response.data,

@@ -1,4 +1,4 @@
-import { Megaphone, Users, DollarSign, TrendingUp, ArrowRight, Target, Play, Clock, Sparkles, CheckCircle, FileEdit, Grid3x3, BarChart3, Plus } from 'lucide-react';
+import { Megaphone, Users, DollarSign, TrendingUp, ArrowRight, Target, Play, Clock, Sparkles, CheckCircle, FileEdit, Grid3x3, BarChart3, Plus, ConciergeBell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import useCampaignStore from '../../../../../stores/campaignStore';
@@ -7,14 +7,50 @@ function CampaignsOverview() {
   const fetchCampaignsOverview = useCampaignStore((s) => s.fetchCampaignsOverview);
   const campaignsOverview = useCampaignStore((s) => s.campaignsOverview);
 
+  const getLifecycleMeta = (campaign) => {
+    const stage = String(campaign?.lifecycleStage || '').toLowerCase();
+
+    if (stage === 'saved') {
+      return {
+        label: 'Saved',
+        className: 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/25',
+      };
+    }
+
+    if (stage === 'draft' || !campaign?.isPublished) {
+      return {
+        label: 'Draft',
+        className: 'bg-amber-500/10 text-amber-300 border border-amber-500/25',
+      };
+    }
+
+    if (stage === 'completed') {
+      return {
+        label: 'Completed',
+        className: 'bg-blue-500/10 text-blue-300 border border-blue-500/25',
+      };
+    }
+
+    if (stage === 'cancelled' || stage === 'canceled') {
+      return {
+        label: 'Cancelled',
+        className: 'bg-rose-500/10 text-rose-300 border border-rose-500/25',
+      };
+    }
+
+    return {
+      label: 'Active',
+      className: 'bg-green-500/10 text-green-300 border border-green-500/25',
+    };
+  };
+
   useEffect(() => {
     fetchCampaignsOverview().catch(() => {});
   }, [fetchCampaignsOverview]);
   const totalCampaigns = campaignsOverview?.totalCampaigns ?? 0;
-  const totalSaved =  campaignsOverview?.totalSaved ?? 0;
+  const totalDraftLifecycles = campaignsOverview?.totalDraft ?? 0;
   const recentCampaigns =campaignsOverview?.recentCampaigns || [];
 
-  
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -62,8 +98,8 @@ function CampaignsOverview() {
             
             <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400 mb-1">Saved Drafts</p>
-                <p className="text-3xl font-bold text-white">{totalSaved}</p>
+                <p className="text-sm text-gray-400 mb-1">Draft</p>
+                <p className="text-3xl font-bold text-white">{totalDraftLifecycles}</p>
               </div>
               <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
                 <FileEdit className="w-6 h-6 text-amber-400" />
@@ -130,7 +166,10 @@ function CampaignsOverview() {
             
             <div className="space-y-5">
               {recentCampaigns.length > 0 ? (
-                recentCampaigns.slice(0, 5).map((c) => (
+                recentCampaigns.slice(0, 5).map((c) => {
+                  const lifecycleMeta = getLifecycleMeta(c);
+
+                  return (
                   <div key={c.id} className="group relative pl-4 border-l-2 border-white/10 hover:border-[#C1B6FD] transition-colors pb-1">
                     {/* Timeline dot */}
                     <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-gray-600 group-hover:bg-[#C1B6FD] transition-colors shadow"></div>
@@ -141,12 +180,8 @@ function CampaignsOverview() {
                     
                     <div className="flex flex-col gap-2 mt-2">
                       <div className="flex items-center justify-between">
-                        <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${
-                          c.isPublished || c.lifecycleStage === 'active' 
-                            ? 'bg-green-500/10 text-green-400 border border-green-500/20' 
-                            : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                        }`}>
-                          {c.isPublished ? (c.lifecycleStage || 'Active') : (c.lifecycleStage || 'Draft')}
+                        <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${lifecycleMeta.className}`}>
+                          {lifecycleMeta.label}
                         </span>
                         <span className="text-[#C1B6FD] text-xs font-semibold">
                            {c.duration ? `${c.duration}` : '—'}
@@ -165,7 +200,7 @@ function CampaignsOverview() {
                       </div>
                     </div>
                   </div>
-                ))
+                )})
               ) : (
                 <div className="text-center py-10 flex flex-col items-center justify-center h-full">
                   <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mb-3">

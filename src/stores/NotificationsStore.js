@@ -91,7 +91,7 @@ const useNotificationsStore = create((set, get) => ({
   fetchUnreadCount: async () => {
     try {
       const data = await notificationsService.getUnreadCount();
-      const unreadCount = Number(data?.unreadCount ?? data?.count ?? 0);
+      const unreadCount = Number(data?.unread ?? data?.unreadCount ?? data?.count ?? 0);
       get().setUnreadCount(unreadCount);
       return { success: true, data: unreadCount };
     } catch (error) {
@@ -179,10 +179,24 @@ const useNotificationsStore = create((set, get) => ({
 
   initRealtimeNotifications: () => {
     (async () => {
-      const socket = getChatSocket() || await acquireChatSocket();
-      if (!socket || notificationSocketListenersAttached) return;
+      if (notificationSocketListenersAttached) return;
 
+      let socket;
+      try {
+        socket = await acquireChatSocket();
+      } catch (err) {
+        console.error('Failed to acquire socket for notifications:', err);
+        return;
+      }
+      if (!socket) return;
+
+      if (notificationSocketListenersAttached) {
+        releaseChatSocket();
+        return;
+      }
       notificationSocketListenersAttached = true;
+
+      socket.emit('subscribe_notifications');
 
       socket.on('notification', (notification) => {
         const normalized = normalizeNotification(notification);

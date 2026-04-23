@@ -9,7 +9,6 @@ import useCollaborationRequestsStore from '../../../../../../stores/Collaboratio
 function SendCollabRequest() {
   const { influencerId } = useParams();
   const navigate = useNavigate();
-console.log('Influencer ID from URL:', influencerId);
   // Campaign Store
   const { campaigns, fetchCampaigns, isLoading: isLoadingCampaigns } = useCampaignStore();
   // Collaboration Requests Store
@@ -67,11 +66,15 @@ console.log('Influencer ID from URL:', influencerId);
     setIsSubmitting(true);
 
     try {
+      const parsedInfluencerId = Number(decodeURIComponent(String(influencerId)));
+      if (!parsedInfluencerId || Number.isNaN(parsedInfluencerId)) {
+        throw new Error('Invalid influencer ID. Please go back and try again.');
+      }
       const payload = {
-        campaignId: formData.campaignId ? Number(formData.campaignId) : null,
-        influencerId: Number(influencerId),
+        influencerId: parsedInfluencerId,
         proposedBudget: parseFloat(formData.proposedBudget),
-        message: formData.message
+        message: formData.message,
+        ...(formData.campaignId ? { campaignId: Number(formData.campaignId) } : {}),
       };
 
       const result = await createRequest(payload);
@@ -139,7 +142,7 @@ console.log('Influencer ID from URL:', influencerId);
             >
               <option value="" className="bg-[#1a0933] text-gray-300">No specific campaign</option>
               {(() => {
-                const campaignList = campaigns?.campaigns || (Array.isArray(campaigns) ? campaigns : []);
+                const campaignList = Array.isArray(campaigns) ? campaigns : [];
                 return campaignList.map(campaign => (
                   <option key={campaign.id} value={campaign.id} className="bg-[#1a0933] text-white">
                     {campaign.campaignName}

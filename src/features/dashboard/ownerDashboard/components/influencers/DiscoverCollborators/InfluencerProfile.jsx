@@ -142,7 +142,7 @@ function InfluencerProfile() {
           <span className="text-sm font-semibold text-gray-300 tracking-wide uppercase">Profile Overview</span>
         </div>
         <button
-          onClick={() => navigate(`/dashboard/owner/influencers/${encodeURIComponent(String(routeInfluencerId || rawInfluencer?.id || ''))}/sendcollbrequest`)}
+          onClick={() => navigate(`/dashboard/owner/influencers/${user?.id || routeInfluencerId}/sendcollbrequest`)}
           className="px-5 py-2.5 bg-[#745CB4] hover:bg-[#5e3fae] text-white rounded-xl font-medium transition-colors shadow-lg shadow-[#745CB4]/20 flex items-center gap-2 text-sm"
         >
           <Send className="w-4 h-4" />

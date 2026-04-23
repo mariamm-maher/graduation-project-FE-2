@@ -28,15 +28,29 @@ export function normalizeCollaboration(collab, index) {
     collab?.completedTasks ?? tasks.filter((task) => task?.completed || task?.status === 'completed').length
   );
 
+  const campaign = collab?.campaign || {};
+
   return {
     id: collab?._id || collab?.id || `collab-${index}`,
-    campaignName:
-      collab?.campaign?.campaignName || collab?.campaign?.name || collab?.campaignName || 'Untitled Campaign',
+    campaignId: collab?.campaignId || campaign?.id || null,
+    influencerId: collab?.influencerId || null,
+    collaborationRequestId: collab?.collaborationRequestId || null,
+    campaignName: campaign?.campaignName || campaign?.name || collab?.campaignName || 'Untitled Campaign',
     influencerName,
     status: normalizeStatus(collab?.status),
+    rawStatus: collab?.status || '',
     budget: Number(
-      collab?.agreedBudget ?? collab?.budget ?? collab?.proposedBudget ?? collab?.campaign?.totalBudget ?? 0
+      collab?.agreedBudget ?? collab?.budget ?? collab?.proposedBudget
+        ?? campaign?.budget_amount ?? campaign?.totalBudget ?? 0
     ),
+    currency: campaign?.budget_currency || collab?.budget_currency || 'USD',
+    goal: campaign?.campaign_goal || collab?.campaign_goal || '',
+    lifecycleStage: campaign?.lifecycleStage || '',
+    durationWeeks: campaign?.campaign_duration_weeks || null,
+    startDate: collab?.startDate || null,
+    endDate: collab?.endDate || null,
+    completedAt: collab?.completedAt || null,
+    cancelledAt: collab?.cancelledAt || null,
     totalTasks,
     completedTasks,
     progress: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,

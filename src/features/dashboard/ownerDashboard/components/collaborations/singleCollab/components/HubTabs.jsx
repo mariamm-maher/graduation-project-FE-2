@@ -35,6 +35,11 @@ export default function HubTabs({ tabs, activeTab, onTabChange }) {
                 }`}
               />
               <span>{tab.label}</span>
+              {tab.badge && (
+                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold bg-amber-500 text-white leading-none">
+                  {tab.badge}
+                </span>
+              )}
             </button>
           );
         })()

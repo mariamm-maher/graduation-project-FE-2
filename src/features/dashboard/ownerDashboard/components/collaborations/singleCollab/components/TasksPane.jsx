@@ -1,5 +1,5 @@
-import { LayoutGrid, ListChecks } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AlertCircle, CheckCircle2, LayoutGrid, ListChecks, Loader2, Plus, RefreshCw, XCircle } from 'lucide-react';
 import {
   closestCorners,
   DndContext,
@@ -12,168 +12,270 @@ import {
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import BoardColumn from '../../CollaborationBoard/BoardColumn';
 import TaskCard from '../../CollaborationBoard/TaskCard';
+import collaborationTasksService from '../../../../../../../api/CollaborationTasksApi';
 
-const INITIAL_TASKS = [
-  {
-    id: 't-1',
-    taskName: 'Finalize brief for influencer',
-    description: 'Share final creative brief and visual references before production starts.',
-    status: 'todo',
-    priority: 'high',
-    assignedTo: 2,
-    assignedToName: 'Ava Morgan',
-    dueDate: '2026-04-24',
-    completedAt: null,
-    tags: ['brief', 'planning'],
-    attachments: 2,
-    comments: 3,
-    watchers: 2,
-  },
-  {
-    id: 't-2',
-    taskName: 'Record first draft reel',
-    description: 'Shoot draft reel with product highlight sequence and CTA ending.',
-    status: 'in_progress',
-    priority: 'high',
-    assignedTo: 2,
-    assignedToName: 'Ava Morgan',
-    dueDate: '2026-04-26',
-    completedAt: null,
-    tags: ['video', 'draft'],
-    attachments: 1,
-    comments: 4,
-    watchers: 3,
-  },
-  {
-    id: 't-3',
-    taskName: 'Internal quality review',
-    description: 'Check brand-safe messaging, pacing, and legal copy before approval.',
-    status: 'review',
-    priority: 'medium',
-    assignedTo: 1,
-    assignedToName: 'You (Owner)',
-    dueDate: '2026-04-27',
-    completedAt: null,
-    tags: ['review', 'compliance'],
-    attachments: 3,
-    comments: 5,
-    watchers: 2,
-  },
-  {
-    id: 't-4',
-    taskName: 'Schedule publishing window',
-    description: 'Book posting slot and sync with campaign launch calendar.',
-    status: 'completed',
-    priority: 'low',
-    assignedTo: 1,
-    assignedToName: 'You (Owner)',
-    dueDate: '2026-04-20',
-    completedAt: '2026-04-19',
-    tags: ['schedule'],
-    attachments: 0,
-    comments: 2,
-    watchers: 1,
-  },
-  {
-    id: 't-5',
-    taskName: 'Prepare final caption pack',
-    description: 'Create 3 approved caption variants and hashtags for posting day.',
-    status: 'todo',
-    priority: 'medium',
-    assignedTo: 3,
-    assignedToName: 'Noah Davis',
-    dueDate: '2026-04-28',
-    completedAt: null,
-    tags: ['copy'],
-    attachments: 1,
-    comments: 1,
-    watchers: 1,
-  },
-];
+const STATUS_MAP = {
+  todo:        'todo',
+  in_progress: 'in_progress',
+  in_review:   'review',
+  Approved:    'completed',
+  approved:    'completed',
+  rejected:    'todo',
+};
 
-export default function TasksPane() {
-  const [tasks, setTasks] = useState(INITIAL_TASKS);
+function normalizeTask(t) {
+  return {
+    ...t,
+    id: String(t.id),
+    status: STATUS_MAP[t.status] ?? t.status,
+  };
+}
+
+export default function TasksPane({ items = [] }) {
+  const [selectedCollabId, setSelectedCollabId] = useState(null);
+  const [tasks, setTasks]     = useState([]);
   const [activeTask, setActiveTask] = useState(null);
+  const [isLoading, setIsLoading]   = useState(false);
+  const [error, setError]           = useState(null);
+  const [actionLoading, setActionLoading] = useState(null);
+  const dragOriginalStatus = useRef(null);
+  const [createModal, setCreateModal]   = useState(false);
+  const [newTaskName, setNewTaskName]   = useState('');
+  const [newTaskDesc, setNewTaskDesc]   = useState('');
+  const [newTaskDue,  setNewTaskDue]    = useState('');
+  const [newTaskPlatform, setNewTaskPlatform] = useState('');
+  const [createLoading, setCreateLoading]     = useState(false);
+
+  const collabs = useMemo(() =>
+    (items || []).map((c) => ({
+      id:   String(c.id || c._id),
+      name: c.campaign?.name || c.campaignName || `Collab #${c.id || c._id}`,
+    })),
+    [items]
+  );
+
+  useEffect(() => {
+    if (!selectedCollabId && collabs.length > 0) {
+      setSelectedCollabId(collabs[0].id);
+    }
+  }, [collabs, selectedCollabId]);
+
+  const fetchTasks = useCallback(async (collabId) => {
+    if (!collabId) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await collaborationTasksService.getTasksByCollaboration(collabId);
+      const raw = res?.data?.tasks || res?.tasks || res?.data || [];
+      setTasks((Array.isArray(raw) ? raw : []).map(normalizeTask));
+    } catch (err) {
+      setError(typeof err === 'string' ? err : err?.message || 'Failed to load tasks');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedCollabId) fetchTasks(selectedCollabId);
+  }, [selectedCollabId, fetchTasks]);
+
+  const updateLocalTask = (taskId, patch) =>
+    setTasks((prev) => prev.map((t) => (t.id === String(taskId) ? { ...t, ...patch } : t)));
+
+  const handleApprove = async (taskId) => {
+    setActionLoading(taskId + '_approve');
+    try {
+      const res = await collaborationTasksService.approveTask(taskId);
+      const updated = res?.data?.task || res?.task;
+      if (updated) updateLocalTask(taskId, normalizeTask(updated));
+      else updateLocalTask(taskId, { status: 'completed', completedAt: new Date().toISOString() });
+    } catch (err) {
+      setError(typeof err === 'string' ? err : 'Failed to approve task');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleCreate = async () => {
+    if (!newTaskName.trim() || !selectedCollabId) return;
+    setCreateLoading(true);
+    try {
+      const res = await collaborationTasksService.createTask(selectedCollabId, {
+        taskName:    newTaskName.trim(),
+        description: newTaskDesc.trim() || undefined,
+        dueDate:     newTaskDue  || undefined,
+        platform:    newTaskPlatform || undefined,
+      });
+      const created = res?.data?.task || res?.task;
+      if (created) setTasks((prev) => [normalizeTask(created), ...prev]);
+      setCreateModal(false);
+      setNewTaskName('');
+      setNewTaskDesc('');
+      setNewTaskDue('');
+      setNewTaskPlatform('');
+    } catch (err) {
+      setError(typeof err === 'string' ? err : 'Failed to create task');
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
+  const handleReject = async (taskId) => {
+    setActionLoading(taskId + '_reject');
+    try {
+      const res = await collaborationTasksService.rejectTask(taskId, { reviewNote: 'Please revise and resubmit.' });
+      const updated = res?.data?.task || res?.task;
+      if (updated) updateLocalTask(taskId, normalizeTask(updated));
+      else updateLocalTask(taskId, { status: 'todo' });
+    } catch (err) {
+      setError(typeof err === 'string' ? err : 'Failed to reject task');
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const tasksByStatus = useMemo(
-    () => ({
-      todo: tasks.filter((task) => task.status === 'todo'),
-      in_progress: tasks.filter((task) => task.status === 'in_progress'),
-      review: tasks.filter((task) => task.status === 'review'),
-      completed: tasks.filter((task) => task.status === 'completed'),
-    }),
-    [tasks]
-  );
+  const tasksByStatus = useMemo(() => ({
+    todo:        tasks.filter((t) => t.status === 'todo'),
+    in_progress: tasks.filter((t) => t.status === 'in_progress'),
+    review:      tasks.filter((t) => t.status === 'review'),
+    completed:   tasks.filter((t) => t.status === 'completed'),
+  }), [tasks]);
 
   const handleDragStart = (event) => {
-    const task = tasks.find((item) => item.id === event.active.id);
-    setActiveTask(task || null);
+    const task = tasks.find((t) => t.id === event.active.id) || null;
+    setActiveTask(task);
+    dragOriginalStatus.current = task?.status ?? null;
   };
 
   const handleDragOver = (event) => {
     const { active, over } = event;
     if (!over) return;
-
-    const activeItem = tasks.find((task) => task.id === active.id);
-    const overTask = tasks.find((task) => task.id === over.id);
-
+    const activeItem = tasks.find((t) => t.id === active.id);
     if (!activeItem) return;
-
+    const overTask   = tasks.find((t) => t.id === over.id);
     const nextStatus = overTask ? overTask.status : over.id;
     if (!nextStatus || activeItem.status === nextStatus) return;
-
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === active.id
-          ? {
-              ...task,
-              status: nextStatus,
-              completedAt: nextStatus === 'completed' ? new Date().toISOString().slice(0, 10) : null,
-            }
-          : task
-      )
-    );
+    setTasks((prev) => prev.map((t) =>
+      t.id === active.id
+        ? { ...t, status: nextStatus }
+        : t
+    ));
   };
 
-  const handleDragEnd = () => {
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
     setActiveTask(null);
+    if (!over) return;
+
+    const droppedTask = tasks.find((t) => t.id === active.id);
+    if (!droppedTask) return;
+
+    const overTask   = tasks.find((t) => t.id === over.id && t.id !== active.id);
+    const nextStatus = overTask ? overTask.status : over.id;
+
+    const prevStatus = dragOriginalStatus.current;
+    dragOriginalStatus.current = null;
+
+    if (!nextStatus || prevStatus === nextStatus) return;
+
+    try {
+      await collaborationTasksService.moveTask(droppedTask.id, nextStatus);
+    } catch (err) {
+      setError(typeof err === 'string' ? err : 'Failed to move task');
+      if (prevStatus) {
+        setTasks((prev) => prev.map((t) =>
+          t.id === droppedTask.id ? { ...t, status: prevStatus } : t
+        ));
+      } else {
+        fetchTasks(selectedCollabId);
+      }
+    }
   };
 
-  const handleAddTask = (status) => {
-    const id = `t-${Date.now()}`;
-    const newTask = {
-      id,
-      taskName: 'New task',
-      description: 'Add task details and assign owner.',
-      status,
-      priority: 'medium',
-      assignedTo: 1,
-      assignedToName: 'You (Owner)',
-      dueDate: '2026-05-01',
-      completedAt: status === 'completed' ? new Date().toISOString().slice(0, 10) : null,
-      tags: ['new'],
-      attachments: 0,
-      comments: 0,
-      watchers: 0,
-    };
-
-    setTasks((prev) => [newTask, ...prev]);
-  };
-
-  const onOpenTaskDetails = () => {};
+  const onOpenTaskDetails = useCallback((task) => {
+    if (task.status === 'review') {
+      if (window.confirm(`Approve task "${task.taskName}"?`)) handleApprove(task.id);
+    }
+  }, []);
 
   return (
+    <>
+    {createModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="w-full max-w-md rounded-2xl border border-[#745CB4]/30 bg-[#1A112C] p-6 space-y-4 shadow-2xl">
+          <h3 className="text-lg font-bold text-white">New Task</h3>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs text-[#9CA3AF] mb-1">Task name <span className="text-red-400">*</span></label>
+              <input
+                type="text"
+                value={newTaskName}
+                onChange={(e) => setNewTaskName(e.target.value)}
+                placeholder="e.g. Record product reel"
+                className="w-full px-3 py-2 rounded-lg bg-[#241A3A]/70 border border-[#745CB4]/25 text-sm text-white placeholder:text-[#6B7280] focus:outline-none focus:border-[#C1B6FD]/45"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-[#9CA3AF] mb-1">Description (optional)</label>
+              <textarea
+                rows={2}
+                value={newTaskDesc}
+                onChange={(e) => setNewTaskDesc(e.target.value)}
+                placeholder="What should the influencer do?"
+                className="w-full px-3 py-2 rounded-lg bg-[#241A3A]/70 border border-[#745CB4]/25 text-sm text-white placeholder:text-[#6B7280] focus:outline-none focus:border-[#C1B6FD]/45 resize-none"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-[#9CA3AF] mb-1">Due date (optional)</label>
+                <input
+                  type="date"
+                  value={newTaskDue}
+                  onChange={(e) => setNewTaskDue(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-[#241A3A]/70 border border-[#745CB4]/25 text-sm text-white focus:outline-none focus:border-[#C1B6FD]/45"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-[#9CA3AF] mb-1">Platform (optional)</label>
+                <select
+                  value={newTaskPlatform}
+                  onChange={(e) => setNewTaskPlatform(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-[#241A3A]/70 border border-[#745CB4]/25 text-sm text-white focus:outline-none focus:border-[#C1B6FD]/45"
+                >
+                  <option value="">Any</option>
+                  {['instagram','tiktok','youtube','facebook','twitter','linkedin','snapchat','other'].map(p => (
+                    <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end pt-1">
+            <button
+              type="button"
+              onClick={() => setCreateModal(false)}
+              className="px-4 py-2 rounded-lg border border-[#745CB4]/25 text-[#9CA3AF] text-sm hover:text-white transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleCreate}
+              disabled={!newTaskName.trim() || createLoading}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#745CB4] border border-[#C1B6FD]/30 text-white text-sm font-semibold hover:bg-[#5e4a9a] disabled:opacity-50 transition-colors"
+            >
+              {createLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              Create Task
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners}
@@ -183,62 +285,131 @@ export default function TasksPane() {
     >
       <section className="space-y-4">
         <div className="rounded-xl border border-[#745CB4]/25 bg-linear-to-b from-[#241A3A]/70 to-[#1A112C]/70 backdrop-blur-md p-4 sm:p-5">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <h3 className="text-xl sm:text-2xl font-bold text-white inline-flex items-center gap-2.5">
                 <LayoutGrid className="w-6 h-6 text-[#C1B6FD]" />
                 Task Board
               </h3>
-              <p className="text-sm text-[#9CA3AF] mt-1">Drag and drop tasks across columns to manage workflow.</p>
+              <p className="text-sm text-[#9CA3AF] mt-1">Approve or reject submitted tasks from your influencers.</p>
             </div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#745CB4]/25 bg-[#1A112C]/50">
-              <ListChecks className="w-4 h-4 text-[#C1B6FD]" />
-              <span className="text-xs font-semibold text-[#C1B6FD]">{tasks.length} total tasks</span>
+            <div className="flex items-center gap-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#745CB4]/25 bg-[#1A112C]/50">
+                <ListChecks className="w-4 h-4 text-[#C1B6FD]" />
+                <span className="text-xs font-semibold text-[#C1B6FD]">{tasks.length} tasks</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCreateModal(true)}
+                disabled={!selectedCollabId}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#C1B6FD]/30 bg-[#745CB4]/70 text-white text-xs font-semibold hover:bg-[#745CB4] transition-colors disabled:opacity-40"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add Task
+              </button>
+              <button
+                type="button"
+                onClick={() => fetchTasks(selectedCollabId)}
+                disabled={isLoading}
+                className="p-2 rounded-lg border border-[#745CB4]/25 bg-[#1A112C]/50 text-[#C1B6FD] hover:bg-[#241A3A]/70 transition-colors disabled:opacity-40"
+                aria-label="Refresh tasks"
+              >
+                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              </button>
             </div>
           </div>
+
+          {collabs.length > 1 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {collabs.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setSelectedCollabId(c.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                    selectedCollabId === c.id
+                      ? 'bg-[#745CB4] border-[#C1B6FD]/40 text-white'
+                      : 'bg-[#1A112C]/50 border-[#745CB4]/25 text-[#9CA3AF] hover:text-white hover:border-[#745CB4]/50'
+                  }`}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="overflow-x-auto">
-          <div className="grid grid-cols-4 gap-4 min-w-[1200px]">
-            <BoardColumn
-              status="todo"
-              title="To Do"
-              tasks={tasksByStatus.todo}
-              color="bg-gray-400"
-              onOpenTaskDetails={onOpenTaskDetails}
-              onAddTask={handleAddTask}
-            />
-            <BoardColumn
-              status="in_progress"
-              title="In Progress"
-              tasks={tasksByStatus.in_progress}
-              color="bg-blue-400"
-              onOpenTaskDetails={onOpenTaskDetails}
-              onAddTask={handleAddTask}
-            />
-            <BoardColumn
-              status="review"
-              title="Review"
-              tasks={tasksByStatus.review}
-              color="bg-purple-400"
-              onOpenTaskDetails={onOpenTaskDetails}
-              onAddTask={handleAddTask}
-            />
-            <BoardColumn
-              status="completed"
-              title="Completed"
-              tasks={tasksByStatus.completed}
-              color="bg-green-400"
-              onOpenTaskDetails={onOpenTaskDetails}
-              onAddTask={handleAddTask}
-            />
+        {error && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-red-500/25 bg-red-500/10 text-red-300 text-sm">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            {error}
+            <button type="button" onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-200">
+              <XCircle className="w-4 h-4" />
+            </button>
           </div>
-        </div>
+        )}
+
+        {isLoading ? (
+          <div className="flex items-center justify-center gap-2 py-16 text-[#9CA3AF]">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span className="text-sm">Loading tasks…</span>
+          </div>
+        ) : !selectedCollabId ? (
+          <div className="text-center py-16 text-[#9CA3AF] text-sm">
+            <ListChecks className="w-10 h-10 mx-auto mb-3 opacity-25" />
+            No collaborations yet.
+          </div>
+        ) : (
+          <>
+            {tasksByStatus.review.length > 0 && (
+              <div className="rounded-xl border border-purple-500/25 bg-purple-500/5 p-4 space-y-2">
+                <p className="text-xs font-semibold text-purple-300 flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {tasksByStatus.review.length} task{tasksByStatus.review.length > 1 ? 's' : ''} awaiting your review
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {tasksByStatus.review.map((task) => (
+                    <div key={task.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-purple-500/30 bg-purple-500/10 text-sm text-purple-200">
+                      <span className="truncate max-w-[160px]">{task.taskName}</span>
+                      <button
+                        type="button"
+                        disabled={!!actionLoading}
+                        onClick={() => handleApprove(task.id)}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded bg-green-500/20 border border-green-500/30 text-green-300 text-xs hover:bg-green-500/35 disabled:opacity-40 transition-colors"
+                      >
+                        {actionLoading === task.id + '_approve' ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!!actionLoading}
+                        onClick={() => handleReject(task.id)}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded bg-red-500/20 border border-red-500/30 text-red-300 text-xs hover:bg-red-500/35 disabled:opacity-40 transition-colors"
+                      >
+                        {actionLoading === task.id + '_reject' ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
+                        Reject
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <div className="grid grid-cols-4 gap-4 min-w-[1200px]">
+                <BoardColumn status="todo"        title="To Do"       tasks={tasksByStatus.todo}        color="bg-gray-400"   onOpenTaskDetails={onOpenTaskDetails} onAddTask={() => setCreateModal(true)} />
+                <BoardColumn status="in_progress" title="In Progress" tasks={tasksByStatus.in_progress} color="bg-blue-400"   onOpenTaskDetails={onOpenTaskDetails} onAddTask={() => {}} />
+                <BoardColumn status="review"      title="In Review"   tasks={tasksByStatus.review}      color="bg-purple-400" onOpenTaskDetails={onOpenTaskDetails} onAddTask={() => {}} />
+                <BoardColumn status="completed"   title="Completed"   tasks={tasksByStatus.completed}   color="bg-green-400"  onOpenTaskDetails={onOpenTaskDetails} onAddTask={() => {}} />
+              </div>
+            </div>
+          </>
+        )}
 
         <DragOverlay>
           {activeTask ? <TaskCard task={activeTask} onOpenDetails={() => {}} /> : null}
         </DragOverlay>
       </section>
     </DndContext>
+    </>
   );
 }

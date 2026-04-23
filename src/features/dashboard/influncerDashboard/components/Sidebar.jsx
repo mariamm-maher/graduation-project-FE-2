@@ -1,4 +1,4 @@
-import { LayoutDashboard, Search, Users, Share2, BarChart3, MessageCircle, Settings, LogOut, User, Briefcase, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Search, Users, Share2, BarChart3, MessageCircle, Settings, LogOut, User, Briefcase, Menu, X, SquareCheckBig } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -36,6 +36,7 @@ function Sidebar() {
     // { id: 'content', icon: Share2, label: 'My Content', path: '/dashboard/influencer/social-media' },
     // { id: 'analytics', icon: BarChart3, label: 'Performance', path: '/dashboard/influencer/analytics' },
     { id: 'messages', icon: MessageCircle, label: 'Messages', path: '/dashboard/influencer/messages' },
+    { id: 'tasks', icon: SquareCheckBig, label: 'Collaboration Tasks', path: '/dashboard/influencer/collaborations/tasks' },
     // { id: 'profile', icon: User, label: 'My Profile', path: '/dashboard/influencer/profile' },
   ];
 

@@ -154,15 +154,17 @@ const useChatStore = create((set) => ({
           });
         });
 
-        socket.on('user_typing', ({ userId, chatRoomId }) => {
+        socket.on('user_typing', ({ user, chatRoomId }) => {
+          const userId = user?.id;
           set((state) => {
             const exists = state.typingUsers.some((u) => u.userId === userId && u.chatRoomId === chatRoomId);
             if (exists) return state;
-            return { typingUsers: [...state.typingUsers, { userId, chatRoomId }] };
+            return { typingUsers: [...state.typingUsers, { userId, name: user?.name, chatRoomId }] };
           });
         });
 
-        socket.on('user_stopped_typing', ({ userId, chatRoomId }) => {
+        socket.on('user_stopped_typing', ({ user, chatRoomId }) => {
+          const userId = user?.id;
           set((state) => ({
             typingUsers: state.typingUsers.filter((u) => !(u.userId === userId && u.chatRoomId === chatRoomId))
           }));
@@ -317,7 +319,7 @@ const useChatStore = create((set) => ({
 
   // Get messages for a room
   getMessages: async (chatRoomId, params = {}) => {
-    set({ isMessagesLoading: true, error: null });
+    set({ isMessagesLoading: true, error: null, activeRoomId: String(chatRoomId) });
     try {
       const response = await chatService.getMessages(chatRoomId, params);
       const payload = response?.data ?? response ?? {};

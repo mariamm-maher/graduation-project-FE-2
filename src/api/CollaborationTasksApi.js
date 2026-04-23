@@ -98,7 +98,31 @@ const collaborationTasksService = {
       console.error('Reject task final error:', error);
       throw error.response?.data?.message || 'Failed to reject task finally';
     }
-  }
+  },
+
+  // PATCH /api/collaboration-tasks/:id/move
+  // Drag-and-drop status change (owner only)
+  moveTask: async (id, status) => {
+    try {
+      const response = await api.patch(`/collaboration-tasks/${id}/move`, { status });
+      return response.data;
+    } catch (error) {
+      console.error('Move task error:', error);
+      throw error.response?.data?.message || 'Failed to move task';
+    }
+  },
+
+  // POST /api/collaboration-tasks/collaboration/:collaborationId
+  // Create a new task (owner only)
+  createTask: async (collaborationId, data) => {
+    try {
+      const response = await api.post(`/collaboration-tasks/collaboration/${collaborationId}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Create task error:', error);
+      throw error.response?.data?.message || 'Failed to create task';
+    }
+  },
 };
 
 export default collaborationTasksService;

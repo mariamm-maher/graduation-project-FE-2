@@ -59,7 +59,6 @@ const safeNotificationId = (notification) => {
   return getNotificationId(normalized);
 };
 
-let notificationSocketListenersAttached = false;
 
 const useNotificationsStore = create((set, get) => ({
   notifications: [],
@@ -179,8 +178,6 @@ const useNotificationsStore = create((set, get) => ({
 
   initRealtimeNotifications: () => {
     (async () => {
-      if (notificationSocketListenersAttached) return;
-
       let socket;
       try {
         socket = await acquireChatSocket();
@@ -190,13 +187,16 @@ const useNotificationsStore = create((set, get) => ({
       }
       if (!socket) return;
 
-      if (notificationSocketListenersAttached) {
-        releaseChatSocket();
+      if (socket.__notificationListenersAttached) {
         return;
       }
-      notificationSocketListenersAttached = true;
+      socket.__notificationListenersAttached = true;
 
       socket.emit('subscribe_notifications');
+
+      socket.on('connect', () => {
+        socket.emit('subscribe_notifications');
+      });
 
       socket.on('notification', (notification) => {
         const normalized = normalizeNotification(notification);
@@ -233,12 +233,13 @@ const useNotificationsStore = create((set, get) => ({
 
   cleanupRealtimeNotifications: () => {
     const socket = getChatSocket();
-    if (socket && notificationSocketListenersAttached) {
+    if (socket && socket.__notificationListenersAttached) {
+      socket.off('connect');
       socket.off('notification');
       socket.off('notification_count_updated');
       socket.off('notification_read');
       socket.off('all_notifications_read');
-      notificationSocketListenersAttached = false;
+      socket.__notificationListenersAttached = false;
       releaseChatSocket();
     }
   },

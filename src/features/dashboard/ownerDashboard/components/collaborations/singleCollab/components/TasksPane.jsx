@@ -18,7 +18,6 @@ const STATUS_MAP = {
   todo:        'todo',
   in_progress: 'in_progress',
   in_review:   'review',
-  Approved:    'completed',
   approved:    'completed',
   rejected:    'todo',
 };
@@ -82,7 +81,7 @@ export default function TasksPane({ items = [] }) {
   const updateLocalTask = (taskId, patch) =>
     setTasks((prev) => prev.map((t) => (t.id === String(taskId) ? { ...t, ...patch } : t)));
 
-  const handleApprove = async (taskId) => {
+  const handleApprove = useCallback(async (taskId) => {
     setActionLoading(taskId + '_approve');
     try {
       const res = await collaborationTasksService.approveTask(taskId);
@@ -94,7 +93,7 @@ export default function TasksPane({ items = [] }) {
     } finally {
       setActionLoading(null);
     }
-  };
+  }, []);
 
   const handleCreate = async () => {
     if (!newTaskName.trim() || !selectedCollabId) return;
@@ -201,7 +200,7 @@ export default function TasksPane({ items = [] }) {
     if (task.status === 'review') {
       if (window.confirm(`Approve task "${task.taskName}"?`)) handleApprove(task.id);
     }
-  }, []);
+  }, [handleApprove]);
 
   return (
     <>

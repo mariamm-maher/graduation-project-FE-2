@@ -190,6 +190,45 @@ const adminService = {
       throw error.response?.data?.message || 'Failed to fetch logs';
     }
   },
+
+  // Get all collaboration requests
+  getCollaborationRequests: async (params = {}) => {
+    try {
+      const { page = 1, limit = 50, status } = params;
+      const query = new URLSearchParams();
+      if (page) query.set('page', page);
+      if (limit) query.set('limit', limit);
+      if (status) query.set('status', status);
+      const url = `/admin/collaboration-requests${query.toString() ? `?${query.toString()}` : ''}`;
+      const response = await api.get(url);
+      return response.data;
+    } catch (error) {
+      console.error('Collaboration requests error:', error);
+      throw error.response?.data?.message || 'Failed to fetch collaboration requests';
+    }
+  },
+
+  // Update collaboration request status
+  updateCollaborationRequestStatus: async (id, status) => {
+    try {
+      const response = await api.patch(`/admin/collaboration-requests/${id}/status`, { status });
+      return response.data;
+    } catch (error) {
+      console.error('Update collaboration request status error:', error);
+      throw error.response?.data?.message || 'Failed to update collaboration request status';
+    }
+  },
+
+  // Update collaboration status
+  updateCollaborationStatus: async (id, status) => {
+    try {
+      const response = await api.patch(`/admin/collaborations/${id}/status`, { status });
+      return response.data;
+    } catch (error) {
+      console.error('Update collaboration status error:', error);
+      throw error.response?.data?.message || 'Failed to update collaboration status';
+    }
+  },
 };
 
 export default adminService;

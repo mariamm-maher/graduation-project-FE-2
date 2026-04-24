@@ -116,15 +116,20 @@ function Sidebar() {
 
       {/* Bottom Actions */}
       <div className="pt-4 border-t border-white/10 space-y-1">
-        <button 
-          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200"
+        <Link
+          to="/dashboard/influencer/settings"
+          className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
+            location.pathname === '/dashboard/influencer/settings'
+              ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg shadow-[#745CB4]/30'
+              : 'text-gray-400 hover:text-white hover:bg-white/5'
+          }`}
           title={!isHovered ? 'Settings' : ''}
         >
           <Settings className="w-5 h-5 shrink-0" />
           {isHovered && (
             <span className="text-sm font-medium whitespace-nowrap">Settings</span>
           )}
-        </button>
+        </Link>
         <button 
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200"

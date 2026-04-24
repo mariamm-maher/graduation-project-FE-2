@@ -236,6 +236,101 @@ const useAdminStore = create((set) => ({
     }
   },
 
+  // Fetch Collaboration Requests
+  fetchCollaborationRequests: async (params = {}) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await adminService.getCollaborationRequests(params);
+      const list = response.data?.requests ?? response.requests ?? (Array.isArray(response.data) ? response.data : []);
+      set({
+        collaborationRequests: Array.isArray(list) ? list : [],
+        isLoading: false,
+        error: null
+      });
+      return { success: true, data: Array.isArray(list) ? list : response.data };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch collaboration requests';
+      set({ collaborationRequests: [], error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Update collaboration request status
+  updateCollaborationRequestStatus: async (id, status) => {
+    set({ error: null });
+    try {
+      await adminService.updateCollaborationRequestStatus(id, status);
+      set((state) => ({
+        collaborationRequests: state.collaborationRequests.map((r) =>
+          String(r.id) === String(id) ? { ...r, status } : r
+        ),
+        error: null
+      }));
+      return { success: true };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to update request status';
+      set({ error: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Update collaboration status
+  updateCollaborationStatus: async (id, status) => {
+    set({ error: null });
+    try {
+      await adminService.updateCollaborationStatus(id, status);
+      set((state) => ({
+        collaborations: state.collaborations.map((c) =>
+          String(c.id) === String(id) ? { ...c, status } : c
+        ),
+        error: null
+      }));
+      return { success: true };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to update collaboration status';
+      set({ error: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Update user role
+  updateUserRole: async (id, role) => {
+    set({ error: null });
+    try {
+      await adminService.updateUserRole(id, role);
+      set((state) => ({
+        users: state.users.map((u) =>
+          String(u.id) === String(id) ? { ...u, role } : u
+        ),
+        error: null
+      }));
+      return { success: true };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to update user role';
+      set({ error: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Update user status
+  updateUserStatus: async (id, status) => {
+    set({ error: null });
+    try {
+      await adminService.updateUserStatus(id, status);
+      set((state) => ({
+        users: state.users.map((u) =>
+          String(u.id) === String(id) ? { ...u, status } : u
+        ),
+        error: null
+      }));
+      return { success: true };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to update user status';
+      set({ error: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  },
+
   // Clear all data
   clearAdminData: () => set({ 
     analytics: null,
@@ -245,6 +340,7 @@ const useAdminStore = create((set) => ({
     campaigns: [],
     recentLogs: [],
     logs: [],
+    collaborationRequests: [],
     logsPagination: {
       currentPage: 1,
       totalPages: 1,

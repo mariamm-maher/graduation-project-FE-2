@@ -5,6 +5,7 @@ import CollaborationsLayout from '../features/dashboard/influncerDashboard/compo
 import Profile from '../features/dashboard/influncerDashboard/components/profile/Profile';
 import CompleteProfileWizard from '../features/dashboard/influncerDashboard/components/profile/CompleteProfileWizard';
 import Messages from '../features/dashboard/influncerDashboard/components/messages/Messages';
+import Settings from './Settings';
 
 function InfluencerDashboard() {
   return (
@@ -21,6 +22,7 @@ function InfluencerDashboard() {
           <Route path="social-media/*" element={<div>Social Media Content</div>} />
           <Route path="analytics/*" element={<div>Performance Analytics</div>} />
           <Route path="messages" element={<Messages />} />
+          <Route path="settings" element={<Settings />} />
         </Routes>
       </div>
     </div>

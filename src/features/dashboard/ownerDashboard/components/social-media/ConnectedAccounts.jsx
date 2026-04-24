@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Instagram, Youtube, Twitter, Facebook, Loader } from 'lucide-react';
+import { Instagram, Youtube, Twitter, Facebook, Loader, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import useSocialMediaStore from '../../../../../stores/SocialMediaStore';
 
@@ -8,6 +8,23 @@ function ConnectedAccounts() {
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState('');
   const [authCode, setAuthCode] = useState('');
+
+  // Dropdown states
+  const [platformQuery, setPlatformQuery] = useState('');
+  const [isPlatformOpen, setIsPlatformOpen] = useState(false);
+
+  const platformOptions = [
+    { value: '', label: 'Select a platform' },
+    { value: 'Instagram', label: 'Instagram' },
+    { value: 'Facebook', label: 'Facebook' },
+    { value: 'Twitter', label: 'Twitter' },
+    { value: 'YouTube', label: 'YouTube' },
+    { value: 'TikTok', label: 'TikTok' },
+  ];
+
+  const filteredPlatforms = platformOptions.filter((opt) =>
+    opt.label.toLowerCase().includes(platformQuery.trim().toLowerCase())
+  );
   const [statsLoading, setStatsLoading] = useState({});
 
   useEffect(() => {
@@ -85,18 +102,43 @@ function ConnectedAccounts() {
             <form onSubmit={handleConnectAccount} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-white mb-2">Platform</label>
-                <select
-                  value={selectedPlatform}
-                  onChange={(e) => setSelectedPlatform(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD]"
-                >
-                  <option value="">Select a platform</option>
-                  <option value="Instagram">Instagram</option>
-                  <option value="Facebook">Facebook</option>
-                  <option value="Twitter">Twitter</option>
-                  <option value="YouTube">YouTube</option>
-                  <option value="TikTok">TikTok</option>
-                </select>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={platformOptions.find(p => p.value === selectedPlatform)?.label || platformQuery}
+                    onChange={(e) => {
+                      setPlatformQuery(e.target.value);
+                      setIsPlatformOpen(true);
+                    }}
+                    onFocus={() => setIsPlatformOpen(true)}
+                    onBlur={() => setTimeout(() => setIsPlatformOpen(false), 120)}
+                    placeholder="Search platforms"
+                    className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD]"
+                  />
+                  {isPlatformOpen && (
+                    <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                      {filteredPlatforms.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            setSelectedPlatform(option.value);
+                            setPlatformQuery('');
+                            setIsPlatformOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                        >
+                          <span className="flex items-center justify-between">
+                            {option.label}
+                            {selectedPlatform === option.value && (
+                              <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                            )}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-white mb-2">Authorization Code</label>

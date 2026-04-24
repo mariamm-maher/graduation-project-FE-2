@@ -194,18 +194,18 @@ function Header() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute top-full mt-2 w-full sm:w-80 bg-[#1a1a3e] backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
+                  className="absolute top-full mt-2 w-full sm:w-80 bg-[#10121f] border border-white/10 rounded-lg shadow-xl max-h-56 overflow-y-auto z-50"
                 >
-                  <div className="p-2 max-h-80 overflow-y-auto">
-                    <div className="px-3 py-2 text-xs text-gray-400 font-medium uppercase tracking-wide">
+                  <div className="p-2">
+                    <div className="px-3 py-2 text-xs text-gray-400 font-medium uppercase tracking-wide border-b border-white/10 mb-1">
                       Search Results
                     </div>
                     {filteredSuggestions.map((suggestion, index) => (
                       <motion.button
                         key={index}
-                        whileHover={{ x: 4, backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                        whileHover={{ x: 4 }}
                         onClick={() => handleSuggestionClick(suggestion)}
-                        className="w-full text-left px-3 py-3 rounded-lg transition-all duration-200 flex items-center justify-between group"
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150 flex items-center justify-between group"
                       >
                         <div className="flex items-center gap-3">
                           <div className={`w-2 h-2 rounded-full ${
@@ -233,11 +233,11 @@ function Header() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute top-full mt-2 w-full sm:w-80 bg-[#1a1a3e] backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
+                  className="absolute top-full mt-2 w-full sm:w-80 bg-[#10121f] border border-white/10 rounded-lg shadow-xl max-h-56 overflow-y-auto z-50"
                 >
                   <div className="p-6 text-center">
                     <Search className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-                    <p className="text-gray-400 text-sm">No results found for "{searchQuery}"</p>
+                    <p className="text-gray-400 text-sm">No results found</p>
                   </div>
                 </motion.div>
               )}
@@ -273,7 +273,7 @@ function Header() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute top-16 right-0 w-96 bg-linear-to-br from-[#1a0933] to-[#2d1b4e] border border-white/20 rounded-xl shadow-2xl z-50"
+                className="absolute top-16 right-0 w-[calc(100vw-2rem)] sm:w-80 md:w-96 max-w-sm bg-linear-to-br from-[#1a0933] to-[#2d1b4e] border border-white/20 rounded-xl shadow-2xl z-50"
               >
                 <div className="p-4 border-b border-white/10 flex items-center justify-between">
                   <h3 className="text-white font-bold">Notifications</h3>
@@ -375,32 +375,32 @@ function Header() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-56 bg-[#1a1a3e] backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
+                  className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-56 max-w-xs bg-[#10121f] border border-white/10 rounded-lg shadow-xl max-h-56 overflow-y-auto z-50"
                 >
                   <div className="p-2">
                     <motion.button
                       whileHover={{ x: 4 }}
                       onClick={() => switchRole('Owner')}
-                      className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 ${
                         activeRole === 'Owner'
-                          ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white'
-                          : 'text-gray-300 hover:bg-white/5'
+                          ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg'
+                          : 'text-gray-200 hover:bg-white/10'
                       }`}
                     >
                       <div className="font-medium">Switch to Owner</div>
-                      <div className="text-xs text-gray-400 mt-1">Manage campaigns & team</div>
+                      <div className="text-xs text-gray-500 mt-1">Manage campaigns & team</div>
                     </motion.button>
                     <motion.button
                       whileHover={{ x: 4 }}
                       onClick={() => switchRole('Influencer')}
-                      className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 mt-1 ${
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 mt-1 ${
                         activeRole === 'Influencer'
-                          ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white'
-                          : 'text-gray-300 hover:bg-white/5'
+                          ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg'
+                          : 'text-gray-200 hover:bg-white/10'
                       }`}
                     >
                       <div className="font-medium">Switch to Influencer</div>
-                      <div className="text-xs text-gray-400 mt-1">View offers & collaborations</div>
+                      <div className="text-xs text-gray-500 mt-1">View offers & collaborations</div>
                     </motion.button>
                   </div>
                 </motion.div>

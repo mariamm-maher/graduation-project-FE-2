@@ -1,4 +1,5 @@
-import { Calendar, Eye, FileText, Plus, Search, PenTool, CheckCircle, XCircle, FileCheck, Package, DollarSign } from 'lucide-react';
+import { Calendar, Eye, FileText, Plus, Search, PenTool, CheckCircle, XCircle, FileCheck, Package, DollarSign, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
 
 function StatusBadge({ status, ownerSigned, influencerSigned }) {
   // New API statuses: draft, partially_signed, signed, active, completed, terminated
@@ -96,6 +97,24 @@ export default function ContractPane({
 }) {
   const q = searchQuery.trim().toLowerCase();
 
+  // Dropdown states for Filter Status
+  const [statusQuery, setStatusQuery] = useState('');
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+
+  const statusOptions = [
+    { value: 'all', label: 'All Status' },
+    { value: 'draft', label: 'Draft' },
+    { value: 'partially_signed', label: 'Partially Signed' },
+    { value: 'signed', label: 'Signed' },
+    { value: 'active', label: 'Active' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'terminated', label: 'Terminated' },
+  ];
+
+  const filteredStatuses = statusOptions.filter((s) =>
+    s.label.toLowerCase().includes(statusQuery.trim().toLowerCase())
+  );
+
   const filteredContracts = (contracts || []).filter((contract) => {
     const displayData = getContractDisplayData(contract);
     const campaign = String(displayData.campaignName || '').toLowerCase();
@@ -172,19 +191,43 @@ export default function ContractPane({
           />
         </div>
 
-        <select
-          value={filterStatus}
-          onChange={(e) => onFilterChange(e.target.value)}
-          className="rounded-xl border border-[#745CB4]/25 bg-[#1A112C]/65 backdrop-blur-sm px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#C1B6FD]/45"
-        >
-          <option value="all">All Status</option>
-          <option value="draft">Draft</option>
-          <option value="partially_signed">Partially Signed</option>
-          <option value="signed">Signed</option>
-          <option value="active">Active</option>
-          <option value="completed">Completed</option>
-          <option value="terminated">Terminated</option>
-        </select>
+        <div className="relative">
+          <input
+            type="text"
+            value={statusOptions.find(s => s.value === filterStatus)?.label || statusQuery}
+            onChange={(e) => {
+              setStatusQuery(e.target.value);
+              setIsStatusOpen(true);
+            }}
+            onFocus={() => setIsStatusOpen(true)}
+            onBlur={() => setTimeout(() => setIsStatusOpen(false), 120)}
+            placeholder="Filter by status"
+            className="w-full rounded-xl border border-[#745CB4]/25 bg-[#1A112C]/65 backdrop-blur-sm px-4 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/45"
+          />
+          {isStatusOpen && (
+            <div className="absolute top-full mt-2 right-0 w-full min-w-[160px] z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+              {filteredStatuses.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    onFilterChange(option.value);
+                    setStatusQuery('');
+                    setIsStatusOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                >
+                  <span className="flex items-center justify-between">
+                    {option.label}
+                    {filterStatus === option.value && (
+                      <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                    )}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {isLoading ? <p className="text-sm text-[#9CA3AF]">Loading contracts...</p> : null}

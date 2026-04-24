@@ -110,6 +110,36 @@ export default function OwnerProfile() {
   const [countryDropdownOpen, setCountryDropdownOpen] = useState({
     target: false
   });
+
+  // Dropdown states for selects
+  const [companySizeQuery, setCompanySizeQuery] = useState('');
+  const [isCompanySizeOpen, setIsCompanySizeOpen] = useState(false);
+  const [industryQuery, setIndustryQuery] = useState('');
+  const [isIndustryOpen, setIsIndustryOpen] = useState(false);
+  const [genderQuery, setGenderQuery] = useState('');
+  const [isGenderOpen, setIsGenderOpen] = useState(false);
+  const [ageRangeQuery, setAgeRangeQuery] = useState('');
+  const [isAgeRangeOpen, setIsAgeRangeOpen] = useState(false);
+  const [prevCampaignQuery, setPrevCampaignQuery] = useState('');
+  const [isPrevCampaignOpen, setIsPrevCampaignOpen] = useState(false);
+
+  const prevCampaignOptions = [
+    { value: 'no', label: 'No' },
+    { value: 'yes', label: 'Yes' }
+  ];
+
+  const filteredCompanySizes = COMPANY_SIZE_OPTIONS.filter((opt) =>
+    opt.toLowerCase().includes(companySizeQuery.trim().toLowerCase())
+  );
+  const filteredIndustries = INDUSTRY_OPTIONS.filter((opt) =>
+    opt.toLowerCase().includes(industryQuery.trim().toLowerCase())
+  );
+  const filteredGenders = TARGET_GENDER_OPTIONS.filter((opt) =>
+    opt.toLowerCase().includes(genderQuery.trim().toLowerCase())
+  );
+  const filteredAgeRanges = TARGET_AGE_OPTIONS.filter((opt) =>
+    opt.toLowerCase().includes(ageRangeQuery.trim().toLowerCase())
+  );
   const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [imageUploaded, setImageUploaded] = useState(false);
@@ -529,18 +559,63 @@ export default function OwnerProfile() {
               <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                 <p className="text-xs text-gray-400 mb-1">Company Size</p>
                 {isEditing ? (
-                  <select
-                    value={formData.company_size}
-                    onChange={(e) => handleInputChange('company_size', e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                  >
-                    <option value="" className="bg-[#1A1A24] text-gray-300">Select Company Size</option>
-                    {COMPANY_SIZE_OPTIONS.map((option) => (
-                      <option key={option} value={option} className="bg-[#1A1A24] text-gray-100">
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.company_size || companySizeQuery}
+                      onChange={(e) => {
+                        setCompanySizeQuery(e.target.value);
+                        setIsCompanySizeOpen(true);
+                      }}
+                      onFocus={() => setIsCompanySizeOpen(true)}
+                      onBlur={() => setTimeout(() => setIsCompanySizeOpen(false), 120)}
+                      placeholder="Search company sizes"
+                      className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+                    />
+                    {isCompanySizeOpen && (
+                      <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleInputChange('company_size', '');
+                            setCompanySizeQuery('');
+                            setIsCompanySizeOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                        >
+                          <span className="flex items-center justify-between">
+                            Select Company Size
+                            {formData.company_size === '' && (
+                              <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                            )}
+                          </span>
+                        </button>
+                        {filteredCompanySizes.length > 0 ? (
+                          filteredCompanySizes.map((option) => (
+                            <button
+                              key={option}
+                              type="button"
+                              onClick={() => {
+                                handleInputChange('company_size', option);
+                                setCompanySizeQuery('');
+                                setIsCompanySizeOpen(false);
+                              }}
+                              className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                            >
+                              <span className="flex items-center justify-between">
+                                {option}
+                                {formData.company_size === option && (
+                                  <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                                )}
+                              </span>
+                            </button>
+                          ))
+                        ) : (
+                          <p className="px-4 py-3 text-sm text-gray-400">No options found</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-sm font-semibold text-white">{profileView.company_size || 'N/A'}</p>
                 )}
@@ -548,18 +623,63 @@ export default function OwnerProfile() {
               <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                 <p className="text-xs text-gray-400 mb-1">Industry</p>
                 {isEditing ? (
-                  <select
-                    value={formData.industry}
-                    onChange={(e) => handleInputChange('industry', e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                  >
-                    <option value="" className="bg-[#1A1A24] text-gray-300">Select Industry</option>
-                    {INDUSTRY_OPTIONS.map((option) => (
-                      <option key={option} value={option} className="bg-[#1A1A24] text-gray-100">
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.industry || industryQuery}
+                      onChange={(e) => {
+                        setIndustryQuery(e.target.value);
+                        setIsIndustryOpen(true);
+                      }}
+                      onFocus={() => setIsIndustryOpen(true)}
+                      onBlur={() => setTimeout(() => setIsIndustryOpen(false), 120)}
+                      placeholder="Search industries"
+                      className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+                    />
+                    {isIndustryOpen && (
+                      <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleInputChange('industry', '');
+                            setIndustryQuery('');
+                            setIsIndustryOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                        >
+                          <span className="flex items-center justify-between">
+                            Select Industry
+                            {formData.industry === '' && (
+                              <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                            )}
+                          </span>
+                        </button>
+                        {filteredIndustries.length > 0 ? (
+                          filteredIndustries.map((option) => (
+                            <button
+                              key={option}
+                              type="button"
+                              onClick={() => {
+                                handleInputChange('industry', option);
+                                setIndustryQuery('');
+                                setIsIndustryOpen(false);
+                              }}
+                              className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                            >
+                              <span className="flex items-center justify-between">
+                                {option}
+                                {formData.industry === option && (
+                                  <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                                )}
+                              </span>
+                            </button>
+                          ))
+                        ) : (
+                          <p className="px-4 py-3 text-sm text-gray-400">No options found</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-sm font-semibold text-white">{profileView.industry || 'N/A'}</p>
                 )}
@@ -628,18 +748,63 @@ export default function OwnerProfile() {
               <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                 <p className="text-xs text-gray-400 mb-1">Gender</p>
                 {isEditing ? (
-                  <select
-                    value={formData.targetAudience?.gender || ''}
-                    onChange={(e) => handleTargetAudienceChange('gender', e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                  >
-                    <option value="" className="bg-[#1A1A24] text-gray-300">Select Gender</option>
-                    {TARGET_GENDER_OPTIONS.map((option) => (
-                      <option key={option} value={option} className="bg-[#1A1A24] text-gray-100">
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.targetAudience?.gender || genderQuery}
+                      onChange={(e) => {
+                        setGenderQuery(e.target.value);
+                        setIsGenderOpen(true);
+                      }}
+                      onFocus={() => setIsGenderOpen(true)}
+                      onBlur={() => setTimeout(() => setIsGenderOpen(false), 120)}
+                      placeholder="Search genders"
+                      className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+                    />
+                    {isGenderOpen && (
+                      <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleTargetAudienceChange('gender', '');
+                            setGenderQuery('');
+                            setIsGenderOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                        >
+                          <span className="flex items-center justify-between">
+                            Select Gender
+                            {formData.targetAudience?.gender === '' && (
+                              <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                            )}
+                          </span>
+                        </button>
+                        {filteredGenders.length > 0 ? (
+                          filteredGenders.map((option) => (
+                            <button
+                              key={option}
+                              type="button"
+                              onClick={() => {
+                                handleTargetAudienceChange('gender', option);
+                                setGenderQuery('');
+                                setIsGenderOpen(false);
+                              }}
+                              className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                            >
+                              <span className="flex items-center justify-between">
+                                {option}
+                                {formData.targetAudience?.gender === option && (
+                                  <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                                )}
+                              </span>
+                            </button>
+                          ))
+                        ) : (
+                          <p className="px-4 py-3 text-sm text-gray-400">No options found</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-sm font-semibold text-white">{targetAudienceSummary.gender}</p>
                 )}
@@ -647,18 +812,63 @@ export default function OwnerProfile() {
               <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                 <p className="text-xs text-gray-400 mb-1">Age Range</p>
                 {isEditing ? (
-                  <select
-                    value={formData.targetAudience?.ageRange || ''}
-                    onChange={(e) => handleTargetAudienceChange('ageRange', e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                  >
-                    <option value="" className="bg-[#1A1A24] text-gray-300">Select Age Range</option>
-                    {TARGET_AGE_OPTIONS.map((option) => (
-                      <option key={option} value={option} className="bg-[#1A1A24] text-gray-100">
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.targetAudience?.ageRange || ageRangeQuery}
+                      onChange={(e) => {
+                        setAgeRangeQuery(e.target.value);
+                        setIsAgeRangeOpen(true);
+                      }}
+                      onFocus={() => setIsAgeRangeOpen(true)}
+                      onBlur={() => setTimeout(() => setIsAgeRangeOpen(false), 120)}
+                      placeholder="Search age ranges"
+                      className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+                    />
+                    {isAgeRangeOpen && (
+                      <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleTargetAudienceChange('ageRange', '');
+                            setAgeRangeQuery('');
+                            setIsAgeRangeOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                        >
+                          <span className="flex items-center justify-between">
+                            Select Age Range
+                            {formData.targetAudience?.ageRange === '' && (
+                              <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                            )}
+                          </span>
+                        </button>
+                        {filteredAgeRanges.length > 0 ? (
+                          filteredAgeRanges.map((option) => (
+                            <button
+                              key={option}
+                              type="button"
+                              onClick={() => {
+                                handleTargetAudienceChange('ageRange', option);
+                                setAgeRangeQuery('');
+                                setIsAgeRangeOpen(false);
+                              }}
+                              className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                            >
+                              <span className="flex items-center justify-between">
+                                {option}
+                                {formData.targetAudience?.ageRange === option && (
+                                  <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                                )}
+                              </span>
+                            </button>
+                          ))
+                        ) : (
+                          <p className="px-4 py-3 text-sm text-gray-400">No options found</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-sm font-semibold text-white">{targetAudienceSummary.ageRange}</p>
                 )}
@@ -819,14 +1029,43 @@ export default function OwnerProfile() {
               <div>
                 <div className="text-xs text-gray-400">Previous Campaigns</div>
                 {isEditing ? (
-                  <select
-                    value={formData.has_previous_campaigns ? 'yes' : 'no'}
-                    onChange={(e) => handleInputChange('has_previous_campaigns', e.target.value === 'yes')}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                  >
-                    <option value="no" className="bg-[#1A1A24] text-gray-300">No</option>
-                    <option value="yes" className="bg-[#1A1A24] text-gray-300">Yes</option>
-                  </select>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={prevCampaignOptions.find(p => p.value === (formData.has_previous_campaigns ? 'yes' : 'no'))?.label || prevCampaignQuery}
+                      onChange={(e) => {
+                        setPrevCampaignQuery(e.target.value);
+                        setIsPrevCampaignOpen(true);
+                      }}
+                      onFocus={() => setIsPrevCampaignOpen(true)}
+                      onBlur={() => setTimeout(() => setIsPrevCampaignOpen(false), 120)}
+                      placeholder="Select option"
+                      className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+                    />
+                    {isPrevCampaignOpen && (
+                      <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                        {prevCampaignOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              handleInputChange('has_previous_campaigns', option.value === 'yes');
+                              setPrevCampaignQuery('');
+                              setIsPrevCampaignOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                          >
+                            <span className="flex items-center justify-between">
+                              {option.label}
+                              {(formData.has_previous_campaigns ? 'yes' : 'no') === option.value && (
+                                <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                              )}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div>{profileView.has_previous_campaigns ? 'Yes' : 'No'}</div>
                 )}

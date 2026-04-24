@@ -45,6 +45,26 @@ export default function TasksPane({ items = [] }) {
   const [newTaskPlatform, setNewTaskPlatform] = useState('');
   const [createLoading, setCreateLoading]     = useState(false);
 
+  // Dropdown states
+  const [platformQuery, setPlatformQuery] = useState('');
+  const [isPlatformOpen, setIsPlatformOpen] = useState(false);
+
+  const platformOptions = [
+    { value: '', label: 'Any' },
+    { value: 'instagram', label: 'Instagram' },
+    { value: 'tiktok', label: 'Tiktok' },
+    { value: 'youtube', label: 'Youtube' },
+    { value: 'facebook', label: 'Facebook' },
+    { value: 'twitter', label: 'Twitter' },
+    { value: 'linkedin', label: 'Linkedin' },
+    { value: 'snapchat', label: 'Snapchat' },
+    { value: 'other', label: 'Other' },
+  ];
+
+  const filteredPlatforms = platformOptions.filter((opt) =>
+    opt.label.toLowerCase().includes(platformQuery.trim().toLowerCase())
+  );
+
   const collabs = useMemo(() =>
     (items || []).map((c) => ({
       id:   String(c.id || c._id),
@@ -241,16 +261,43 @@ export default function TasksPane({ items = [] }) {
               </div>
               <div>
                 <label className="block text-xs text-[#9CA3AF] mb-1">Platform (optional)</label>
-                <select
-                  value={newTaskPlatform}
-                  onChange={(e) => setNewTaskPlatform(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-[#241A3A]/70 border border-[#745CB4]/25 text-sm text-white focus:outline-none focus:border-[#C1B6FD]/45"
-                >
-                  <option value="">Any</option>
-                  {['instagram','tiktok','youtube','facebook','twitter','linkedin','snapchat','other'].map(p => (
-                    <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={platformOptions.find(p => p.value === newTaskPlatform)?.label || platformQuery}
+                    onChange={(e) => {
+                      setPlatformQuery(e.target.value);
+                      setIsPlatformOpen(true);
+                    }}
+                    onFocus={() => setIsPlatformOpen(true)}
+                    onBlur={() => setTimeout(() => setIsPlatformOpen(false), 120)}
+                    placeholder="Search platforms"
+                    className="w-full px-3 py-2 rounded-lg bg-[#241A3A]/70 border border-[#745CB4]/25 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/45"
+                  />
+                  {isPlatformOpen && (
+                    <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                      {filteredPlatforms.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            setNewTaskPlatform(option.value);
+                            setPlatformQuery('');
+                            setIsPlatformOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                        >
+                          <span className="flex items-center justify-between">
+                            {option.label}
+                            {newTaskPlatform === option.value && (
+                              <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                            )}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

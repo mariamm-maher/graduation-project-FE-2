@@ -56,7 +56,7 @@ function Sidebar() {
       )}
 
       <div 
-        className={`fixed left-3 md:left-6 top-28 md:top-36 flex flex-col gap-2 backdrop-blur-md rounded-2xl p-4 border border-white/10 transition-all duration-300 ease-in-out z-50 ${
+        className={`fixed left-3 md:left-6 top-20 md:top-32 flex flex-col gap-2 backdrop-blur-md rounded-2xl p-4 border border-white/10 transition-all duration-300 ease-in-out z-50 ${
           isHovered ? 'w-64 bg-[#1a1a1a]/95' : 'w-20 bg-white/5'
         } ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'

@@ -1,12 +1,28 @@
+import { useState } from 'react';
 import { X, CheckCircle2, XCircle, Calendar } from 'lucide-react';
 
-function HistoryFiltersPanel({ 
-  filters, 
-  onFilterChange, 
-  onStatusToggle, 
-  onClearFilters, 
-  onClose 
+function HistoryFiltersPanel({
+  filters,
+  onFilterChange,
+  onStatusToggle,
+  onClearFilters,
+  onClose
 }) {
+  // Year dropdown state
+  const [yearQuery, setYearQuery] = useState('');
+  const [isYearOpen, setIsYearOpen] = useState(false);
+
+  const yearOptions = [
+    { value: 'all', label: 'All Years' },
+    { value: '2026', label: '2026' },
+    { value: '2025', label: '2025' },
+    { value: '2024', label: '2024' },
+  ];
+
+  const filteredYears = yearOptions.filter((y) =>
+    y.label.toLowerCase().includes(yearQuery.trim().toLowerCase())
+  );
+
   return (
     <aside className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
@@ -111,16 +127,47 @@ function HistoryFiltersPanel({
             <Calendar className="w-4 h-4 inline mr-2" />
             Completion Year
           </label>
-          <select
-            value={filters.year}
-            onChange={(e) => onFilterChange({ year: e.target.value })}
-            className="w-full bg-white/10 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#C1B6FD]"
-          >
-            <option value="all" className="bg-gray-800">All Years</option>
-            <option value="2026" className="bg-gray-800">2026</option>
-            <option value="2025" className="bg-gray-800">2025</option>
-            <option value="2024" className="bg-gray-800">2024</option>
-          </select>
+          <div className="relative">
+            <input
+              type="text"
+              value={yearOptions.find(y => y.value === filters.year)?.label || yearQuery}
+              onChange={(e) => {
+                setYearQuery(e.target.value);
+                setIsYearOpen(true);
+              }}
+              onFocus={() => setIsYearOpen(true)}
+              onBlur={() => setTimeout(() => setIsYearOpen(false), 120)}
+              placeholder="Search years"
+              className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+            />
+            {isYearOpen && (
+              <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                {filteredYears.length > 0 ? (
+                  filteredYears.map((year) => (
+                    <button
+                      key={year.value}
+                      type="button"
+                      onClick={() => {
+                        onFilterChange({ year: year.value });
+                        setYearQuery('');
+                        setIsYearOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                    >
+                      <span className="flex items-center justify-between">
+                        {year.label}
+                        {filters.year === year.value && (
+                          <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                        )}
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <p className="px-4 py-3 text-sm text-gray-400">No options found</p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
-import { Calendar, DollarSign, Target, FileText, Sparkles } from 'lucide-react';
 import { useState } from 'react';
+import { Calendar, DollarSign, Target, FileText, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import useCampaignStore from '../../../../../../stores/campaignStore';
@@ -7,6 +7,38 @@ import useCampaignStore from '../../../../../../stores/campaignStore';
 function CreateCampaign() {
   const navigate = useNavigate();
   const { isLoading } = useCampaignStore();
+  // Dropdown states
+  const [campaignGoalQuery, setCampaignGoalQuery] = useState('');
+  const [isCampaignGoalOpen, setIsCampaignGoalOpen] = useState(false);
+  const [currencyQuery, setCurrencyQuery] = useState('');
+  const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
+
+  const campaignGoalOptions = [
+    { value: '', label: 'Select campaign goal' },
+    { value: 'Awareness', label: 'Awareness' },
+    { value: 'Leads', label: 'Leads' },
+    { value: 'Sales', label: 'Sales' },
+    { value: 'Retention', label: 'Retention' },
+    { value: 'Re-engagement', label: 'Re-engagement' },
+  ];
+
+  const currencyOptions = [
+    { value: '', label: 'Select', disabled: true },
+    { value: 'USD', label: 'USD ($)' },
+    { value: 'EUR', label: 'EUR (€)' },
+    { value: 'GBP', label: 'GBP (£)' },
+    { value: 'EGP', label: 'EGP (E£)' },
+    { value: 'SAR', label: 'SAR (SR)' },
+    { value: 'AED', label: 'AED (د.إ)' },
+  ];
+
+  const filteredCampaignGoals = campaignGoalOptions.filter((g) =>
+    g.label.toLowerCase().includes(campaignGoalQuery.trim().toLowerCase())
+  );
+  const filteredCurrencies = currencyOptions.filter((c) =>
+    c.label.toLowerCase().includes(currencyQuery.trim().toLowerCase())
+  );
+
   const [campaignData, setCampaignData] = useState({
     campaignName: '',
     campaignGoal: '',
@@ -176,18 +208,45 @@ function CreateCampaign() {
                 <label className="block text-sm font-medium text-gray-300 mb-2">Campaign Goal</label>
                 <div className="relative">
                   <Target className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                  <select
-                    value={campaignData.campaignGoal}
-                    onChange={(e) => setCampaignData({ ...campaignData, campaignGoal: e.target.value })}
-                    className="w-full bg-[#2A2240] border border-white/15 rounded-xl pl-12 pr-4 py-3.5 text-white hover:border-[#C1B6FD]/45 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all appearance-none cursor-pointer"
-                  >
-                    <option value="" className="bg-[#1A1A24] text-gray-300">Select campaign goal</option>
-                    <option value="Awareness" className="bg-[#1A1A24] text-gray-100">Awareness</option>
-                    <option value="Leads" className="bg-[#1A1A24] text-gray-100">Leads</option>
-                    <option value="Sales" className="bg-[#1A1A24] text-gray-100">Sales</option>
-                    <option value="Retention" className="bg-[#1A1A24] text-gray-100">Retention</option>
-                    <option value="Re-engagement" className="bg-[#1A1A24] text-gray-100">Re-engagement</option>
-                  </select>
+                  <input
+                    type="text"
+                    value={campaignGoalOptions.find(g => g.value === campaignData.campaignGoal)?.label || campaignGoalQuery}
+                    onChange={(e) => {
+                      setCampaignGoalQuery(e.target.value);
+                      setIsCampaignGoalOpen(true);
+                    }}
+                    onFocus={() => setIsCampaignGoalOpen(true)}
+                    onBlur={() => setTimeout(() => setIsCampaignGoalOpen(false), 120)}
+                    placeholder="Search campaign goals"
+                    className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg pl-12 pr-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+                  />
+                  {isCampaignGoalOpen && (
+                    <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                      {filteredCampaignGoals.length > 0 ? (
+                        filteredCampaignGoals.map((goal) => (
+                          <button
+                            key={goal.value}
+                            type="button"
+                            onClick={() => {
+                              setCampaignData({ ...campaignData, campaignGoal: goal.value });
+                              setCampaignGoalQuery('');
+                              setIsCampaignGoalOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                          >
+                            <span className="flex items-center justify-between">
+                              {goal.label}
+                              {campaignData.campaignGoal === goal.value && (
+                                <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                              )}
+                            </span>
+                          </button>
+                        ))
+                      ) : (
+                        <p className="px-4 py-3 text-sm text-gray-400">No options found</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -220,19 +279,52 @@ function CreateCampaign() {
                 </div>
                 <div className="col-span-1">
                   <label className="block text-sm font-medium text-gray-300 mb-2">Currency</label>
-                  <select
-                    value={campaignData.currency}
-                    onChange={(e) => setCampaignData({ ...campaignData, currency: e.target.value })}
-                    className="w-full bg-[#2A2240] border border-white/15 rounded-xl px-4 py-3.5 text-white hover:border-[#C1B6FD]/45 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/70 transition-all appearance-none cursor-pointer"
-                  >
-                    <option value="" disabled>Select</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="GBP">GBP (£)</option>
-                    <option value="EGP">EGP (E£)</option>
-                    <option value="SAR">SAR (SR)</option>
-                    <option value="AED">AED (د.إ)</option>
-                  </select>
+                  <input
+                    type="text"
+                    value={currencyOptions.find(c => c.value === campaignData.currency)?.label || currencyQuery}
+                    onChange={(e) => {
+                      setCurrencyQuery(e.target.value);
+                      setIsCurrencyOpen(true);
+                    }}
+                    onFocus={() => setIsCurrencyOpen(true)}
+                    onBlur={() => setTimeout(() => setIsCurrencyOpen(false), 120)}
+                    placeholder="Search currencies"
+                    className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+                  />
+                  {isCurrencyOpen && (
+                    <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                      {filteredCurrencies.length > 0 ? (
+                        filteredCurrencies.map((currency) => (
+                          <button
+                            key={currency.value}
+                            type="button"
+                            disabled={currency.disabled}
+                            onClick={() => {
+                              if (!currency.disabled) {
+                                setCampaignData({ ...campaignData, currency: currency.value });
+                                setCurrencyQuery('');
+                                setIsCurrencyOpen(false);
+                              }
+                            }}
+                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 ${
+                              currency.disabled
+                                ? 'text-gray-500 cursor-not-allowed'
+                                : 'text-gray-200 hover:bg-white/10'
+                            }`}
+                          >
+                            <span className="flex items-center justify-between">
+                              {currency.label}
+                              {campaignData.currency === currency.value && (
+                                <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                              )}
+                            </span>
+                          </button>
+                        ))
+                      ) : (
+                        <p className="px-4 py-3 text-sm text-gray-400">No options found</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 

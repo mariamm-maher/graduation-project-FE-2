@@ -1,4 +1,5 @@
-import { Search, Filter } from 'lucide-react';
+import { useState } from 'react';
+import { Search, Filter, CheckCircle2 } from 'lucide-react';
 
 const CATEGORY_OPTIONS = [
   'Beauty',
@@ -35,6 +36,23 @@ function SearchFilters({
       return { ...prev, categories: nextCategories };
     });
   };
+
+  // Platform dropdown state
+  const [platformQuery, setPlatformQuery] = useState('');
+  const [isPlatformOpen, setIsPlatformOpen] = useState(false);
+
+  const platformOptions = [
+    { value: '', label: 'All platforms' },
+    { value: 'instagram', label: 'Instagram' },
+    { value: 'tiktok', label: 'TikTok' },
+    { value: 'youtube', label: 'YouTube' },
+    { value: 'facebook', label: 'Facebook' },
+    { value: 'x', label: 'X / Twitter' },
+  ];
+
+  const filteredPlatforms = platformOptions.filter((p) =>
+    p.label.toLowerCase().includes(platformQuery.trim().toLowerCase())
+  );
 
   return (
     <div className="space-y-3">
@@ -96,18 +114,47 @@ function SearchFilters({
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD]"
             />
 
-            <select
-              value={filters.platform}
-              onChange={(e) => updateFilter('platform', e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD]"
-            >
-              <option value="" className="bg-[#161222]">All platforms</option>
-              <option value="instagram" className="bg-[#161222]">Instagram</option>
-              <option value="tiktok" className="bg-[#161222]">TikTok</option>
-              <option value="youtube" className="bg-[#161222]">YouTube</option>
-              <option value="facebook" className="bg-[#161222]">Facebook</option>
-              <option value="x" className="bg-[#161222]">X / Twitter</option>
-            </select>
+            <div className="relative">
+              <input
+                type="text"
+                value={platformOptions.find(p => p.value === filters.platform)?.label || platformQuery}
+                onChange={(e) => {
+                  setPlatformQuery(e.target.value);
+                  setIsPlatformOpen(true);
+                }}
+                onFocus={() => setIsPlatformOpen(true)}
+                onBlur={() => setTimeout(() => setIsPlatformOpen(false), 120)}
+                placeholder="Search platforms"
+                className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+              />
+              {isPlatformOpen && (
+                <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                  {filteredPlatforms.length > 0 ? (
+                    filteredPlatforms.map((platform) => (
+                      <button
+                        key={platform.value}
+                        type="button"
+                        onClick={() => {
+                          updateFilter('platform', platform.value);
+                          setPlatformQuery('');
+                          setIsPlatformOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                      >
+                        <span className="flex items-center justify-between">
+                          {platform.label}
+                          {filters.platform === platform.value && (
+                            <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                          )}
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="px-4 py-3 text-sm text-gray-400">No options found</p>
+                  )}
+                </div>
+              )}
+            </div>
 
             <input
               type="number"

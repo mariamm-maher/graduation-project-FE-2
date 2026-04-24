@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, DollarSign, MessageSquare, Briefcase, X, Loader } from 'lucide-react';
+import { ArrowLeft, Send, DollarSign, MessageSquare, Briefcase, X, Loader, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 import useCampaignStore from '../../../../../../stores/campaignStore';
@@ -22,6 +22,15 @@ function SendCollabRequest() {
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Campaign dropdown state
+  const [campaignQuery, setCampaignQuery] = useState('');
+  const [isCampaignOpen, setIsCampaignOpen] = useState(false);
+
+  const campaignList = Array.isArray(campaigns) ? campaigns : [];
+  const filteredCampaigns = campaignList.filter((campaign) =>
+    campaign.campaignName?.toLowerCase().includes(campaignQuery.trim().toLowerCase())
+  );
 
   useEffect(() => {
     fetchCampaigns();
@@ -132,24 +141,72 @@ function SendCollabRequest() {
               <Briefcase className="w-4 h-4 text-[#C1B6FD]" />
               Select Campaign (Optional)
             </label>
-            <select
-              id="campaignId"
-              name="campaignId"
-              value={formData.campaignId}
-              onChange={handleChange}
-              disabled={isLoadingCampaigns}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD]/50 transition-all disabled:opacity-50"
-            >
-              <option value="" className="bg-[#1a0933] text-gray-300">No specific campaign</option>
-              {(() => {
-                const campaignList = Array.isArray(campaigns) ? campaigns : [];
-                return campaignList.map(campaign => (
-                  <option key={campaign.id} value={campaign.id} className="bg-[#1a0933] text-white">
-                    {campaign.campaignName}
-                  </option>
-                ));
-              })()}
-            </select>
+            <div className="relative">
+              <input
+                type="text"
+                id="campaignId"
+                name="campaignId"
+                value={formData.campaignId ? campaignList.find(c => c.id === Number(formData.campaignId))?.campaignName || campaignQuery : campaignQuery}
+                onChange={(e) => {
+                  setCampaignQuery(e.target.value);
+                  setIsCampaignOpen(true);
+                  if (formData.campaignId) {
+                    setFormData(prev => ({ ...prev, campaignId: '' }));
+                  }
+                }}
+                onFocus={() => setIsCampaignOpen(true)}
+                onBlur={() => setTimeout(() => setIsCampaignOpen(false), 120)}
+                placeholder={isLoadingCampaigns ? 'Loading campaigns...' : 'Search campaigns'}
+                disabled={isLoadingCampaigns}
+                className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300 disabled:opacity-50"
+              />
+              {isCampaignOpen && !isLoadingCampaigns && (
+                <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, campaignId: '' }));
+                      setCampaignQuery('');
+                      setIsCampaignOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                  >
+                    <span className="flex items-center justify-between">
+                      No specific campaign
+                      {formData.campaignId === '' && (
+                        <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                      )}
+                    </span>
+                  </button>
+                  {filteredCampaigns.length > 0 ? (
+                    filteredCampaigns.map((campaign) => (
+                      <button
+                        key={campaign.id}
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, campaignId: String(campaign.id) }));
+                          setCampaignQuery('');
+                          setIsCampaignOpen(false);
+                          if (errors.campaignId) {
+                            setErrors(prev => ({ ...prev, campaignId: '' }));
+                          }
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                      >
+                        <span className="flex items-center justify-between">
+                          {campaign.campaignName}
+                          {formData.campaignId === String(campaign.id) && (
+                            <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                          )}
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="px-4 py-3 text-sm text-gray-400">No campaigns found</p>
+                  )}
+                </div>
+              )}
+            </div>
             <p className="text-xs text-gray-400 mt-2">
               {isLoadingCampaigns ? 'Loading campaigns...' : 'Choose a campaign or leave empty for a general collaboration'}
             </p>

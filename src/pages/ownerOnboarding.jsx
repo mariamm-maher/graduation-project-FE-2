@@ -21,6 +21,15 @@ export default function OwnerOnboarding() {
   const [imageUploaded, setImageUploaded] = useState(false);
   const [targetMarketQuery, setTargetMarketQuery] = useState('');
   const [isTargetMarketOpen, setIsTargetMarketOpen] = useState(false);
+
+  // Custom dropdown states for single-select dropdowns
+  const [industryQuery, setIndustryQuery] = useState('');
+  const [isIndustryOpen, setIsIndustryOpen] = useState(false);
+  const [ageRangeQuery, setAgeRangeQuery] = useState('');
+  const [isAgeRangeOpen, setIsAgeRangeOpen] = useState(false);
+  const [locationQuery, setLocationQuery] = useState('');
+  const [isLocationOpen, setIsLocationOpen] = useState(false);
+
   const [formData, setFormData] = useState({
     businessName: '',
     productOrService: '',
@@ -125,6 +134,18 @@ export default function OwnerOnboarding() {
 
   const filteredTargetMarkets = targetMarketOptions.filter((market) =>
     market.toLowerCase().includes(targetMarketQuery.trim().toLowerCase())
+  );
+
+  const filteredIndustries = industries.filter((ind) =>
+    ind.toLowerCase().includes(industryQuery.trim().toLowerCase())
+  );
+
+  const filteredAgeRanges = ageRanges.filter((range) =>
+    range.toLowerCase().includes(ageRangeQuery.trim().toLowerCase())
+  );
+
+  const filteredLocations = targetMarketOptions.filter((loc) =>
+    loc.toLowerCase().includes(locationQuery.trim().toLowerCase())
   );
 
   const addCompetitor = () => {
@@ -445,18 +466,47 @@ export default function OwnerOnboarding() {
           <label className="block text-sm font-medium text-gray-300">
             What industry best describes your business?
           </label>
-          <select
-            value={formData.industry}
-            onChange={(e) => handleChange('industry', e.target.value)}
-            className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
-          >
-            <option value="" className="bg-gray-900">Select industry</option>
-            {industries.map((ind) => (
-              <option key={ind} value={ind} className="bg-gray-900">
-                {ind}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <input
+              type="text"
+              value={formData.industry || industryQuery}
+              onChange={(e) => {
+                setIndustryQuery(e.target.value);
+                setIsIndustryOpen(true);
+              }}
+              onFocus={() => setIsIndustryOpen(true)}
+              onBlur={() => setTimeout(() => setIsIndustryOpen(false), 120)}
+              placeholder="Search industries"
+              className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+            />
+            {isIndustryOpen && (
+              <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                {filteredIndustries.length > 0 ? (
+                  filteredIndustries.map((ind) => (
+                    <button
+                      key={ind}
+                      type="button"
+                      onClick={() => {
+                        handleChange('industry', ind);
+                        setIndustryQuery('');
+                        setIsIndustryOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                    >
+                      <span className="flex items-center justify-between">
+                        {ind}
+                        {formData.industry === ind && (
+                          <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                        )}
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <p className="px-4 py-3 text-sm text-gray-400">No options found</p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )
     },
@@ -813,18 +863,47 @@ export default function OwnerOnboarding() {
           {/* Age Range */}
           <div>
             <label className="block text-xs text-gray-400 mb-2">Age Range</label>
-            <select
-              value={formData.targetAudience.ageRange}
-              onChange={(e) => handleTargetAudienceChange('ageRange', e.target.value)}
-              className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
-            >
-              <option value="" className="bg-gray-900">Select age range</option>
-              {ageRanges.map((range) => (
-                <option key={range} value={range} className="bg-gray-900">
-                  {range}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <input
+                type="text"
+                value={formData.targetAudience.ageRange || ageRangeQuery}
+                onChange={(e) => {
+                  setAgeRangeQuery(e.target.value);
+                  setIsAgeRangeOpen(true);
+                }}
+                onFocus={() => setIsAgeRangeOpen(true)}
+                onBlur={() => setTimeout(() => setIsAgeRangeOpen(false), 120)}
+                placeholder="Search age ranges"
+                className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+              />
+              {isAgeRangeOpen && (
+                <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                  {filteredAgeRanges.length > 0 ? (
+                    filteredAgeRanges.map((range) => (
+                      <button
+                        key={range}
+                        type="button"
+                        onClick={() => {
+                          handleTargetAudienceChange('ageRange', range);
+                          setAgeRangeQuery('');
+                          setIsAgeRangeOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                      >
+                        <span className="flex items-center justify-between">
+                          {range}
+                          {formData.targetAudience.ageRange === range && (
+                            <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                          )}
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="px-4 py-3 text-sm text-gray-400">No options found</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Gender */}
@@ -852,18 +931,47 @@ export default function OwnerOnboarding() {
           {/* Location */}
           <div>
             <label className="block text-xs text-gray-400 mb-2">Target Location</label>
-            <select
-              value={formData.targetAudience.location}
-              onChange={(e) => handleTargetAudienceChange('location', e.target.value)}
-              className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
-            >
-              <option value="" className="bg-gray-900">Select location</option>
-              {targetMarketOptions.map((location) => (
-                <option key={location} value={location} className="bg-gray-900">
-                  {location}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <input
+                type="text"
+                value={formData.targetAudience.location || locationQuery}
+                onChange={(e) => {
+                  setLocationQuery(e.target.value);
+                  setIsLocationOpen(true);
+                }}
+                onFocus={() => setIsLocationOpen(true)}
+                onBlur={() => setTimeout(() => setIsLocationOpen(false), 120)}
+                placeholder="Search locations"
+                className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+              />
+              {isLocationOpen && (
+                <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                  {filteredLocations.length > 0 ? (
+                    filteredLocations.map((loc) => (
+                      <button
+                        key={loc}
+                        type="button"
+                        onClick={() => {
+                          handleTargetAudienceChange('location', loc);
+                          setLocationQuery('');
+                          setIsLocationOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                      >
+                        <span className="flex items-center justify-between">
+                          {loc}
+                          {formData.targetAudience.location === loc && (
+                            <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                          )}
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="px-4 py-3 text-sm text-gray-400">No options found</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )

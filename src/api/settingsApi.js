@@ -1,4 +1,4 @@
-import api from './axios';
+import api from '../config/axios';
 
 const settingsService = {
   // =======================

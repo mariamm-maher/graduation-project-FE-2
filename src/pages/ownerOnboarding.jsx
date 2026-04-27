@@ -469,13 +469,19 @@ export default function OwnerOnboarding() {
           <div className="relative">
             <input
               type="text"
-              value={formData.industry || industryQuery}
+              value={isIndustryOpen ? industryQuery : (formData.industry || '')}
               onChange={(e) => {
                 setIndustryQuery(e.target.value);
                 setIsIndustryOpen(true);
               }}
-              onFocus={() => setIsIndustryOpen(true)}
-              onBlur={() => setTimeout(() => setIsIndustryOpen(false), 120)}
+              onFocus={() => {
+                setIndustryQuery('');
+                setIsIndustryOpen(true);
+              }}
+              onBlur={() => setTimeout(() => {
+                setIsIndustryOpen(false);
+                setIndustryQuery('');
+              }, 150)}
               placeholder="Search industries"
               className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
             />
@@ -866,13 +872,19 @@ export default function OwnerOnboarding() {
             <div className="relative">
               <input
                 type="text"
-                value={formData.targetAudience.ageRange || ageRangeQuery}
+                value={isAgeRangeOpen ? ageRangeQuery : (formData.targetAudience.ageRange || '')}
                 onChange={(e) => {
                   setAgeRangeQuery(e.target.value);
                   setIsAgeRangeOpen(true);
                 }}
-                onFocus={() => setIsAgeRangeOpen(true)}
-                onBlur={() => setTimeout(() => setIsAgeRangeOpen(false), 120)}
+                onFocus={() => {
+                  setAgeRangeQuery('');
+                  setIsAgeRangeOpen(true);
+                }}
+                onBlur={() => setTimeout(() => {
+                  setIsAgeRangeOpen(false);
+                  setAgeRangeQuery('');
+                }, 150)}
                 placeholder="Search age ranges"
                 className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
               />
@@ -934,18 +946,24 @@ export default function OwnerOnboarding() {
             <div className="relative">
               <input
                 type="text"
-                value={formData.targetAudience.location || locationQuery}
+                value={isLocationOpen ? locationQuery : (formData.targetAudience.location || '')}
                 onChange={(e) => {
                   setLocationQuery(e.target.value);
                   setIsLocationOpen(true);
                 }}
-                onFocus={() => setIsLocationOpen(true)}
-                onBlur={() => setTimeout(() => setIsLocationOpen(false), 120)}
+                onFocus={() => {
+                  setLocationQuery('');
+                  setIsLocationOpen(true);
+                }}
+                onBlur={() => setTimeout(() => {
+                  setIsLocationOpen(false);
+                  setLocationQuery('');
+                }, 150)}
                 placeholder="Search locations"
                 className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
               />
               {isLocationOpen && (
-                <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                <div className="absolute bottom-full mb-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
                   {filteredLocations.length > 0 ? (
                     filteredLocations.map((loc) => (
                       <button
@@ -1028,7 +1046,7 @@ export default function OwnerOnboarding() {
           </div>
 
           {/* Step Content */}
-          <div className="flex-1">
+          <div className="flex-1 overflow-visible">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}

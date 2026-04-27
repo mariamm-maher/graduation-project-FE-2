@@ -63,8 +63,8 @@ function ActiveCampaignCards({ campaigns = [], kpis, loading }) {
                   type="button"
                   onClick={() => openCampaign(campaign)}
                   disabled={!resolveCampaignId(campaign)}
-                  className="font-bold text-white mb-1 truncate group-hover:text-[#C1B6FD] transition-colors hover:underline disabled:opacity-70 disabled:cursor-not-allowed text-left"
-                  title={resolveCampaignId(campaign) ? 'Open campaign details' : 'Campaign id unavailable'}
+                  className="w-full font-bold text-white mb-1 truncate block group-hover:text-[#C1B6FD] transition-colors hover:underline disabled:opacity-70 disabled:cursor-not-allowed text-left"
+                  title={campaign.name}
                 >
                   {campaign.name}
                 </button>

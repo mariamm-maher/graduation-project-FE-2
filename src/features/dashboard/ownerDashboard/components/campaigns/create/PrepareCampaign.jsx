@@ -18,6 +18,14 @@ function PrepareCampaign() {
   const [ownerEdits, setOwnerEdits] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Audience location search-select state
+  const [locationQuery, setLocationQuery] = useState('');
+  const [isLocationOpen, setIsLocationOpen] = useState(false);
+  const locationOptions = ['Egypt', 'Saudi Arabia', 'UAE', 'GCC', 'MENA', 'Europe', 'USA', 'Worldwide'];
+  const filteredLocations = locationOptions.filter((loc) =>
+    loc.toLowerCase().includes(locationQuery.toLowerCase())
+  );
+
   useEffect(() => {
     fetchOwnerProfile();
   }, [fetchOwnerProfile]);
@@ -129,37 +137,34 @@ function PrepareCampaign() {
   };
 
   const toggleOwnerArrayValue = (field, value) => {
-    setOwnerEdits((prev) => {
-      const current = Array.isArray(ownerDraft[field]) ? ownerDraft[field] : [];
-      const next = current.includes(value)
-        ? current.filter((item) => item !== value)
-        : [...current, value];
-
-      return {
-        ...prev,
-        [field]: next,
-      };
-    });
+    const current = Array.isArray(ownerDraft[field]) ? ownerDraft[field] : [];
+    const next = current.includes(value)
+      ? current.filter((item) => item !== value)
+      : [...current, value];
+    setOwnerEdits((prev) => ({ ...prev, [field]: next }));
   };
 
   const addCompetitor = () => {
+    const current = Array.isArray(ownerDraft.competitors) ? ownerDraft.competitors : [];
     setOwnerEdits((prev) => ({
       ...prev,
-      competitors: [...(Array.isArray(prev.competitors) ? prev.competitors : []), { name: '', website: '', notes: '' }],
+      competitors: [...current, { name: '', website: '', notes: '' }],
     }));
   };
 
   const removeCompetitor = (index) => {
+    const current = Array.isArray(ownerDraft.competitors) ? ownerDraft.competitors : [];
     setOwnerEdits((prev) => ({
       ...prev,
-      competitors: (Array.isArray(prev.competitors) ? prev.competitors : []).filter((_, i) => i !== index),
+      competitors: current.filter((_, i) => i !== index),
     }));
   };
 
   const updateCompetitor = (index, field, value) => {
+    const current = Array.isArray(ownerDraft.competitors) ? ownerDraft.competitors : [];
     setOwnerEdits((prev) => ({
       ...prev,
-      competitors: (Array.isArray(prev.competitors) ? prev.competitors : []).map((competitor, i) =>
+      competitors: current.map((competitor, i) =>
         i === index ? { ...(competitor || {}), [field]: value } : competitor
       ),
     }));
@@ -322,7 +327,9 @@ function PrepareCampaign() {
       </div>
     );
   }
-
+console.log("campaignData", campaignData);
+console.log("ownerDraft", ownerDraft);
+console.log("compatators", campaignData?.competitors);
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-white/10 bg-[#1e1632]/55 backdrop-blur-md px-6 py-6 shadow-xl">
@@ -394,18 +401,18 @@ function PrepareCampaign() {
           )}
 
           {currentStep === 1 && (
-            <div className="space-y-4">
+            <div className="space-y-5">
               <h2 className="text-xl font-semibold text-white">Offer & Positioning</h2>
               <p className="text-sm text-gray-400">{steps[1].description}</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm text-gray-300 mb-2">Product or Service</label>
                   <input
                     type="text"
                     value={ownerDraft.product_or_service}
                     onChange={(e) => updateOwnerField('product_or_service', e.target.value)}
-                    placeholder="Product or service"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+                    placeholder="e.g. Skincare brand, SaaS app..."
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
                   />
                 </div>
 
@@ -415,41 +422,55 @@ function PrepareCampaign() {
                     type="text"
                     value={ownerDraft.brand_name}
                     onChange={(e) => updateOwnerField('brand_name', e.target.value)}
-                    placeholder="Brand name"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+                    placeholder="e.g. Glow Co."
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm text-gray-300 mb-2">Industry</label>
-                  <select
-                    value={ownerDraft.industry}
-                    onChange={(e) => updateOwnerField('industry', e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
-                  >
-                    <option value="" className="bg-[#1A1A24] text-gray-300">Select Industry</option>
-                    {industryOptions.map((option) => (
-                      <option key={option} value={option} className="bg-[#1A1A24] text-white">
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-300 mb-3">Industry</label>
+                  <div className="flex flex-wrap gap-2">
+                    {industryOptions.map((option) => {
+                      const selected = ownerDraft.industry === option;
+                      return (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => updateOwnerField('industry', selected ? '' : option)}
+                          className={`px-3 py-1.5 rounded-full text-xs border transition-all ${
+                            selected
+                              ? 'bg-[#C1B6FD]/20 border-[#C1B6FD]/60 text-[#E9E3FF]'
+                              : 'bg-white/5 border-white/15 text-gray-300 hover:bg-white/10'
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm text-gray-300 mb-2">Company Size</label>
-                  <select
-                    value={ownerDraft.company_size}
-                    onChange={(e) => updateOwnerField('company_size', e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
-                  >
-                    <option value="" className="bg-[#1A1A24] text-gray-300">Select Company Size</option>
-                    {companySizeOptions.map((option) => (
-                      <option key={option} value={option} className="bg-[#1A1A24] text-white">
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-300 mb-3">Company Size</label>
+                  <div className="flex flex-wrap gap-2">
+                    {companySizeOptions.map((option) => {
+                      const selected = ownerDraft.company_size === option;
+                      return (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => updateOwnerField('company_size', selected ? '' : option)}
+                          className={`px-4 py-2 rounded-full text-xs border transition-all ${
+                            selected
+                              ? 'bg-[#C1B6FD]/20 border-[#C1B6FD]/60 text-[#E9E3FF]'
+                              : 'bg-white/5 border-white/15 text-gray-300 hover:bg-white/10'
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="md:col-span-2">
@@ -457,9 +478,9 @@ function PrepareCampaign() {
                   <textarea
                     value={ownerDraft.unique_selling_point}
                     onChange={(e) => updateOwnerField('unique_selling_point', e.target.value)}
-                    placeholder="Unique selling point"
+                    placeholder="What makes your brand stand out?"
                     rows={3}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white resize-none"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 resize-none"
                   />
                 </div>
               </div>
@@ -496,15 +517,26 @@ function PrepareCampaign() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-300 mb-2">Previous Campaigns</label>
-                  <select
-                    value={ownerDraft.has_previous_campaigns ? 'yes' : 'no'}
-                    onChange={(e) => updateOwnerField('has_previous_campaigns', e.target.value === 'yes')}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
-                  >
-                    <option value="no" className="bg-[#1A1A24]">No previous campaigns</option>
-                    <option value="yes" className="bg-[#1A1A24]">Has previous campaigns</option>
-                  </select>
+                  <label className="block text-sm text-gray-300 mb-3">Previous Campaigns</label>
+                  <div className="flex gap-2">
+                    {[{ label: 'No previous campaigns', value: false }, { label: 'Has previous campaigns', value: true }].map((opt) => {
+                      const selected = ownerDraft.has_previous_campaigns === opt.value;
+                      return (
+                        <button
+                          key={String(opt.value)}
+                          type="button"
+                          onClick={() => updateOwnerField('has_previous_campaigns', opt.value)}
+                          className={`px-4 py-2 rounded-full text-xs border transition-all ${
+                            selected
+                              ? 'bg-[#C1B6FD]/20 border-[#C1B6FD]/60 text-[#E9E3FF]'
+                              : 'bg-white/5 border-white/15 text-gray-300 hover:bg-white/10'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {ownerDraft.has_previous_campaigns && (
@@ -515,7 +547,7 @@ function PrepareCampaign() {
                       onChange={(e) => updateOwnerField('previous_campaign_description', e.target.value)}
                       rows={3}
                       placeholder="Describe your previous campaigns"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white resize-none"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 resize-none"
                     />
                   </div>
                 )}
@@ -541,7 +573,7 @@ function PrepareCampaign() {
                           value={competitor?.name || ''}
                           onChange={(e) => updateCompetitor(index, 'name', e.target.value)}
                           placeholder="Name"
-                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
                         />
                       </div>
                       <div>
@@ -551,7 +583,7 @@ function PrepareCampaign() {
                           value={competitor?.website || ''}
                           onChange={(e) => updateCompetitor(index, 'website', e.target.value)}
                           placeholder="Website"
-                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
                         />
                       </div>
                       <div className="flex gap-2">
@@ -562,7 +594,7 @@ function PrepareCampaign() {
                             value={competitor?.notes || ''}
                             onChange={(e) => updateCompetitor(index, 'notes', e.target.value)}
                             placeholder="Notes"
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
                           />
                         </div>
                         <button
@@ -591,8 +623,8 @@ function PrepareCampaign() {
                     type="text"
                     value={ownerDraft.website || ''}
                     onChange={(e) => updateOwnerField('website', e.target.value)}
-                    placeholder="Website"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+                    placeholder="https://yourbrand.com"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
                   />
                 </div>
                 <div className="md:col-span-2">
@@ -624,8 +656,8 @@ function PrepareCampaign() {
                     type="text"
                     value={ownerDraft.targetAudience?.gender || ''}
                     onChange={(e) => updateAudience('gender', e.target.value)}
-                    placeholder="Audience gender"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+                    placeholder="e.g. Female, Male, All"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
                   />
                 </div>
                 <div>
@@ -634,19 +666,67 @@ function PrepareCampaign() {
                     type="text"
                     value={ownerDraft.targetAudience?.ageRange || ''}
                     onChange={(e) => updateAudience('ageRange', e.target.value)}
-                    placeholder="Audience age range"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+                    placeholder="e.g. 18-34"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm text-gray-300 mb-2">Audience Location</label>
-                  <input
-                    type="text"
-                    value={ownerDraft.targetAudience?.location || ''}
-                    onChange={(e) => updateAudience('location', e.target.value)}
-                    placeholder="Audience location"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
-                  />
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Audience Location
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={locationQuery}
+                      onChange={(e) => {
+                        setLocationQuery(e.target.value);
+                        setIsLocationOpen(true);
+                      }}
+                      onFocus={() => setIsLocationOpen(true)}
+                      onBlur={() => setTimeout(() => setIsLocationOpen(false), 120)}
+                      placeholder="Search locations"
+                      className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+                    />
+                    {isLocationOpen && (
+                      <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                        {filteredLocations.length > 0 ? (
+                          filteredLocations.map((loc) => {
+                            const selected = ownerDraft.targetAudience?.location === loc;
+                            return (
+                              <button
+                                key={loc}
+                                type="button"
+                                onClick={() => {
+                                  updateAudience('location', selected ? '' : loc);
+                                  setLocationQuery('');
+                                  setIsLocationOpen(false);
+                                }}
+                                className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                              >
+                                <span className="flex items-center justify-between">
+                                  {loc}
+                                  {selected && <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />}
+                                </span>
+                              </button>
+                            );
+                          })
+                        ) : (
+                          <p className="px-4 py-3 text-sm text-gray-400">No options found</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {ownerDraft.targetAudience?.location && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <button
+                        type="button"
+                        onClick={() => updateAudience('location', '')}
+                        className="px-3 py-1.5 rounded-full text-xs border border-[#C1B6FD]/40 bg-[#C1B6FD]/10 text-[#E0DAFF]"
+                      >
+                        {ownerDraft.targetAudience.location} x
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

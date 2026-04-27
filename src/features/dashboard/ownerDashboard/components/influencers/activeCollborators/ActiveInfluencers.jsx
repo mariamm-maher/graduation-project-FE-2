@@ -14,46 +14,39 @@ function ActiveInfluencers() {
     fetchActiveInfluencers
   } = useOwnerStore();
 
-  console.log('Active Influencers Data:', activeInfluencers);
   useEffect(() => {
     fetchActiveInfluencers();
   }, [fetchActiveInfluencers]);
 
   const activeCollaborations = useMemo(() => {
     return (activeInfluencers || []).map((collab, index) => {
-      const influencer = collab?.influencer || collab?.influencerId || {};
-      const influencerFirstName = influencer?.firstName || influencer?.user?.firstName || '';
-      const influencerLastName = influencer?.lastName || influencer?.user?.lastName || '';
-      const influencerName = `${influencerFirstName} ${influencerLastName}`.trim() || influencer?.name || 'Unknown Influencer';
-      const avatarName = influencerName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+      // Backend shape from getActiveInfluencers:
+      // { collaborationId, status, startDate, endDate,
+      //   influencer: { id, firstName, lastName, email, profileImage, primaryPlatform, followersCount },
+      //   campaign: { id, title } }
+      const influencer = collab?.influencer || {};
+      const influencerName = `${influencer.firstName || ''} ${influencer.lastName || ''}`.trim() || 'Unknown Influencer';
+      const avatarName = influencerName.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
 
-      const collaborationStatus = collab?.status || collab?.collaborationStatus || 'pending';
-      const status = collaborationStatus === 'active' ? 'in-progress' : collaborationStatus;
-
-      const tasks = (collab?.tasks || []).map((task, taskIndex) => ({
-        id: task?.id ?? task?._id ?? taskIndex + 1,
-        title: task?.title || task?.name || `Task ${taskIndex + 1}`,
-        completed: task?.completed === true || task?.status === 'completed'
-      }));
-
-      const budgetValue = collab?.proposedBudget ?? collab?.budget;
+      const status = collab?.status || 'pending';
 
       return {
-        id: collab?.id ?? collab?._id ?? index + 1,
-        influencerId: influencer?.id ?? influencer?._id ?? null,
+        id: collab?.collaborationId ?? collab?.id ?? index + 1,
+        influencerId: influencer?.id ?? null,
         influencerName,
         influencerAvatar: avatarName || 'NA',
-        influencerImage: influencer?.image || influencer?.avatar || influencer?.profileImage || null,
-        campaignId: collab?.campaign?.id ?? collab?.campaignId ?? null,
-        campaignName: collab?.campaign?.campaignName || collab?.campaign?.name || collab?.campaignName || 'General Collaboration',
-        platform: (influencer?.primaryPlatform || collab?.platform || 'instagram').toLowerCase(),
+        influencerImage: influencer?.profileImage || null,
+        campaignId: collab?.campaign?.id ?? null,
+        campaignName: collab?.campaign?.title || 'General Collaboration',
+        platform: (influencer?.primaryPlatform || 'instagram').toLowerCase(),
+        followersCount: influencer?.followersCount ?? 0,
         status,
-        progress: Number(collab?.progress ?? collab?.completionPercentage ?? 0),
-        currentTasks: tasks,
-        deadline: collab?.deadline || collab?.dueDate || collab?.endDate || new Date().toISOString(),
-        budget: budgetValue !== undefined && budgetValue !== null ? `$${Number(budgetValue).toLocaleString()}` : '$0',
+        progress: Number(collab?.progress ?? 0),
+        currentTasks: [],
+        deadline: collab?.endDate || collab?.startDate || new Date().toISOString(),
+        budget: collab?.proposedBudget != null ? `$${Number(collab.proposedBudget).toLocaleString()}` : '$0',
         unreadMessages: Number(collab?.unreadMessages || 0),
-        lastActivity: collab?.lastActivity || collab?.updatedAt || 'N/A'
+        lastActivity: collab?.updatedAt || 'N/A'
       };
     });
   }, [activeInfluencers]);

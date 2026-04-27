@@ -194,13 +194,13 @@ export default function ContractPane({
         <div className="relative">
           <input
             type="text"
-            value={statusOptions.find(s => s.value === filterStatus)?.label || statusQuery}
+            value={isStatusOpen ? statusQuery : (statusOptions.find(s => s.value === filterStatus)?.label || '')}
             onChange={(e) => {
               setStatusQuery(e.target.value);
               setIsStatusOpen(true);
             }}
-            onFocus={() => setIsStatusOpen(true)}
-            onBlur={() => setTimeout(() => setIsStatusOpen(false), 120)}
+            onFocus={() => { setStatusQuery(''); setIsStatusOpen(true); }}
+            onBlur={() => setTimeout(() => { setIsStatusOpen(false); setStatusQuery(''); }, 150)}
             placeholder="Filter by status"
             className="w-full rounded-xl border border-[#745CB4]/25 bg-[#1A112C]/65 backdrop-blur-sm px-4 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/45"
           />

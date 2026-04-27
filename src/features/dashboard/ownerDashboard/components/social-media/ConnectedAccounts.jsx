@@ -105,13 +105,13 @@ function ConnectedAccounts() {
                 <div className="relative">
                   <input
                     type="text"
-                    value={platformOptions.find(p => p.value === selectedPlatform)?.label || platformQuery}
+                    value={isPlatformOpen ? platformQuery : (platformOptions.find(p => p.value === selectedPlatform)?.label || '')}
                     onChange={(e) => {
                       setPlatformQuery(e.target.value);
                       setIsPlatformOpen(true);
                     }}
-                    onFocus={() => setIsPlatformOpen(true)}
-                    onBlur={() => setTimeout(() => setIsPlatformOpen(false), 120)}
+                    onFocus={() => { setPlatformQuery(''); setIsPlatformOpen(true); }}
+                    onBlur={() => setTimeout(() => { setIsPlatformOpen(false); setPlatformQuery(''); }, 150)}
                     placeholder="Search platforms"
                     className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD]"
                   />

@@ -562,13 +562,13 @@ export default function OwnerProfile() {
                   <div className="relative">
                     <input
                       type="text"
-                      value={formData.company_size || companySizeQuery}
+                      value={isCompanySizeOpen ? companySizeQuery : (formData.company_size || '')}
                       onChange={(e) => {
                         setCompanySizeQuery(e.target.value);
                         setIsCompanySizeOpen(true);
                       }}
-                      onFocus={() => setIsCompanySizeOpen(true)}
-                      onBlur={() => setTimeout(() => setIsCompanySizeOpen(false), 120)}
+                      onFocus={() => { setCompanySizeQuery(''); setIsCompanySizeOpen(true); }}
+                      onBlur={() => setTimeout(() => { setIsCompanySizeOpen(false); setCompanySizeQuery(''); }, 150)}
                       placeholder="Search company sizes"
                       className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
                     />
@@ -626,13 +626,13 @@ export default function OwnerProfile() {
                   <div className="relative">
                     <input
                       type="text"
-                      value={formData.industry || industryQuery}
+                      value={isIndustryOpen ? industryQuery : (formData.industry || '')}
                       onChange={(e) => {
                         setIndustryQuery(e.target.value);
                         setIsIndustryOpen(true);
                       }}
-                      onFocus={() => setIsIndustryOpen(true)}
-                      onBlur={() => setTimeout(() => setIsIndustryOpen(false), 120)}
+                      onFocus={() => { setIndustryQuery(''); setIsIndustryOpen(true); }}
+                      onBlur={() => setTimeout(() => { setIsIndustryOpen(false); setIndustryQuery(''); }, 150)}
                       placeholder="Search industries"
                       className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
                     />
@@ -751,13 +751,13 @@ export default function OwnerProfile() {
                   <div className="relative">
                     <input
                       type="text"
-                      value={formData.targetAudience?.gender || genderQuery}
+                      value={isGenderOpen ? genderQuery : (formData.targetAudience?.gender || '')}
                       onChange={(e) => {
                         setGenderQuery(e.target.value);
                         setIsGenderOpen(true);
                       }}
-                      onFocus={() => setIsGenderOpen(true)}
-                      onBlur={() => setTimeout(() => setIsGenderOpen(false), 120)}
+                      onFocus={() => { setGenderQuery(''); setIsGenderOpen(true); }}
+                      onBlur={() => setTimeout(() => { setIsGenderOpen(false); setGenderQuery(''); }, 150)}
                       placeholder="Search genders"
                       className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
                     />
@@ -815,13 +815,13 @@ export default function OwnerProfile() {
                   <div className="relative">
                     <input
                       type="text"
-                      value={formData.targetAudience?.ageRange || ageRangeQuery}
+                      value={isAgeRangeOpen ? ageRangeQuery : (formData.targetAudience?.ageRange || '')}
                       onChange={(e) => {
                         setAgeRangeQuery(e.target.value);
                         setIsAgeRangeOpen(true);
                       }}
-                      onFocus={() => setIsAgeRangeOpen(true)}
-                      onBlur={() => setTimeout(() => setIsAgeRangeOpen(false), 120)}
+                      onFocus={() => { setAgeRangeQuery(''); setIsAgeRangeOpen(true); }}
+                      onBlur={() => setTimeout(() => { setIsAgeRangeOpen(false); setAgeRangeQuery(''); }, 150)}
                       placeholder="Search age ranges"
                       className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
                     />
@@ -1032,13 +1032,13 @@ export default function OwnerProfile() {
                   <div className="relative">
                     <input
                       type="text"
-                      value={prevCampaignOptions.find(p => p.value === (formData.has_previous_campaigns ? 'yes' : 'no'))?.label || prevCampaignQuery}
+                      value={isPrevCampaignOpen ? prevCampaignQuery : (prevCampaignOptions.find(p => p.value === (formData.has_previous_campaigns ? 'yes' : 'no'))?.label || '')}
                       onChange={(e) => {
                         setPrevCampaignQuery(e.target.value);
                         setIsPrevCampaignOpen(true);
                       }}
-                      onFocus={() => setIsPrevCampaignOpen(true)}
-                      onBlur={() => setTimeout(() => setIsPrevCampaignOpen(false), 120)}
+                      onFocus={() => { setPrevCampaignQuery(''); setIsPrevCampaignOpen(true); }}
+                      onBlur={() => setTimeout(() => { setIsPrevCampaignOpen(false); setPrevCampaignQuery(''); }, 150)}
                       placeholder="Select option"
                       className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
                     />

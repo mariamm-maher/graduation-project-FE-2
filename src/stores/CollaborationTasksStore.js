@@ -3,6 +3,7 @@ import collaborationTasksService from '../api/CollaborationTasksApi';
 
 const useCollaborationTasksStore = create((set) => ({
   tasks: [],
+  groupedCollaborations: [],
   currentTask: null,
   isLoading: false,
   error: null,
@@ -202,6 +203,38 @@ const useCollaborationTasksStore = create((set) => ({
       return { success: true, data: task };
     } catch (error) {
       const errorMessage = typeof error === 'string' ? error : error?.message || 'Failed to reject task finally';
+      set({ error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Get all collaborations + nested tasks for the authenticated owner
+  getMyTasksAsOwner: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await collaborationTasksService.getMyTasksAsOwner();
+      const payload = response?.data ?? response ?? {};
+      const collaborations = payload?.collaborations || [];
+      set({ groupedCollaborations: collaborations, isLoading: false });
+      return { success: true, data: collaborations };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error?.message || 'Failed to fetch owner tasks';
+      set({ error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Get all collaborations + nested tasks for the authenticated influencer
+  getMyTasksAsInfluencer: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await collaborationTasksService.getMyTasksAsInfluencer();
+      const payload = response?.data ?? response ?? {};
+      const collaborations = payload?.collaborations || [];
+      set({ groupedCollaborations: collaborations, isLoading: false });
+      return { success: true, data: collaborations };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error?.message || 'Failed to fetch influencer tasks';
       set({ error: errorMessage, isLoading: false });
       return { success: false, error: errorMessage };
     }

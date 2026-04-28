@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, ArrowRight, LayoutGrid, ListChecks, Loader2, RefreshCw, XCircle } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AlertCircle, ArrowRight, Calendar, LayoutGrid, ListChecks, Loader2, RefreshCw, User, XCircle } from 'lucide-react';
 import {
   closestCorners,
   DndContext,
@@ -13,7 +13,7 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import BoardColumn from '../../../ownerDashboard/components/collaborations/CollaborationBoard/BoardColumn';
 import TaskCard from '../../../ownerDashboard/components/collaborations/CollaborationBoard/TaskCard';
 import collaborationTasksService from '../../../../../api/CollaborationTasksApi';
-import useCollaborationStore from '../../../../../stores/collaborationStore';
+import useCollaborationTasksStore from '../../../../../stores/CollaborationTasksStore';
 
 const STATUS_MAP = {
   todo:        'todo',
@@ -33,8 +33,8 @@ function normalizeTask(t) {
 }
 
 export default function TasksPane() {
-  const { influencerCollaborations, getMyInfluencerCollaborations, isInfluencerCollaborationsLoading } =
-    useCollaborationStore();
+  const { groupedCollaborations, getMyTasksAsInfluencer, isLoading: isCollabsLoading } =
+    useCollaborationTasksStore();
 
   const [selectedCollabId, setSelectedCollabId] = useState(null);
   const [tasks, setTasks]           = useState([]);
@@ -47,15 +47,24 @@ export default function TasksPane() {
   const [submitNote, setSubmitNote]   = useState('');
 
   useEffect(() => {
-    getMyInfluencerCollaborations();
-  }, [getMyInfluencerCollaborations]);
+    getMyTasksAsInfluencer();
+  }, [getMyTasksAsInfluencer]);
 
   const collabs = useMemo(() =>
-    (influencerCollaborations || []).map((c) => ({
-      id:   String(c.id || c._id),
-      name: c.campaign?.name || c.campaignName || `Collab #${c.id || c._id}`,
+    (groupedCollaborations || []).map((c) => ({
+      id:        String(c.collaborationId),
+      name:      c.campaignName || `Collab #${c.collaborationId}`,
+      ownerName: c.ownerName    || '—',
+      status:    c.status       || '—',
+      startDate: c.startDate    || null,
+      endDate:   c.endDate      || null,
     })),
-    [influencerCollaborations]
+    [groupedCollaborations]
+  );
+
+  const selectedCollab = useMemo(
+    () => collabs.find((c) => c.id === selectedCollabId) || null,
+    [collabs, selectedCollabId]
   );
 
   useEffect(() => {
@@ -80,7 +89,8 @@ export default function TasksPane() {
   }, []);
 
   useEffect(() => {
-    if (selectedCollabId) fetchTasks(selectedCollabId);
+    if (!selectedCollabId) return;
+    fetchTasks(selectedCollabId);
   }, [selectedCollabId, fetchTasks]);
 
   const updateLocalTask = (taskId, patch) =>
@@ -133,8 +143,12 @@ export default function TasksPane() {
     completed:   tasks.filter((t) => t.status === 'completed'),
   }), [tasks]);
 
+  const dragOriginalStatus = useRef(null);
+
   const handleDragStart = (event) => {
-    setActiveTask(tasks.find((t) => t.id === event.active.id) || null);
+    const task = tasks.find((t) => t.id === event.active.id) || null;
+    setActiveTask(task);
+    dragOriginalStatus.current = task?.status ?? null;
   };
 
   const handleDragOver = (event) => {
@@ -146,13 +160,21 @@ export default function TasksPane() {
     const nextStatus = overTask ? overTask.status : over.id;
     if (!nextStatus || activeItem.status === nextStatus) return;
     setTasks((prev) => prev.map((t) =>
-      t.id === active.id
-        ? { ...t, status: nextStatus, completedAt: nextStatus === 'completed' ? new Date().toISOString().slice(0, 10) : null }
-        : t
+      t.id === active.id ? { ...t, status: nextStatus } : t
     ));
   };
 
-  const handleDragEnd = () => setActiveTask(null);
+  const handleDragEnd = (event) => {
+    const { active } = event;
+    setActiveTask(null);
+    const prevStatus = dragOriginalStatus.current;
+    dragOriginalStatus.current = null;
+    if (prevStatus) {
+      setTasks((prev) => prev.map((t) =>
+        t.id === active.id ? { ...t, status: prevStatus } : t
+      ));
+    }
+  };
 
   const onOpenTaskDetails = useCallback((task) => {
     if (task.status === 'todo') handleStart(task.id);
@@ -245,11 +267,11 @@ export default function TasksPane() {
               </div>
             </div>
 
-            {isInfluencerCollaborationsLoading ? (
+            {isCollabsLoading ? (
               <div className="mt-3 flex items-center gap-2 text-xs text-[#9CA3AF]">
                 <Loader2 className="w-3 h-3 animate-spin" /> Loading collaborations…
               </div>
-            ) : collabs.length > 1 && (
+            ) : collabs.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {collabs.map((c) => (
                   <button
@@ -268,6 +290,31 @@ export default function TasksPane() {
               </div>
             )}
           </div>
+
+          {selectedCollab && (
+            <div className="rounded-xl border border-[#745CB4]/25 bg-[#1A112C]/60 px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+              <span className="font-semibold text-white text-base">{selectedCollab.name}</span>
+              <span className="flex items-center gap-1.5 text-[#C1B6FD]">
+                <User className="w-3.5 h-3.5" />
+                {selectedCollab.ownerName}
+              </span>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${
+                selectedCollab.status === 'live' || selectedCollab.status === 'in_progress'
+                  ? 'bg-green-500/15 border-green-500/30 text-green-300'
+                  : selectedCollab.status === 'completed'
+                  ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
+                  : 'bg-[#745CB4]/20 border-[#745CB4]/30 text-[#C1B6FD]'
+              }`}>
+                {selectedCollab.status.replace(/_/g, ' ')}
+              </span>
+              {(selectedCollab.startDate || selectedCollab.endDate) && (
+                <span className="flex items-center gap-1.5 text-[#9CA3AF]">
+                  <Calendar className="w-3.5 h-3.5" />
+                  {selectedCollab.startDate ?? '?'} → {selectedCollab.endDate ?? '?'}
+                </span>
+              )}
+            </div>
+          )}
 
           {error && (
             <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-red-500/25 bg-red-500/10 text-red-300 text-sm">
@@ -290,7 +337,7 @@ export default function TasksPane() {
               No collaborations yet.
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto pb-3 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-[#1A112C] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#745CB4]/60 hover:[&::-webkit-scrollbar-thumb]:bg-[#C1B6FD]/70">
               <div className="grid grid-cols-4 gap-4 min-w-[1200px]">
                 <BoardColumn status="todo"        title="To Do"       tasks={tasksByStatus.todo}        color="bg-gray-400"   onOpenTaskDetails={onOpenTaskDetails} onAddTask={() => {}} />
                 <BoardColumn status="in_progress" title="In Progress" tasks={tasksByStatus.in_progress} color="bg-blue-400"   onOpenTaskDetails={onOpenTaskDetails} onAddTask={() => {}} />

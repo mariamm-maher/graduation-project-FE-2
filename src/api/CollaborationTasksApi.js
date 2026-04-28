@@ -112,6 +112,30 @@ const collaborationTasksService = {
     }
   },
 
+  // GET /api/collaboration-tasks/my/owner
+  // All collaborations with nested tasks for the authenticated owner
+  getMyTasksAsOwner: async () => {
+    try {
+      const response = await api.get('/collaboration-tasks/my/owner');
+      return response.data;
+    } catch (error) {
+      console.error('Get owner tasks error:', error);
+      throw error.response?.data?.message || 'Failed to fetch owner tasks';
+    }
+  },
+
+  // GET /api/collaboration-tasks/my/influencer
+  // All collaborations with nested tasks for the authenticated influencer
+  getMyTasksAsInfluencer: async () => {
+    try {
+      const response = await api.get('/collaboration-tasks/my/influencer');
+      return response.data;
+    } catch (error) {
+      console.error('Get influencer tasks error:', error);
+      throw error.response?.data?.message || 'Failed to fetch influencer tasks';
+    }
+  },
+
   // POST /api/collaboration-tasks/collaboration/:collaborationId
   // Create a new task (owner only)
   createTask: async (collaborationId, data) => {

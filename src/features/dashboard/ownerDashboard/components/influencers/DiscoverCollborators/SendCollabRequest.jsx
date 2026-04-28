@@ -146,7 +146,7 @@ function SendCollabRequest() {
                 type="text"
                 id="campaignId"
                 name="campaignId"
-                value={formData.campaignId ? campaignList.find(c => c.id === Number(formData.campaignId))?.campaignName || campaignQuery : campaignQuery}
+                value={isCampaignOpen ? campaignQuery : (formData.campaignId ? (campaignList.find(c => c.id === Number(formData.campaignId))?.campaignName || '') : '')}
                 onChange={(e) => {
                   setCampaignQuery(e.target.value);
                   setIsCampaignOpen(true);
@@ -154,8 +154,8 @@ function SendCollabRequest() {
                     setFormData(prev => ({ ...prev, campaignId: '' }));
                   }
                 }}
-                onFocus={() => setIsCampaignOpen(true)}
-                onBlur={() => setTimeout(() => setIsCampaignOpen(false), 120)}
+                onFocus={() => { setCampaignQuery(''); setIsCampaignOpen(true); }}
+                onBlur={() => setTimeout(() => { setIsCampaignOpen(false); setCampaignQuery(''); }, 150)}
                 placeholder={isLoadingCampaigns ? 'Loading campaigns...' : 'Search campaigns'}
                 disabled={isLoadingCampaigns}
                 className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300 disabled:opacity-50"

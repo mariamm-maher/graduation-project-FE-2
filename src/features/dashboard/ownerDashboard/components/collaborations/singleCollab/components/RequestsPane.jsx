@@ -50,11 +50,14 @@ function RequestCard({ item, type, onAccept, onReject, onCancel }) {
   const meta = STATUS_META[status] || STATUS_META.pending;
   const StatusIcon = meta.icon;
 
+  const lastBy = String(item.lastCounteredBy || '').toLowerCase();
   const canRespond = type === 'incoming' && item.status === 'pending';
   const waitingForInfluencer =
-    type === 'outgoing' && item.status === 'negotiating' && String(item.lastCounteredBy).toLowerCase() === 'owner';
+    type === 'outgoing' && item.status === 'negotiating' && lastBy === 'owner';
+  const ownerCanRespondToCounter =
+    type === 'outgoing' && item.status === 'negotiating' && lastBy === 'influencer';
   const waitingForOwner =
-    type === 'incoming' && item.status === 'negotiating' && String(item.lastCounteredBy).toLowerCase() === 'influencer';
+    type === 'incoming' && item.status === 'negotiating' && lastBy === 'influencer';
   const canCancel = type === 'outgoing' && (item.status === 'pending' || item.status === 'negotiating');
 
   return (
@@ -73,6 +76,12 @@ function RequestCard({ item, type, onAccept, onReject, onCancel }) {
 
       <div className="flex flex-wrap items-center gap-2 text-xs text-[#C1B6FD] mb-2">
         <span className="font-semibold text-white">${item.proposedBudget.toLocaleString()}</span>
+        {item.counterPrice != null && (
+          <>
+            <span className="text-[#9CA3AF]">→</span>
+            <span className="font-semibold text-indigo-300">Counter: ${Number(item.counterPrice).toLocaleString()}</span>
+          </>
+        )}
         <span className="text-[#9CA3AF]">•</span>
         <span>{meta.helper}</span>
       </div>
@@ -80,6 +89,12 @@ function RequestCard({ item, type, onAccept, onReject, onCancel }) {
       {item.message ? (
         <div className="text-xs text-[#C1B6FD] leading-normal border-l-2 border-[#745CB4]/40 pl-2 mb-2">
           {item.message}
+        </div>
+      ) : null}
+
+      {item.responseMessage ? (
+        <div className="text-xs text-indigo-300 leading-normal border-l-2 border-indigo-400/40 pl-2 mb-2 italic">
+          Counter note: {item.responseMessage}
         </div>
       ) : null}
 
@@ -104,6 +119,26 @@ function RequestCard({ item, type, onAccept, onReject, onCancel }) {
         ) : null}
 
         {waitingForInfluencer ? <span className="text-[11px] text-[#9CA3AF] italic">Waiting for influencer response...</span> : null}
+
+        {ownerCanRespondToCounter ? (
+          <>
+            <span className="text-[11px] text-indigo-300 font-medium mr-1">Counter received:</span>
+            <button
+              type="button"
+              className="px-3 py-1.5 rounded-md text-[11px] font-semibold bg-green-500/10 text-green-300 border border-green-500/25 cursor-pointer"
+              onClick={() => onAccept(item.id)}
+            >
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" />Accept Counter</span>
+            </button>
+            <button
+              type="button"
+              className="px-3 py-1.5 rounded-md text-[11px] font-semibold bg-rose-500/10 text-rose-300 border border-rose-500/25 cursor-pointer"
+              onClick={() => onReject(item.id)}
+            >
+              <span className="inline-flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />Decline</span>
+            </button>
+          </>
+        ) : null}
 
         {waitingForOwner ? (
           <>
@@ -167,6 +202,7 @@ function RequestsColumn({ title, count, items, type, onAccept, onReject, onCance
 }
 
 export default function RequestsPane({ outgoing, requestsLoading, requestsError, onAccept, onReject, onCancel }) {
+  console.log("outgoing" , outgoing);
   return (
     <div className="space-y-3">
       {requestsError ? (

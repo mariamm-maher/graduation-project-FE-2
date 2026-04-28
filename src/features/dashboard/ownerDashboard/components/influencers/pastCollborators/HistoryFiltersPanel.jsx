@@ -130,13 +130,13 @@ function HistoryFiltersPanel({
           <div className="relative">
             <input
               type="text"
-              value={yearOptions.find(y => y.value === filters.year)?.label || yearQuery}
+              value={isYearOpen ? yearQuery : (yearOptions.find(y => y.value === filters.year)?.label || '')}
               onChange={(e) => {
                 setYearQuery(e.target.value);
                 setIsYearOpen(true);
               }}
-              onFocus={() => setIsYearOpen(true)}
-              onBlur={() => setTimeout(() => setIsYearOpen(false), 120)}
+              onFocus={() => { setYearQuery(''); setIsYearOpen(true); }}
+              onBlur={() => setTimeout(() => { setIsYearOpen(false); setYearQuery(''); }, 150)}
               placeholder="Search years"
               className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
             />

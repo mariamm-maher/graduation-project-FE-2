@@ -124,21 +124,15 @@ const useOwnerStore = create((set) => ({
                 throw new Error(payload?.message || response?.message || 'Failed to fetch active influencers');
             }
 
-            const influencers = payload?.data?.influencers ?? payload?.influencers ?? payload?.data ?? [];
-            const paginationSource = payload?.data?.pagination ?? payload?.pagination ?? payload?.data ?? {};
+            // Backend returns: { data: { collaborations: [...] } }
+            const collaborations = payload?.data?.collaborations ?? payload?.collaborations ?? [];
 
             set({
-                activeInfluencers: Array.isArray(influencers) ? influencers : [],
-                activePagination: {
-                    currentPage: paginationSource.currentPage ?? paginationSource.page ?? page,
-                    totalPages: paginationSource.totalPages ?? 1,
-                    totalItems: paginationSource.totalItems ?? paginationSource.total ?? (Array.isArray(influencers) ? influencers.length : 0),
-                    itemsPerPage: paginationSource.itemsPerPage ?? limit
-                },
+                activeInfluencers: Array.isArray(collaborations) ? collaborations : [],
                 activeInfluencersLoading: false
             });
 
-            return { success: true, data: Array.isArray(influencers) ? influencers : [] };
+            return { success: true, data: Array.isArray(collaborations) ? collaborations : [] };
         } catch (error) {
             const msg = typeof error === 'string' ? error : error.message || 'Failed to fetch active influencers';
             set({ activeInfluencersError: msg, activeInfluencersLoading: false });
@@ -168,21 +162,15 @@ const useOwnerStore = create((set) => ({
                 throw new Error(payload?.message || response?.message || 'Failed to fetch past influencers');
             }
 
-            const influencers = payload?.data?.influencers ?? payload?.influencers ?? payload?.data ?? [];
-            const paginationSource = payload?.data?.pagination ?? payload?.pagination ?? payload?.data ?? {};
+            // Backend returns: { data: { collaborations: [...] } }
+            const collaborations = payload?.data?.collaborations ?? payload?.collaborations ?? [];
 
             set({
-                pastInfluencers: Array.isArray(influencers) ? influencers : [],
-                pastPagination: {
-                    currentPage: paginationSource.currentPage ?? paginationSource.page ?? page,
-                    totalPages: paginationSource.totalPages ?? 1,
-                    totalItems: paginationSource.totalItems ?? paginationSource.total ?? (Array.isArray(influencers) ? influencers.length : 0),
-                    itemsPerPage: paginationSource.itemsPerPage ?? limit
-                },
+                pastInfluencers: Array.isArray(collaborations) ? collaborations : [],
                 pastInfluencersLoading: false
             });
 
-            return { success: true, data: Array.isArray(influencers) ? influencers : [] };
+            return { success: true, data: Array.isArray(collaborations) ? collaborations : [] };
         } catch (error) {
             const msg = typeof error === 'string' ? error : error.message || 'Failed to fetch past influencers';
             set({ pastInfluencersError: msg, pastInfluencersLoading: false });

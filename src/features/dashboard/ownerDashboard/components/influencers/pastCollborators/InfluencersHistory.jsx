@@ -31,39 +31,44 @@ function InfluencersHistory() {
   }, [fetchPastInfluencers]);
 
   const pastCollaborations = useMemo(() => {
-    return (pastInfluencers || []).map((collab, index) => {
-      const influencer = collab?.influencer || collab?.influencerId || {};
-      const influencerFirstName = influencer?.firstName || influencer?.user?.firstName || '';
-      const influencerLastName = influencer?.lastName || influencer?.user?.lastName || '';
-      const influencerName = `${influencerFirstName} ${influencerLastName}`.trim() || influencer?.name || 'Unknown Influencer';
-      const influencerAvatar = influencerName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'NA';
+    const formatDate = (value) => {
+      if (!value) return 'N/A';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
 
-      const endDateSource = collab?.endDate || collab?.completedAt || collab?.updatedAt || collab?.createdAt;
+    return (pastInfluencers || []).map((collab, index) => {
+      // Backend shape from getPastInfluencers:
+      // { collaborationId, status, completedAt, startDate, endDate,
+      //   influencer: { id, firstName, lastName, email, profileImage, primaryPlatform, followersCount },
+      //   campaign: { id, title } }
+      const influencer = collab?.influencer || {};
+      const influencerName = `${influencer.firstName || ''} ${influencer.lastName || ''}`.trim() || 'Unknown Influencer';
+      const influencerAvatar = influencerName.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase() || 'NA';
+
+      const endDateSource = collab?.endDate || collab?.completedAt || collab?.updatedAt;
       const startDateSource = collab?.startDate || collab?.createdAt;
 
-      const formatDate = (value) => {
-        if (!value) return 'N/A';
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return String(value);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      };
+      const endYear = endDateSource ? String(new Date(endDateSource).getFullYear()) : 'N/A';
 
-      const status = collab?.status || collab?.collaborationStatus || 'completed';
+      const status = collab?.status || 'completed';
       const performanceValue = Number(collab?.performance ?? collab?.rating ?? 0);
       const roiValue = Number(collab?.roi ?? collab?.returnOnInvestment ?? 0);
       const engagementValue = Number(collab?.engagementRate ?? collab?.engagement ?? 0);
       const revenueValue = Number(collab?.revenue ?? collab?.totalRevenue ?? collab?.earnedAmount ?? 0);
 
       return {
-        id: collab?.id ?? collab?._id ?? index + 1,
-        influencerId: influencer?.id ?? influencer?._id ?? null,
+        id: collab?.collaborationId ?? collab?.id ?? index + 1,
+        influencerId: influencer?.id ?? null,
         influencerName,
         influencerAvatar,
-        influencerImage: influencer?.image || influencer?.avatar || influencer?.profileImage || null,
-        niche: influencer?.categories?.[0] || influencer?.niche || collab?.niche || 'General',
-        campaignName: collab?.campaign?.campaignName || collab?.campaign?.name || collab?.campaignName || 'General Collaboration',
+        influencerImage: influencer?.profileImage || null,
+        niche: influencer?.categories?.[0] || collab?.niche || 'General',
+        campaignName: collab?.campaign?.title || 'General Collaboration',
         startDate: formatDate(startDateSource),
         endDate: formatDate(endDateSource),
+        endYear,
         status,
         performance: performanceValue ? performanceValue.toFixed(1) : '0.0',
         roi: `${roiValue.toFixed(1)}%`,
@@ -93,13 +98,12 @@ function InfluencersHistory() {
       const roi = parseFloat(collab.roi.replace(/[^0-9.-]+/g, ''));
       const matchesROI = roi >= filters.minROI && roi <= filters.maxROI;
 
-      // Year filter
-      const year = collab.endDate.split(',')[1]?.trim();
-      const matchesYear = filters.year === 'all' || year === filters.year;
+      // Year filter — endYear is pre-parsed as a string from the ISO date
+      const matchesYear = filters.year === 'all' || collab.endYear === filters.year;
 
       return matchesSearch && matchesStatus && matchesPerformance && matchesROI && matchesYear;
     });
-  }, [searchQuery, filters]);
+  }, [pastCollaborations, searchQuery, filters]);
 
   const handleStatusToggle = (status) => {
     setFilters(prev => ({

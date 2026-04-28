@@ -264,13 +264,13 @@ export default function TasksPane({ items = [] }) {
                 <div className="relative">
                   <input
                     type="text"
-                    value={platformOptions.find(p => p.value === newTaskPlatform)?.label || platformQuery}
+                    value={isPlatformOpen ? platformQuery : (platformOptions.find(p => p.value === newTaskPlatform)?.label || '')}
                     onChange={(e) => {
                       setPlatformQuery(e.target.value);
                       setIsPlatformOpen(true);
                     }}
-                    onFocus={() => setIsPlatformOpen(true)}
-                    onBlur={() => setTimeout(() => setIsPlatformOpen(false), 120)}
+                    onFocus={() => { setPlatformQuery(''); setIsPlatformOpen(true); }}
+                    onBlur={() => setTimeout(() => { setIsPlatformOpen(false); setPlatformQuery(''); }, 150)}
                     placeholder="Search platforms"
                     className="w-full px-3 py-2 rounded-lg bg-[#241A3A]/70 border border-[#745CB4]/25 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/45"
                   />

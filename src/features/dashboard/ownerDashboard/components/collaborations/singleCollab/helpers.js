@@ -68,9 +68,10 @@ export function normalizeRequest(request, index) {
     campaignName: request?.campaign?.campaignName || request?.campaignName || 'Campaign',
     status: String(request?.status || 'pending').toLowerCase(),
     proposedBudget: Number(request?.proposedBudget || 0),
+    counterPrice: request?.counterPrice != null ? Number(request.counterPrice) : null,
     responseMessage: request?.responseMessage || '',
     message: request?.message || '',
-    lastCounteredBy: request?.lastCounteredBy || request?.lastCounteredByRole || '',
+    lastCounteredBy: request?.lastCounteredByRole || request?.lastCounteredBy || '',
   };
 }
 

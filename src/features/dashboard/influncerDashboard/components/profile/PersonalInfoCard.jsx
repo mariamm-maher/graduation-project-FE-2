@@ -60,12 +60,12 @@ function PersonalInfoCard({ profileData, isEditing, onInputChange }) {
               <input
                 type="text"
                 name="location"
-                value={profileData.location || countryQuery}
+                value={countryOpen ? countryQuery : (profileData.location || '')}
                 onChange={(e) => {
                   setCountryQuery(e.target.value);
-                  if (onInputChange) onInputChange(e);
+                  if (onInputChange) onInputChange({ target: { name: 'location', value: e.target.value } });
                 }}
-                onFocus={() => setCountryOpen(true)}
+                onFocus={() => { setCountryQuery(''); setCountryOpen(true); }}
                 placeholder="Select country"
                 autoComplete="off"
                 className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-[#C1B6FD]/50"

@@ -751,7 +751,7 @@ export default function InfluencerOnboarding() {
           </div>
 
           {/* Step Content */}
-          <div className="flex-1">
+          <div className="flex-1 overflow-visible">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}

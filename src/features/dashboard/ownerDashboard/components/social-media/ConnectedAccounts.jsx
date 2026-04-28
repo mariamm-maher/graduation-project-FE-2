@@ -1,83 +1,194 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
 import { Instagram, Youtube, Twitter, Facebook, Loader, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useLocation, useNavigate } from 'react-router-dom';
 import useSocialMediaStore from '../../../../../stores/SocialMediaStore';
 
 function ConnectedAccounts() {
-  const { accounts, getAccounts, getStats, connectAccount, disconnectAccount, isLoading } = useSocialMediaStore();
+  const { accounts, getAccounts, getStats, disconnectAccount, isLoading } = useSocialMediaStore();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState('');
-  const [authCode, setAuthCode] = useState('');
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Dropdown states
   const [platformQuery, setPlatformQuery] = useState('');
   const [isPlatformOpen, setIsPlatformOpen] = useState(false);
 
-  const platformOptions = [
-    { value: '', label: 'Select a platform' },
-    { value: 'Instagram', label: 'Instagram' },
-    { value: 'Facebook', label: 'Facebook' },
-    { value: 'Twitter', label: 'Twitter' },
-    { value: 'YouTube', label: 'YouTube' },
-    { value: 'TikTok', label: 'TikTok' },
-  ];
+  const platformOptions = useMemo(
+    () => [
+      { value: 'Instagram', label: 'Instagram', icon: Instagram },
+      { value: 'Facebook', label: 'Facebook', icon: Facebook },
+      { value: 'Twitter', label: 'Twitter', icon: Twitter },
+      { value: 'YouTube', label: 'YouTube', icon: Youtube },
+      { value: 'TikTok', label: 'TikTok', icon: Instagram },
+    ],
+    []
+  );
 
   const filteredPlatforms = platformOptions.filter((opt) =>
     opt.label.toLowerCase().includes(platformQuery.trim().toLowerCase())
   );
+  const selectedPlatformOption = platformOptions.find((p) => p.value === selectedPlatform);
   const [statsLoading, setStatsLoading] = useState({});
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+  const BACKEND_ROOT_URL = API_BASE_URL.replace(/\/api\/?$/, '');
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const success = params.get('success') === 'true' || params.get('connected') === 'true';
+    const error = params.get('error');
+    const simulated = params.get('simulated') === 'true';
+
+    if (success) {
+      toast.success(simulated ? 'Channel connected successfully (simulation mode)' : 'Social account connected successfully');
+    } else if (error) {
+      toast.error(error === 'meta_failed' ? 'Meta connection failed. Please try again.' : 'Failed to connect social account. Please try again.');
+    }
+
+    if (success) {
+      const timer = setTimeout(() => {
+        getAccounts();
+      }, 500);
+
+      if (success || error) {
+        navigate(location.pathname, { replace: true });
+      }
+
+      return () => clearTimeout(timer);
+    }
+
     getAccounts();
-  }, [getAccounts]);
 
-  const handleConnectAccount = async (e) => {
-    e.preventDefault();
-    if (!selectedPlatform || !authCode) {
-      toast.error('Please select a platform and provide auth code');
-      return;
+    if (success || error) {
+      navigate(location.pathname, { replace: true });
     }
+  }, [getAccounts, location.pathname, location.search, navigate]);
 
-    const res = await connectAccount(selectedPlatform, { authCode });
-    if (res?.success) {
-      toast.success(`${selectedPlatform} account connected!`);
+  const handleConnectAccount = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (!selectedPlatform) {
+        toast.error('Please select a platform to connect');
+        return;
+      }
+
+      setIsRedirecting(true);
       setShowConnectModal(false);
-      setSelectedPlatform('');
-      setAuthCode('');
-      await getAccounts();
-    } else {
-      toast.error(res?.error || 'Failed to connect account');
-    }
-  };
+      const normalized = selectedPlatform.toLowerCase();
+      let oauthEndpoint = '';
 
-  const handleDisconnect = async (platform) => {
-    const res = await disconnectAccount(platform);
+      if (['facebook', 'instagram'].includes(normalized)) {
+        oauthEndpoint = 'meta';
+      } else if (normalized === 'tiktok') {
+        oauthEndpoint = 'tiktok';
+      } else {
+        setIsRedirecting(false);
+        toast.error(`${selectedPlatform} OAuth is not configured yet.`);
+        return;
+      }
+
+      try {
+        if (oauthEndpoint === 'meta') {
+          const token = localStorage.getItem('accessToken');
+          if (!token) {
+            throw new Error('Access token not found. Please login again.');
+          }
+
+          const response = await axios.get(`${BACKEND_ROOT_URL}/auth/meta-url`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const oauthUrl = response?.data?.data?.url;
+
+          if (!oauthUrl) {
+            throw new Error('Meta OAuth URL not returned');
+          }
+
+          window.open(oauthUrl, '_self');
+          return;
+        }
+
+        window.location.href = `${BACKEND_ROOT_URL}/auth/${oauthEndpoint}`;
+      } catch (error) {
+        setIsRedirecting(false);
+        setShowConnectModal(true);
+        toast.error(error?.response?.data?.message || error?.message || 'Failed to start OAuth flow');
+      }
+    },
+    [BACKEND_ROOT_URL, selectedPlatform]
+  );
+
+  const handleDisconnect = async (account) => {
+    const accountIdentifier = account?.id || account?._id || account?.platform;
+    const res = await disconnectAccount(accountIdentifier);
     if (res?.success) {
-      toast.success(`${platform} account disconnected`);
+      toast.success(`${account?.platform || 'Account'} disconnected`);
       await getAccounts();
     } else {
       toast.error(res?.error || 'Failed to disconnect');
     }
   };
 
-  const handleViewAnalytics = async (platform) => {
-    setStatsLoading(prev => ({ ...prev, [platform]: true }));
-    const res = await getStats(platform);
-    setStatsLoading(prev => ({ ...prev, [platform]: false }));
-    if (res?.success) {
-      toast.info(`Analytics loaded for ${platform}`);
+  const handleViewAnalytics = async (account) => {
+    const id = account?.id || account?._id;
+    const key = id || account?.platform;
+    setStatsLoading((prev) => ({ ...prev, [key]: true }));
+    const res = await getStats(id || account?.platform);
+    setStatsLoading((prev) => ({ ...prev, [key]: false }));
+
+    if (res?.success && res?.data) {
+      useSocialMediaStore.setState((state) => ({
+        accounts: state.accounts.map((a) =>
+          (a.id || a._id) === id
+            ? {
+              ...a,
+              followers: res.data.followersCount ?? res.data.fan_count ?? a.followers,
+              engagement: res.data.engagement ?? a.engagement,
+            }
+            : a
+        ),
+      }));
+      toast.success(`Analytics updated for ${account?.platform}`);
     } else {
       toast.error('Failed to load analytics');
     }
   };
 
   const platformIcons = {
-    Instagram,
-    YouTube: Youtube,
-    Twitter,
-    Facebook,
-    TikTok: Instagram
+    instagram: Instagram,
+    youtube: Youtube,
+    twitter: Twitter,
+    facebook: Facebook,
+    tiktok: Instagram
   };
+
+  const formatMetricValue = (value) => {
+    if (value === null || value === undefined || value === '') {
+      return '—';
+    }
+
+    if (typeof value === 'number') {
+      return value.toLocaleString();
+    }
+
+    return value;
+  };
+
+  const emptyState = (
+    <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center">
+      <p className="text-white font-semibold mb-2">No connected accounts yet</p>
+      <p className="text-gray-400 mb-4">Connect a platform to start tracking performance and engagement.</p>
+      <button
+        onClick={() => setShowConnectModal(true)}
+        className="px-5 py-2.5 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg font-medium hover:shadow-lg transition-all"
+      >
+        Connect your first account
+      </button>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -94,6 +205,17 @@ function ConnectedAccounts() {
         </button>
       </div>
 
+      {/* Redirect Overlay */}
+      {isRedirecting && (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-[#171327] border border-white/15 rounded-xl px-6 py-5 text-center">
+            <Loader className="w-6 h-6 text-[#C1B6FD] animate-spin mx-auto mb-3" />
+            <p className="text-white font-semibold">Redirecting to {selectedPlatform}...</p>
+            <p className="text-xs text-gray-400 mt-1">Please complete OAuth authorization in the next window.</p>
+          </div>
+        </div>
+      )}
+
       {/* Connect Modal */}
       {showConnectModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-xl">
@@ -105,13 +227,24 @@ function ConnectedAccounts() {
                 <div className="relative">
                   <input
                     type="text"
-                    value={platformOptions.find(p => p.value === selectedPlatform)?.label || platformQuery}
+                    value={isPlatformOpen ? platformQuery : selectedPlatformOption?.label || ''}
                     onChange={(e) => {
                       setPlatformQuery(e.target.value);
                       setIsPlatformOpen(true);
+                      if (selectedPlatformOption && e.target.value !== selectedPlatformOption.label) {
+                        setSelectedPlatform('');
+                      }
                     }}
-                    onFocus={() => setIsPlatformOpen(true)}
-                    onBlur={() => setTimeout(() => setIsPlatformOpen(false), 120)}
+                    onFocus={() => {
+                      setIsPlatformOpen(true);
+                      setPlatformQuery('');
+                    }}
+                    onBlur={() =>
+                      setTimeout(() => {
+                        setIsPlatformOpen(false);
+                        setPlatformQuery('');
+                      }, 120)
+                    }
                     placeholder="Search platforms"
                     className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD]"
                   />
@@ -123,13 +256,16 @@ function ConnectedAccounts() {
                           type="button"
                           onClick={() => {
                             setSelectedPlatform(option.value);
-                            setPlatformQuery('');
+                            setPlatformQuery(option.label);
                             setIsPlatformOpen(false);
                           }}
                           className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
                         >
                           <span className="flex items-center justify-between">
-                            {option.label}
+                            <span className="flex items-center gap-2">
+                              <option.icon className="w-4 h-4 text-gray-300" />
+                              {option.label}
+                            </span>
                             {selectedPlatform === option.value && (
                               <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
                             )}
@@ -140,23 +276,13 @@ function ConnectedAccounts() {
                   )}
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-white mb-2">Authorization Code</label>
-                <input
-                  type="text"
-                  value={authCode}
-                  onChange={(e) => setAuthCode(e.target.value)}
-                  placeholder="Enter auth code from platform"
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD]"
-                />
-              </div>
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || isRedirecting || !selectedPlatform}
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg font-medium disabled:opacity-50"
                 >
-                  {isLoading ? 'Connecting...' : 'Connect'}
+                  {isRedirecting ? `Redirecting to ${selectedPlatform}...` : 'Connect'}
                 </button>
                 <button
                   type="button"
@@ -177,21 +303,20 @@ function ConnectedAccounts() {
           <Loader className="w-6 h-6 text-[#C1B6FD] animate-spin" />
         </div>
       ) : accounts?.length === 0 ? (
-        <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center">
-          <p className="text-gray-400">No connected accounts yet</p>
-        </div>
+        emptyState
       ) : (
         <div className="grid grid-cols-2 gap-6">
           {accounts.map((account) => {
-            const Icon = platformIcons[account.platform] || Instagram;
+            const platformKey = (account.platform || '').toLowerCase();
+            const Icon = platformIcons[platformKey] || Instagram;
             const platformColors = {
-              Instagram: 'from-pink-500 to-purple-500',
-              Facebook: 'from-blue-600 to-blue-700',
-              Twitter: 'from-blue-400 to-blue-500',
-              YouTube: 'from-red-500 to-red-600',
-              TikTok: 'from-black to-cyan-500'
+              instagram: 'from-pink-500 to-purple-500',
+              facebook: 'from-blue-600 to-blue-700',
+              twitter: 'from-blue-400 to-blue-500',
+              youtube: 'from-red-500 to-red-600',
+              tiktok: 'from-black to-cyan-500'
             };
-            const color = platformColors[account.platform] || 'from-gray-500 to-gray-600';
+            const color = platformColors[platformKey] || 'from-gray-500 to-gray-600';
 
             return (
               <div
@@ -209,18 +334,18 @@ function ConnectedAccounts() {
                         Connected
                       </span>
                     </div>
-                    <p className="text-sm text-gray-400">{account.username || account.accountName || 'Connected'}</p>
+                    <p className="text-sm text-gray-400">{account.username || account.accountName || account.name || 'Connected'}</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   <div className="bg-white/5 rounded-lg p-3">
                     <p className="text-xs text-gray-400 mb-1">Followers</p>
-                    <p className="text-base font-bold text-white">{account.followers || '—'}</p>
+                    <p className="text-base font-bold text-white">{formatMetricValue(account.followers ?? account.followersCount ?? account.fan_count)}</p>
                   </div>
                   <div className="bg-white/5 rounded-lg p-3">
                     <p className="text-xs text-gray-400 mb-1">Engagement</p>
-                    <p className="text-base font-bold text-[#C1B6FD]">{account.engagement || '—'}</p>
+                    <p className="text-base font-bold text-[#C1B6FD]">{formatMetricValue(account.engagement)}</p>
                   </div>
                   <div className="bg-white/5 rounded-lg p-3">
                     <p className="text-xs text-gray-400 mb-1">Status</p>
@@ -230,11 +355,11 @@ function ConnectedAccounts() {
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => handleViewAnalytics(account.platform)}
-                    disabled={statsLoading[account.platform]}
+                    onClick={() => handleViewAnalytics(account)}
+                    disabled={statsLoading[account.id || account._id || account.platform]}
                     className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-white font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {statsLoading[account.platform] ? (
+                    {statsLoading[account.id || account._id || account.platform] ? (
                       <>
                         <Loader className="w-3 h-3 animate-spin" />
                         Loading...
@@ -244,7 +369,7 @@ function ConnectedAccounts() {
                     )}
                   </button>
                   <button
-                    onClick={() => handleDisconnect(account.platform)}
+                    onClick={() => handleDisconnect(account)}
                     className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-sm text-red-400 font-medium transition-all"
                   >
                     Disconnect

@@ -215,7 +215,7 @@ function PrepareCampaign() {
       startDate: campaignData?.startDate || campaignData?.start_date || null,
       endDate: campaignData?.endDate || campaignData?.end_date || null,
     };
-
+  
     const requiredCampaignFields = [
       { key: 'campaignName', label: 'Campaign name', value: campaignDataForAi?.campaignName },
       { key: 'campaignGoal', label: 'Campaign goal', value: campaignDataForAi?.campaignGoal },
@@ -223,55 +223,43 @@ function PrepareCampaign() {
       { key: 'currency', label: 'Currency', value: campaignDataForAi?.currency },
       { key: 'durationWeeks', label: 'Campaign weeks', value: campaignDataForAi?.durationWeeks },
     ];
-
+  
     const requiredOwnerFields = [
       { key: 'brand_name', label: 'Brand name', value: ownerDraft.brand_name },
       { key: 'product_or_service', label: 'Product or service', value: ownerDraft.product_or_service },
       { key: 'industry', label: 'Industry', value: ownerDraft.industry },
-      {
-        key: 'target_market',
-        label: 'Target market',
-        value: Array.isArray(ownerDraft.target_market) ? ownerDraft.target_market : [],
-      },
+      { key: 'target_market', label: 'Target market', value: Array.isArray(ownerDraft.target_market) ? ownerDraft.target_market : [] },
       { key: 'company_size', label: 'Campaign size', value: ownerDraft.company_size },
       { key: 'unique_selling_point', label: 'USP', value: ownerDraft.unique_selling_point },
     ];
-
+  
     const isMissingValue = (value) => {
-      if (Array.isArray(value)) {
-        return value.length === 0;
-      }
-
-      if (typeof value === 'string') {
-        return value.trim().length === 0;
-      }
-
+      if (Array.isArray(value)) return value.length === 0;
+      if (typeof value === 'string') return value.trim().length === 0;
       return value === null || value === undefined;
     };
-
+  
     const missingCampaignField = requiredCampaignFields.find((field) => isMissingValue(field.value));
     if (missingCampaignField) {
       toast.warn(`You must add (${missingCampaignField.label}) for more personalized campaign plan.`, {
-        position: 'top-right',
-        autoClose: 3500,
+        position: 'top-right', autoClose: 3500,
       });
       return;
     }
-
+  
     const missingOwnerField = requiredOwnerFields.find((field) => isMissingValue(field.value));
     if (missingOwnerField) {
       toast.warn(`You must add (${missingOwnerField.label}) for more personalized campaign plan.`, {
-        position: 'top-right',
-        autoClose: 3500,
+        position: 'top-right', autoClose: 3500,
       });
       return;
     }
-
+  
     if (!Number.isFinite(parsedWeeks) || parsedWeeks < 1) {
       toast.error('Campaign duration must be at least 1 week.');
       return;
     }
-
+  
     setIsSubmitting(true);
     try {
       const ownerProfileForAi = {
@@ -282,32 +270,36 @@ function PrepareCampaign() {
           location: ownerDraft.targetAudience?.location || '',
         },
       };
-
+  
       const { payload, response } = await aiCampaignApi.generateCampaignWithProfileContext({
         campaignData: campaignDataForAi,
         ownerProfile: ownerProfileForAi,
       });
-      console.log("AI Campaign Response:", response);
-      const success = response?.success || response?.status === 'success';
-      if (!success) {
-        throw new Error(response?.message || 'Failed to generate campaign');
+  
+      console.log("✅ AI Campaign Response:", response);
+  
+      // FastAPI returns { strategy, calendar } directly — no wrapper
+      if (!response?.strategy) {
+        throw new Error('Invalid response from AI pipeline');
       }
-
+  
       toast.success('AI campaign generated successfully!', { position: 'top-right', autoClose: 3000 });
+  
       navigate('/dashboard/owner/campaigns/generated', {
         state: {
-          campaignData: payload,
-          aiPreview: response?.data?.aiPreview,
+          campaignData: payload,       // the brief you sent
+          strategy: response.strategy, // AI strategy block
+          calendar: response.calendar, // AI content calendar
         },
       });
-      return;
+  
     } catch (error) {
+      console.error("❌ Generation error:", error);
       toast.error(error?.message || 'Failed to generate campaign', { position: 'top-right', autoClose: 4000 });
     } finally {
       setIsSubmitting(false);
     }
   };
-
   if (!campaignData) {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-gray-300">

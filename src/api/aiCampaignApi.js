@@ -46,51 +46,50 @@ export const buildAiGeneratePayload = ({ campaignData, ownerProfile }) => {
   const profile = ownerProfile || {};
 
   return {
-    campaignName: toTrimmedString(campaignData?.campaignName || campaignData?.campaign_name),
-    brand_name: toTrimmedString(profile.brand_name),
-    product_or_service: toTrimmedString(profile.product_or_service),
-    industry: toTrimmedString(profile.industry),
-    target_market: toArray(profile.target_market),
-    company_size: toTrimmedString(profile.company_size),
-    campaign_goal: toTrimmedString(campaignData?.campaignGoal),
-    budget_amount: Number.parseFloat(campaignData?.budget || 0),
-    budget_currency: toTrimmedString(campaignData?.currency),
-    campaign_duration_weeks: Number.parseInt(campaignData?.durationWeeks || 0, 10),
-    unique_selling_point: toTrimmedString(profile.unique_selling_point),
-    current_channels: toArray(profile.current_channels),
-    competitors: toCompetitorsArray(profile.competitors),
-    has_previous_campaigns: Boolean(profile.has_previous_campaigns),
+    brand_name:                   toTrimmedString(profile.brand_name),
+    product_or_service:           toTrimmedString(profile.product_or_service),
+    industry:                     toTrimmedString(profile.industry),
+    target_market:                toArray(profile.target_market).join(', '), // ← string not array
+    company_size:                 toTrimmedString(profile.company_size),
+    campaign_goal:                toTrimmedString(campaignData?.campaignGoal),
+    budget_amount:                parseFloat(campaignData?.budget || 0),
+    budget_currency:              toTrimmedString(campaignData?.currency),
+    campaign_duration_weeks:      parseInt(campaignData?.durationWeeks || 0, 10),
+    unique_selling_point:         toTrimmedString(profile.unique_selling_point),
+    current_channels:             toArray(profile.current_channels),
+    competitors:                  toCompetitorsArray(profile.competitors),
+    has_previous_campaigns:       Boolean(profile.has_previous_campaigns),
     previous_campaign_description: profile.has_previous_campaigns
       ? toTrimmedString(profile.previous_campaign_description)
-      : '',
-    website: toTrimmedString(profile.website),
-    platforms: toArray(profile.platforms),
-    startDate: toTrimmedString(campaignData?.startDate),
-    endDate: toTrimmedString(campaignData?.endDate),
+      : null,
   };
 };
-
+const API_BASE = 'http://localhost:8000';
 const aiCampaignApi = {
   generateCampaignWithProfileContext: async ({ campaignData, ownerProfile }) => {
     const payload = buildAiGeneratePayload({ campaignData, ownerProfile });
-    console.log("Sending AI Campaign Payload:", payload);
-    const response = await axios.post('http://localhost:5001/api/campaigns/ai/generate', payload);
-    console.log("AI Campaign Response from the aiCompagin Api:", response.data.data.aiPreview);
-    return {
-      payload,
-      response: response.data,
-    };
-  },
-  // Send an already-built payload directly to the AI generate endpoint
-  generateWithPayload: async (payload) => {
-    console.log("Sending AI Campaign Payload (direct):", payload);
-    const response = await axios.post('http://localhost:5001/api/campaigns/ai/generate', payload);
-    console.log("AI Campaign Response from the aiCompagin Api:", response.data.data.aiPreview);
+    console.log("📦 Full payload:", JSON.stringify(payload, null, 2));
 
-    return {
-      payload,
-      response: response.data,
-    };
+    try {
+      const response = await axios.post(`${API_BASE}/generate`, payload);
+      console.log("✅ Response:", response.data);
+      return { payload, response: response.data };
+    } catch (error) {
+      console.error("❌ 422 fields:", error.response?.data?.detail);
+      throw error;
+    }
+  },
+
+  generateWithPayload: async (payload) => {
+    console.log("📦 Direct payload:", JSON.stringify(payload, null, 2));
+    try {
+      const response = await axios.post(`${API_BASE}/generate`, payload);
+      console.log("✅ Response:", response.data);
+      return { payload, response: response.data };
+    } catch (error) {
+      console.error("❌ 422 fields:", error.response?.data?.detail);
+      throw error;
+    }
   },
 };
 

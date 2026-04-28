@@ -32,15 +32,26 @@ const useAuthStore = create(
       // Actions
       setUser: (user) => set({ user, isAuthenticated: true, error: null }),
       
-      setToken: (token) => set({ token }),
+      setToken: (token) => {
+        if (token) {
+          localStorage.setItem('accessToken', token);
+        } else {
+          localStorage.removeItem('accessToken');
+        }
+        set({ token });
+      },
       
-      setAuth: (user, token) => 
+      setAuth: (user, token) => {
+        if (token) {
+          localStorage.setItem('accessToken', token);
+        }
         set({ 
           user, 
           token, 
           isAuthenticated: true, 
           error: null 
-        }),
+        });
+      },
       
       setLoading: (isLoading) => set({ isLoading }),
       
@@ -73,6 +84,7 @@ const useAuthStore = create(
               token: newAccessToken,
               isAuthenticated: Boolean(state.user)
             }));
+            localStorage.setItem('accessToken', newAccessToken);
 
             return newAccessToken;
           } catch (error) {
@@ -83,6 +95,7 @@ const useAuthStore = create(
               error: null,
               isLoading: false
             });
+            localStorage.removeItem('accessToken');
             throw (typeof error === 'string' ? new Error(error) : error);
           } finally {
             refreshPromise = null;
@@ -124,6 +137,7 @@ const useAuthStore = create(
           });
           
           // Clear localStorage
+          localStorage.removeItem('accessToken');
           localStorage.removeItem('auth-storage');
           localStorage.clear();
         }
@@ -219,6 +233,9 @@ const useAuthStore = create(
               isLoading: false,
               error: null
             });
+            if (accessToken) {
+              localStorage.setItem('accessToken', accessToken);
+            }
 
             return {
               success: true,

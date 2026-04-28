@@ -5,7 +5,10 @@ const useSocialMediaStore = create((set) => ({
   accounts: [],
   currentAccount: null,
   stats: null,
+  posts: [],
+  postAnalytics: {},
   isLoading: false,
+  postsLoading: false,
   error: null,
 
   // Connect a social media account
@@ -46,7 +49,10 @@ const useSocialMediaStore = create((set) => ({
       }
 
       set((state) => ({
-        accounts: state.accounts.filter((a) => a.platform !== platform),
+        accounts: state.accounts.filter((a) => {
+          const accountId = a.id || a._id;
+          return accountId ? String(accountId) !== String(platform) : a.platform !== platform;
+        }),
         isLoading: false
       }));
       return { success: true };
@@ -98,6 +104,56 @@ const useSocialMediaStore = create((set) => ({
       const errorMessage = typeof error === 'string' ? error : error?.message || 'Failed to fetch stats';
       set({ error: errorMessage, isLoading: false });
       return { success: false, error: errorMessage };
+    }
+  },
+
+  getPosts: async () => {
+    set({ postsLoading: true });
+    try {
+      const data = await socialMediaService.getPosts();
+      const posts = data?.data?.posts || data?.posts || [];
+      set({ posts, postsLoading: false });
+      return { success: true };
+    } catch (error) {
+      set({ postsLoading: false });
+      return { success: false, error };
+    }
+  },
+
+  createPost: async (payload) => {
+    set({ postsLoading: true });
+    try {
+      const data = await socialMediaService.createPost(payload);
+      set({ postsLoading: false });
+      return { success: true, data };
+    } catch (error) {
+      set({ postsLoading: false });
+      return { success: false, error };
+    }
+  },
+
+  deletePost: async (postId) => {
+    try {
+      await socialMediaService.deletePost(postId);
+      set((state) => ({
+        posts: state.posts.filter((p) => (p.id || p._id) !== postId)
+      }));
+      return { success: true };
+    } catch (error) {
+      return { success: false, error };
+    }
+  },
+
+  getPostAnalytics: async (postId) => {
+    try {
+      const data = await socialMediaService.getPostAnalytics(postId);
+      const analytics = data?.data || data;
+      set((state) => ({
+        postAnalytics: { ...state.postAnalytics, [postId]: analytics }
+      }));
+      return { success: true };
+    } catch (error) {
+      return { success: false, error };
     }
   },
 

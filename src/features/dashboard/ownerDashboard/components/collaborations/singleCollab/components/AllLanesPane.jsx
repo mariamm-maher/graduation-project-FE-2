@@ -1,3 +1,4 @@
+import { FilePlus2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { LANES, LANE_LABELS } from '../constants';
 
@@ -27,7 +28,7 @@ function fmt(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function CollabCard({ c, status, onClick }) {
+function CollabCard({ c, status, onClick, onMakeContract }) {
   const hasDates = c.startDate || c.endDate;
   const closedAt = c.completedAt || c.cancelledAt;
 
@@ -85,6 +86,18 @@ function CollabCard({ c, status, onClick }) {
         <div className="text-[10px] text-[#9CA3AF] text-right">
           {c.completedAt ? 'Completed' : 'Cancelled'}: {fmt(closedAt)}
         </div>
+      )}
+
+      {/* Make a Contract CTA */}
+      {status === 'waiting_contract_sign' && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onMakeContract(c.id); }}
+          className="w-full mt-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-linear-to-r from-blue-500/20 to-cyan-500/20 border border-blue-400/30 text-blue-300 hover:from-blue-500/30 hover:to-cyan-500/30 hover:border-blue-400/50 transition-all"
+        >
+          <FilePlus2 className="w-3.5 h-3.5" />
+          Make a Contract
+        </button>
       )}
 
       {/* Progress bar for live */}
@@ -152,6 +165,9 @@ export default function AllLanesPane({ laneData, rawCollabs = [] }) {
                       `/dashboard/owner/collaborations/${c.id}/workspace`,
                       { state: { collab: rawById[c.id] || null } }
                     )
+                  }
+                  onMakeContract={(id) =>
+                    navigate(`/dashboard/owner/collaborations/${id}/contract`)
                   }
                 />
               ))

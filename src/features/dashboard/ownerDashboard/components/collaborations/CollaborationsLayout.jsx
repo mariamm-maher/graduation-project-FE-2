@@ -29,7 +29,7 @@ function CollaborationsLayout() {
         {/* <Route path="past" element={<PastCollaborations />} /> */}
         {/* <Route path="contracts" element={<Contracts />} /> */}
         {/* <Route path="contracts/:id" element={<ContractDetail />} /> */}
-        {/* <Route path=":id/contract" element={<CreateContract />} /> */}
+        <Route path=":id/contract" element={<CreateContract />} />
         {/* <Route path="requests" element={<Requests />} /> */}    
         {/* <Route path="analytics" element={<Analytics />} /> */}
         {/* <Route path="board" element={<CollaborationBoard />} /> */}

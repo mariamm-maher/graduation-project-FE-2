@@ -284,7 +284,7 @@ export default function SingleCollabHub() {
       </div>
 
       <div className={activeTab === 'tasks' ? 'block' : 'hidden'}>
-        <TasksPane items={ownerCollaborations} />
+        <TasksPane />
       </div>
     </div>
   );

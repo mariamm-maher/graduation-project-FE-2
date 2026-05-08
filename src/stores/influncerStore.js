@@ -52,6 +52,11 @@ const useInfluncerStore = create((set) => ({
   applyingCampaignId: null,
   applyCampaignError: null,
 
+  // Contact owner
+  contactOwnerLoading: false,
+  contactOwnerError: null,
+  contactOwnerSuccess: false,
+
   fetchInfluencerOverview: async (params = {}) => {
     set({ overviewLoading: true, overviewError: null });
     try {
@@ -202,6 +207,30 @@ const useInfluncerStore = create((set) => ({
       return { success: false, error: errorMessage };
     }
   },
+
+  contactOwner: async (campaignId, message) => {
+    set({ contactOwnerLoading: true, contactOwnerError: null, contactOwnerSuccess: false });
+    try {
+      const response = await influncerService.contactOwner(campaignId, message);
+      const payload = response?.data ?? response ?? {};
+      const ok = response?.success === true || payload?.success === true || response?.status === 200;
+
+      if (!ok && !payload?.sent) {
+        throw new Error(response?.message || payload?.message || 'Failed to send message');
+      }
+
+      set({ contactOwnerLoading: false, contactOwnerSuccess: true });
+      return { success: true };
+    } catch (error) {
+      const errorMessage = typeof error === 'string'
+        ? error
+        : error?.response?.data?.message || error?.message || 'Failed to send message';
+      set({ contactOwnerError: errorMessage, contactOwnerLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  resetContactOwner: () => set({ contactOwnerLoading: false, contactOwnerError: null, contactOwnerSuccess: false }),
 
   // Fetch my influencer collaborations
   getMyInfluencerCollaborations: async (params = {}) => {

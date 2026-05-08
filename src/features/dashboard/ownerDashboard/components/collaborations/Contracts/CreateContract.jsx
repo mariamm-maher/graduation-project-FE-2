@@ -1,84 +1,81 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FileText, Save, Send, Calendar, DollarSign, List, ArrowLeft, Loader2, Info } from 'lucide-react';
+import { FileText, Save, Send, Calendar, Lock, List, ArrowLeft, Loader2, Info, DollarSign } from 'lucide-react';
 import useCollaborationStore from '../../../../../../stores/collaborationStore';
 import useCollaborationContractsStore from '../../../../../../stores/CollaborationContractsStore';
 import { toast } from 'react-toastify';
 
+function ReadOnlyField({ label, value }) {
+  return (
+    <div>
+      <label className="flex items-center gap-1.5 text-sm font-medium text-gray-400 mb-2">
+        <Lock className="w-3.5 h-3.5 opacity-60" />
+        {label}
+      </label>
+      <div className="w-full bg-black/30 border border-white/5 rounded-xl px-4 py-3 text-[#C1B6FD] text-sm select-all cursor-default">
+        {value || <span className="text-gray-600 italic">—</span>}
+      </div>
+    </div>
+  );
+}
+
 function CreateContract() {
-  const { id } = useParams(); // Collaboration ID
+  const { id } = useParams();
   const navigate = useNavigate();
-  
-  // Replace with real getter from store
+
   const { ownerCollaborations, isOwnerCollaborationsLoading, getMyOwnerCollaborations } = useCollaborationStore();
   const { createContract, isLoading: contractLoading } = useCollaborationContractsStore();
 
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Setup standard state for the form
   const [formData, setFormData] = useState({
-    title: '',
     startDate: '',
     endDate: '',
     deliverables: '',
-    agreedPrice: '',
     notes: ''
   });
 
-  // Find the exact collaboration
   const collaboration = ownerCollaborations?.find(c => (c._id || c.id)?.toString() === id);
 
   useEffect(() => {
-    // Refresh colabs if we don't have this one
     if (!collaboration && ownerCollaborations.length === 0) {
       getMyOwnerCollaborations();
     }
   }, [collaboration, getMyOwnerCollaborations, ownerCollaborations.length]);
 
-  // Pre-fill some data if collaboration exists
-  useEffect(() => {
-    if (collaboration) {
-      setFormData(prev => ({
-        ...prev,
-        title: `Contract: ${collaboration?.campaign?.campaignName || collaboration?.campaignName || 'Campaign'}`,
-        startDate: (collaboration?.startDate || collaboration?.campaign?.startDate || new Date().toISOString()).split('T')[0],
-        endDate: (collaboration?.endDate || collaboration?.campaign?.endDate || new Date().toISOString()).split('T')[0],
-        agreedPrice: collaboration?.agreedBudget || collaboration?.budget || collaboration?.proposedBudget || collaboration?.campaign?.totalBudget || 0
-      }));
-    }
-  }, [collaboration]);
+  const agreedPrice =
+    collaboration?.request?.counterPrice != null
+      ? Number(collaboration.request.counterPrice)
+      : collaboration?.request?.proposedBudget != null
+      ? Number(collaboration.request.proposedBudget)
+      : collaboration?.agreedBudget ?? collaboration?.budget ?? 0;
+
+  const campaignName = collaboration?.campaign?.campaignName || collaboration?.campaignName || '—';
+  const influencerName = collaboration?.influencer
+    ? `${collaboration.influencer.firstName || ''} ${collaboration.influencer.lastName || ''}`.trim()
+    : collaboration?.influencerName || '—';
+  const ownerId     = collaboration?.ownerId     ? String(collaboration.ownerId)     : (collaboration?.request?.ownerId ? String(collaboration.request.ownerId) : '—');
+  const influencerId = collaboration?.influencerId ? String(collaboration.influencerId) : (collaboration?.request?.influencerId ? String(collaboration.request.influencerId) : '—');
+  const campaignId  = collaboration?.campaignId  ? String(collaboration.campaignId)  : '—';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const constructPayload = (status) => {
-    return {
-      collaborationId: parseInt(id),
-      agreedPrice: parseFloat(formData.agreedPrice) || 0,
-      deliverables: formData.deliverables.split('\n').filter(d => d.trim() !== ''), // Convert lines to JSON array format
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      status: status, // 'draft' or 'sent'
-      notes: formData.notes
-    };
-  };
+  const buildPayload = (status) => ({
+    agreedPrice,
+    deliverables: formData.deliverables.split('\n').filter(d => d.trim() !== ''),
+    startDate: formData.startDate,
+    endDate: formData.endDate,
+    status,
+    notes: formData.notes,
+  });
 
   const handleSaveDraft = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    const payload = constructPayload('draft');
-    console.log('Draft payload:', payload);
-    
-    // API call to save as draft
-    const response = await createContract(id, payload);
+    const response = await createContract(id, buildPayload('draft'));
     setIsLoading(false);
-    
     if (response.success) {
       toast.success('Contract saved as draft successfully!');
       navigate('/dashboard/owner/collaborations');
@@ -90,14 +87,8 @@ function CreateContract() {
   const handleSendToInfluencer = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    const payload = constructPayload('sent');
-    console.log('Send to influencer payload:', payload);
-
-    // API call to finalize and turn to sent
-    const response = await createContract(id, payload);
+    const response = await createContract(id, buildPayload('sent'));
     setIsLoading(false);
-
     if (response.success) {
       toast.success('Contract sent to Influencer successfully!');
       navigate('/dashboard/owner/collaborations');
@@ -122,17 +113,11 @@ function CreateContract() {
     );
   }
 
-  const influencerName = collaboration?.influencer?.firstName 
-    ? `${collaboration.influencer.firstName} ${collaboration.influencer.lastName || ''}`
-    : collaboration?.influencer?.user?.firstName
-    ? `${collaboration.influencer.user.firstName} ${collaboration.influencer.user.lastName || ''}`
-    : collaboration?.influencerName || 'the Influencer';
-
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <button 
+        <button
           onClick={() => navigate(-1)}
           className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
         >
@@ -149,27 +134,30 @@ function CreateContract() {
         </div>
       </div>
 
-      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 sm:p-8">
+      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 sm:p-8 space-y-8">
+
+        {/* ── Read-only: From collaboration request ── */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-[#745CB4] uppercase tracking-widest flex items-center gap-2 border-b border-white/10 pb-2">
+            <Lock className="w-4 h-4" /> From Collaboration Request
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ReadOnlyField label="Collaboration ID" value={String(collaboration.id)} />
+            <ReadOnlyField label="Agreed Price" value={`$${Number(agreedPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
+            <ReadOnlyField label="Campaign" value={campaignName} />
+            <ReadOnlyField label="Influencer" value={influencerName} />
+            <ReadOnlyField label="Owner ID" value={ownerId} />
+            <ReadOnlyField label="Influencer ID" value={influencerId} />
+            <ReadOnlyField label="Campaign ID" value={campaignId} />
+          </div>
+        </div>
+
         <form className="space-y-6">
-          {/* Basic Information */}
+          {/* ── Dates ── */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2 flex items-center gap-2">
-              <Info className="w-5 h-5 text-purple-400" /> General Details
+              <Info className="w-5 h-5 text-purple-400" /> Contract Details
             </h3>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Contract Title</label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
-                placeholder="e.g. Master Collaboration Agreement"
-                required
-              />
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Start Date</label>
@@ -185,9 +173,8 @@ function CreateContract() {
                   />
                 </div>
               </div>
-              
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">End Date (Estimated)</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">End Date</label>
                 <div className="relative">
                   <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
                   <input
@@ -203,12 +190,11 @@ function CreateContract() {
             </div>
           </div>
 
-          {/* Scope and Deliverables */}
-          <div className="space-y-4 pt-4">
+          {/* ── Deliverables ── */}
+          <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2 flex items-center gap-2">
               <List className="w-5 h-5 text-blue-400" /> Scope of Work
             </h3>
-            
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Deliverables & Responsibilities</label>
               <textarea
@@ -218,32 +204,15 @@ function CreateContract() {
                 rows={4}
                 className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all resize-none"
                 placeholder="List the specific content requirements, platforms, posting schedules, etc."
-                required
               />
             </div>
           </div>
 
-          {/* Financials */}
-          <div className="space-y-4 pt-4">
+          {/* ── Notes ── */}
+          <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2 flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-green-400" /> Compensation & Terms
+              <DollarSign className="w-5 h-5 text-green-400" /> Additional Terms
             </h3>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Agreed Price ($)</label>
-              <input
-                type="number"
-                name="agreedPrice"
-                value={formData.agreedPrice}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] transition-all"
-                placeholder="e.g. 5000"
-                required
-              />
-            </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Notes & Additional Conditions (Optional)</label>
               <textarea
@@ -257,13 +226,13 @@ function CreateContract() {
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="border-t border-white/10 pt-6 mt-6 flex flex-col sm:flex-row justify-end gap-4">
+          {/* ── Actions ── */}
+          <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-end gap-4">
             <button
               type="button"
               onClick={handleSaveDraft}
-              disabled={isLoading}
-              className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+              disabled={isLoading || contractLoading}
+              className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
               Save as Draft
@@ -271,11 +240,11 @@ function CreateContract() {
             <button
               type="button"
               onClick={handleSendToInfluencer}
-              disabled={isLoading}
-              className="px-6 py-3 bg-linear-to-r from-blue-500 to-cyan-500 hover:shadow-lg hover:shadow-cyan-500/30 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+              disabled={isLoading || contractLoading}
+              className="px-6 py-3 bg-linear-to-r from-blue-500 to-cyan-500 hover:shadow-lg hover:shadow-cyan-500/30 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-              Send Contract 
+              Send Contract
             </button>
           </div>
         </form>

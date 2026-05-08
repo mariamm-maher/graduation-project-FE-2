@@ -1,128 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { FileText, Calendar, DollarSign, Building2, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import useInfluncerStore from '../../../../../../stores/influncerStore';
 import useCollaborationContractsStore from '../../../../../../stores/CollaborationContractsStore';
 
 function ContractsList() {
-  const { getMyInfluencerCollaborations } = useInfluncerStore();
-  const { getContractByCollaboration } = useCollaborationContractsStore();
-  const [contracts, setContracts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const normalizeContract = (raw, fallback = {}) => {
-    if (!raw || typeof raw !== 'object') return null;
-    const contract = raw.contract && typeof raw.contract === 'object' ? raw.contract : raw;
-
-    return {
-      ...contract,
-      collaborationId:
-        contract.collaborationId ??
-        fallback.collaborationId ??
-        contract.collaboration?.id ??
-        contract.collaboration?.collaborationId,
-      campaignName:
-        fallback.campaignName ??
-        contract.campaignName ??
-        contract.collaboration?.campaign?.campaignName ??
-        'Untitled Campaign',
-      ownerName:
-        fallback.ownerName ??
-        contract.ownerName ??
-        contract.collaboration?.owner?.ownerProfile?.businessName ??
-        contract.collaboration?.owner?.companyName ??
-        contract.collaboration?.owner?.user?.firstName ??
-        'Brand Owner',
-    };
-  };
+  const {
+    contracts: rawContracts,
+    isLoading,
+    getMyInfluencerContracts,
+  } = useCollaborationContractsStore();
 
   useEffect(() => {
-    let isMounted = true;
+    getMyInfluencerContracts();
+  }, [getMyInfluencerContracts]);
 
-    const loadContracts = async () => {
-      setIsLoading(true);
-      const response = await getMyInfluencerCollaborations();
-
-      if (!response?.success) {
-        if (isMounted) {
-          setContracts([]);
-          setIsLoading(false);
-        }
-        return;
-      }
-
-      const payload = response.data;
-      let rawContracts = [];
-
-      if (Array.isArray(payload)) {
-        rawContracts = payload;
-      } else if (payload?.contracts && Array.isArray(payload.contracts)) {
-        rawContracts = payload.contracts;
-      } else if (payload?.data?.contracts && Array.isArray(payload.data.contracts)) {
-        rawContracts = payload.data.contracts;
-      } else if (payload?.contract && typeof payload.contract === 'object') {
-        rawContracts = [payload.contract];
-      } else if (payload?.data?.contract && typeof payload.data.contract === 'object') {
-        rawContracts = [payload.data.contract];
-      }
-
-      if (rawContracts.length > 0) {
-        const normalized = rawContracts
-          .map((item) => normalizeContract(item))
-          .filter(Boolean);
-
-        if (isMounted) {
-          setContracts(normalized);
-          setIsLoading(false);
-        }
-        return;
-      }
-
-      const collaborations = Array.isArray(payload?.collaborations)
-        ? payload.collaborations
-        : Array.isArray(payload?.data?.collaborations)
-        ? payload.data.collaborations
-        : Array.isArray(payload)
-        ? payload
-        : [];
-
-      const resolved = await Promise.all(
-        collaborations.map(async (collab) => {
-          const collaborationId = collab?._id || collab?.id;
-          if (!collaborationId) return null;
-
-          const contractRes = await getContractByCollaboration(collaborationId);
-          if (!contractRes?.success) return null;
-
-          return normalizeContract(contractRes.data, {
-            collaborationId,
-            campaignName: collab?.campaign?.campaignName,
-            ownerName:
-              collab?.owner?.ownerProfile?.businessName ||
-              collab?.owner?.companyName ||
-              collab?.owner?.user?.firstName,
-          });
-        })
-      );
-
-      if (isMounted) {
-        setContracts(resolved.filter(Boolean));
-        setIsLoading(false);
-      }
-    };
-
-    loadContracts().catch(() => {
-      if (isMounted) {
-        toast.error('Failed to load contracts');
-        setIsLoading(false);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [getMyInfluencerCollaborations, getContractByCollaboration]);
+  const contracts = (Array.isArray(rawContracts) ? rawContracts : []).map((c) => {
+    const collab = c?.collaboration || {};
+    const campaignName = collab?.campaign?.campaignName || c?.campaignName || 'Untitled Campaign';
+    const owner = collab?.owner || {};
+    const ownerName =
+      owner?.ownerProfile?.brand_name ||
+      `${owner?.firstName || ''} ${owner?.lastName || ''}`.trim() ||
+      'Brand Owner';
+    return { ...c, campaignName, ownerName };
+  });
 
   if (isLoading) {
     return (

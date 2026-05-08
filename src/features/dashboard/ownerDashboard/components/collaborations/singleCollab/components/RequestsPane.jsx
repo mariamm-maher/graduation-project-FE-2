@@ -1,4 +1,5 @@
 import { Ban, CheckCircle2, Clock3, Handshake, MessageSquare, XCircle } from 'lucide-react';
+import InterestMessagesPane from './InterestMessagesPane';
 
 const STATUS_META = {
   pending: {
@@ -202,31 +203,40 @@ function RequestsColumn({ title, count, items, type, onAccept, onReject, onCance
 }
 
 export default function RequestsPane({ outgoing, requestsLoading, requestsError, onAccept, onReject, onCancel }) {
-  console.log("outgoing" , outgoing);
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {requestsError ? (
-        <div className="mb-2.5 p-2.5 rounded-lg text-xs bg-red-500/10 text-red-400 border border-red-500/20/80">
+        <div className="mb-2.5 p-2.5 rounded-lg text-xs bg-red-500/10 text-red-400 border border-red-500/20">
           {requestsError}
         </div>
       ) : null}
       {requestsLoading ? <div className="mb-2.5 text-xs text-[#C1B6FD]">Loading requests...</div> : null}
 
-      <div className="bg-[#241A3A]/65 backdrop-blur-md border border-[#745CB4]/25 rounded-xl p-3.5">
-        {outgoing.length ? (
-          outgoing.map((item) => (
-            <RequestCard
-              key={item.id}
-              item={item}
-              type="outgoing"
-              onAccept={onAccept}
-              onReject={onReject}
-              onCancel={onCancel}
-            />
-          ))
-        ) : (
-          <p className="text-xs text-[#9CA3AF] py-1">No outgoing requests.</p>
-        )}
+      {/* Collaboration requests sent by owner */}
+      <div>
+        <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-2">Collaboration Requests</p>
+        <div className="bg-[#241A3A]/65 backdrop-blur-md border border-[#745CB4]/25 rounded-xl p-3.5">
+          {outgoing.length ? (
+            outgoing.map((item) => (
+              <RequestCard
+                key={item.id}
+                item={item}
+                type="outgoing"
+                onAccept={onAccept}
+                onReject={onReject}
+                onCancel={onCancel}
+              />
+            ))
+          ) : (
+            <p className="text-xs text-[#9CA3AF] py-1">No outgoing collaboration requests.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Interest messages from influencers — separate section */}
+      <div>
+        <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-2">Interest Messages from Influencers</p>
+        <InterestMessagesPane />
       </div>
     </div>
   );

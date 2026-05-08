@@ -114,6 +114,28 @@ const ownerService = {
             throw error.response?.data?.message || 'Failed to fetch your offers';
         }
     },
+
+    getInterestMessages: async (params = {}) => {
+        try {
+            const query = new URLSearchParams();
+            Object.entries(params).forEach(([k, v]) => {
+                if (v !== undefined && v !== null && v !== '') query.set(k, v);
+            });
+            const response = await api.get(`/owner/interest-messages?${query.toString()}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data?.message || 'Failed to fetch interest messages';
+        }
+    },
+
+    markInterestMessageRead: async (id) => {
+        try {
+            const response = await api.patch(`/owner/interest-messages/${id}/read`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data?.message || 'Failed to mark message as read';
+        }
+    },
 };
 
 export default ownerService;

@@ -192,14 +192,14 @@ function ConnectedAccounts() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Connected Accounts</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Connected Accounts</h1>
           <p className="text-gray-400">Manage your social media platform connections</p>
         </div>
         <button
           onClick={() => setShowConnectModal(true)}
-          className="px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+          className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg transition-all"
         >
           Connect New Account
         </button>
@@ -305,7 +305,7 @@ function ConnectedAccounts() {
       ) : accounts?.length === 0 ? (
         emptyState
       ) : (
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {accounts.map((account) => {
             const platformKey = (account.platform || '').toLowerCase();
             const Icon = platformIcons[platformKey] || Instagram;
@@ -321,7 +321,7 @@ function ConnectedAccounts() {
             return (
               <div
                 key={account._id || account.id}
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all"
+                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 sm:p-6 hover:bg-white/10 transition-all"
               >
                 <div className="flex items-start gap-4 mb-4">
                   <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center shrink-0`}>
@@ -338,7 +338,7 @@ function ConnectedAccounts() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                   <div className="bg-white/5 rounded-lg p-3">
                     <p className="text-xs text-gray-400 mb-1">Followers</p>
                     <p className="text-base font-bold text-white">{formatMetricValue(account.followers ?? account.followersCount ?? account.fan_count)}</p>
@@ -353,7 +353,7 @@ function ConnectedAccounts() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <button
                     onClick={() => handleViewAnalytics(account)}
                     disabled={statsLoading[account.id || account._id || account.platform]}
@@ -370,7 +370,7 @@ function ConnectedAccounts() {
                   </button>
                   <button
                     onClick={() => handleDisconnect(account)}
-                    className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-sm text-red-400 font-medium transition-all"
+                    className="w-full sm:w-auto px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-sm text-red-400 font-medium transition-all"
                   >
                     Disconnect
                   </button>

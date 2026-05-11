@@ -11,6 +11,7 @@ function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const logout = useAuthStore((s) => s.logout);
   const user = useAuthStore((s) => s.user);
+  const showLabels = isMobileOpen || isHovered;
 
   const handleLogout = async () => {
     try {
@@ -45,7 +46,7 @@ function Sidebar() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="fixed top-6 left-4 z-50 md:hidden p-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/10 text-white hover:bg-white/20 transition-all"
+        className="fixed top-6 left-4 z-60 md:hidden p-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/10 text-white hover:bg-white/20 transition-all"
       >
         {isMobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
@@ -59,8 +60,8 @@ function Sidebar() {
       )}
 
       <div 
-        className={`fixed left-3 md:left-6 top-20 md:top-32 flex flex-col gap-2 backdrop-blur-md rounded-2xl p-4 border border-white/10 transition-all duration-300 ease-in-out z-50 ${
-          isHovered ? 'w-64 bg-[#1a1a1a]/95' : 'w-20 bg-white/5'
+        className={`fixed left-0 top-0 bottom-0 pt-16 md:left-6 md:top-32 md:bottom-auto md:pt-4 flex flex-col gap-2 backdrop-blur-md md:rounded-2xl p-4 border-r md:border border-white/10 transition-all duration-300 ease-in-out z-50 overflow-y-auto w-64 bg-[#1a1a1a]/95 ${
+          isHovered ? '' : 'md:w-20 md:bg-white/5'
         } ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
@@ -72,9 +73,10 @@ function Sidebar() {
         <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center shrink-0">
           <User className="w-5 h-5 text-white" />
         </div>
-        {isHovered && (
+        {showLabels && (
           <Link
             to="/dashboard/influencer/profile"
+            onClick={() => setIsMobileOpen(false)}
             className="flex-1 overflow-hidden"
             title={user?.email || 'No email'}
           >
@@ -98,15 +100,16 @@ function Sidebar() {
             <Link
               key={item.id}
               to={item.path}
+              onClick={() => setIsMobileOpen(false)}
               className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
                 isActive
                   ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg shadow-[#745CB4]/30'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
-              title={!isHovered ? item.label : ''}
+              title={!showLabels ? item.label : ''}
             >
               <Icon className="w-5 h-5 shrink-0" />
-              {isHovered && (
+              {showLabels && (
                 <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
               )}
             </Link>
@@ -118,25 +121,26 @@ function Sidebar() {
       <div className="pt-4 border-t border-white/10 space-y-1">
         <Link
           to="/dashboard/influencer/settings"
+          onClick={() => setIsMobileOpen(false)}
           className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
             location.pathname === '/dashboard/influencer/settings'
               ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg shadow-[#745CB4]/30'
               : 'text-gray-400 hover:text-white hover:bg-white/5'
           }`}
-          title={!isHovered ? 'Settings' : ''}
+          title={!showLabels ? 'Settings' : ''}
         >
           <Settings className="w-5 h-5 shrink-0" />
-          {isHovered && (
+          {showLabels && (
             <span className="text-sm font-medium whitespace-nowrap">Settings</span>
           )}
         </Link>
         <button 
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200"
-          title={!isHovered ? 'Logout' : ''}
+          title={!showLabels ? 'Logout' : ''}
         >
           <LogOut className="w-5 h-5 shrink-0" />
-          {isHovered && (
+          {showLabels && (
             <span className="text-sm font-medium whitespace-nowrap">Logout</span>
           )}
         </button>

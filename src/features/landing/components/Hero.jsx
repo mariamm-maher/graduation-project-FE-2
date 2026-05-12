@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import {  BarChart3, Target, Smartphone, Zap } from 'lucide-react'
-import gemini from '../../../assets/gemini.mp4'
+import gemini from '../../../assets/ccf_d_a_d_dmp_.mp4'
 
 const Hero = () => {
 

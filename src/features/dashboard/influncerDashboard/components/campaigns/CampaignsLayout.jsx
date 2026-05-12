@@ -8,7 +8,7 @@ import SingleCampaign from './SingleCampaign';
 function CampaignsLayout() {
   return (
     <div className="space-y-6">
-      <Breadcrumb />
+      {/* <Breadcrumb /> */}
       <Routes>
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<CampaignsOverview />} />

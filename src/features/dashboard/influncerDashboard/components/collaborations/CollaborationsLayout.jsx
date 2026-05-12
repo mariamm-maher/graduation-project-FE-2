@@ -4,7 +4,7 @@ import TasksPane from './TasksPane';
 
 function CollaborationsLayout() {
   return (
-    <div className="p-6">
+    <div>
       <Routes>
         <Route index element={<CollaborationsOverview />} />
         <Route path="requests" element={<Requests />} />

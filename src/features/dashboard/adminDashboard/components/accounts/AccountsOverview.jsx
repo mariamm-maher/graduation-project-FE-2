@@ -4,19 +4,41 @@ import { Link } from 'react-router-dom';
 import useAdminStore from '../../../../../stores/AdminStore';
 import { toast } from 'react-toastify';
 
-// Map backend user to display shape; backend: id, firstName, lastName, email, createdAt, roles: [{ name }], status?
+// Map backend user to display shape; backend: id, firstName, lastName, email, createdAt, roles: [{ name }], status?, updatedAt
 function mapUser(u) {
   const roleName = u.roles?.[0]?.name ?? '';
+  const hasStatus = u.status && u.status !== '—' && u.status !== '';
   return {
     id: u.id,
     name: [u.firstName, u.lastName].filter(Boolean).join(' ').trim() || '—',
     email: u.email || '—',
     role: roleName.toLowerCase(),
     roleRaw: roleName,
-    status: (u.status || '—').toLowerCase(),
+    status: hasStatus ? (u.status || '').toLowerCase() : null,
+    statusRaw: u.status,
+    lastActive: u.updatedAt ? new Date(u.updatedAt).toISOString().split('T')[0] : '—',
     createdAt: u.createdAt ? new Date(u.createdAt).toISOString().split('T')[0] : '—',
     raw: u
   };
+}
+
+// Status badge component
+function StatusBadge({ status }) {
+  const statusConfig = {
+    active: { color: 'bg-green-500/20 text-green-400', label: 'Active' },
+    blocked: { color: 'bg-red-500/20 text-red-400', label: 'Blocked' },
+    suspended: { color: 'bg-yellow-500/20 text-yellow-400', label: 'Suspended' },
+    incomplete: { color: 'bg-gray-500/20 text-gray-400', label: 'Incomplete' },
+    pending: { color: 'bg-blue-500/20 text-blue-400', label: 'Pending' }
+  };
+
+  const config = statusConfig[status] || { color: 'bg-gray-500/20 text-gray-400', label: status || 'Unknown' };
+
+  return (
+    <span className={`px-3 py-1 rounded-full text-xs font-medium ${config.color}`}>
+      {config.label}
+    </span>
+  );
 }
 
 function AccountsOverview() {
@@ -53,14 +75,31 @@ function AccountsOverview() {
   const confirmDelete = async () => {
     if (!accountToDelete) return;
     setDeleting(true);
-    const result = await deleteUser(accountToDelete.id);
-    setDeleting(false);
-    if (result.success) {
-      setAccountToDelete(null);
-      setShowDeleteModal(false);
-      toast.success('User deleted successfully');
-    } else {
-      toast.error(result.error || 'Failed to delete user');
+    try {
+      const result = await deleteUser(accountToDelete.id);
+      if (result.success) {
+        setAccountToDelete(null);
+        setShowDeleteModal(false);
+        toast.success('User deleted successfully');
+      } else {
+        // Check for foreign key constraint error
+        const errorMsg = result.error || '';
+        if (errorMsg.includes('foreign key') || errorMsg.includes('violates')) {
+          toast.error(
+            <div>
+              <p className="font-semibold">Cannot delete user with active collaborations</p>
+              <p className="text-sm">This user owns campaigns with active collaborations. Please delete their campaigns first or reassign them.</p>
+            </div>,
+            { autoClose: 5000 }
+          );
+        } else {
+          toast.error(result.error || 'Failed to delete user');
+        }
+      }
+    } catch (err) {
+      toast.error(err.message || 'An error occurred while deleting');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -150,7 +189,9 @@ function AccountsOverview() {
                   <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">User</th>
                   <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Email</th>
                   <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Role</th>
-                  <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Status</th>
+                  <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">
+                    {list.some(u => u.status) ? 'Status' : 'Last Active'}
+                  </th>
                   <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Joined</th>
                   <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Actions</th>
                 </tr>
@@ -181,9 +222,11 @@ function AccountsOverview() {
                       </span>
                     </td>
                     <td className="py-4 px-4">
-                      <span className={acc.status === 'active' ? 'text-green-400' : 'text-gray-500'}>
-                        {acc.status}
-                      </span>
+                      {acc.status ? (
+                        <StatusBadge status={acc.status} />
+                      ) : (
+                        <span className="text-gray-400 text-sm">{acc.lastActive}</span>
+                      )}
                     </td>
                     <td className="py-4 px-4 text-gray-400 text-sm">{acc.createdAt}</td>
                     <td className="py-4 px-4">

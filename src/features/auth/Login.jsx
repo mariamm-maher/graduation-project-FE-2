@@ -129,6 +129,16 @@ export default function Login({ onSwitchToRegister, onNeedsRoleSelection }) {
           </button>
         </div>
 
+        <div className="flex justify-end -mt-2">
+          <button
+            type="button"
+            onClick={() => navigate('/reset-password')}
+            className="text-sm text-[#C1B6FD] hover:text-[#745CB4] transition-colors duration-300 hover:underline"
+          >
+            Forgot password?
+          </button>
+        </div>
+
         <button
           type="submit"
           disabled={isLoading}

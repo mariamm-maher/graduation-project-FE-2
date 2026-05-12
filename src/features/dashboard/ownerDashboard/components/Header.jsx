@@ -11,7 +11,6 @@ import CreateInfluencerProfile from './createInfluncerProfile';
 function Header() {
   const navigate = useNavigate();
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
-  const [activeRole, setActiveRole] = useState('Owner');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
@@ -86,13 +85,6 @@ function Header() {
     }
   };
 
-  const hasInfluencerRole = Boolean(
-    user && (
-      (Array.isArray(user.roles) && user.roles.some(r => String(r).toUpperCase().includes('INFLUENCER'))) ||
-      (typeof user.role === 'string' && String(user.role).toUpperCase().includes('INFLUENCER'))
-    )
-  );
-
   // Mock search suggestions - replace with actual data
   const searchSuggestions = [
     { type: 'campaign', name: 'Summer Fashion Campaign', status: 'Active' },
@@ -146,8 +138,7 @@ function Header() {
     console.log('Selected:', suggestion);
   };
 
-  const switchRole = (role) => {
-    setActiveRole(role);
+  const handleSwitchRole = (role) => {
     setShowRoleDropdown(false);
     if (role === 'Influencer') {
       navigate('/dashboard/influencer');
@@ -405,7 +396,7 @@ function Header() {
             >
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-xs sm:text-sm font-medium">Active: <span className="text-[#C1B6FD]">{activeRole}</span></span>
+                <span className="text-xs sm:text-sm font-medium">Active: <span className="text-[#C1B6FD]">Owner</span></span>
               </div>
               <ChevronDown className={`w-3 h-3 sm:w-4 sm:h-4 text-gray-400 transition-transform duration-200 ${showRoleDropdown ? 'rotate-180' : ''}`} />
             </Motion.button>
@@ -422,24 +413,15 @@ function Header() {
                   <div className="p-2">
                     <Motion.button
                       whileHover={{ x: 4 }}
-                      onClick={() => switchRole('Owner')}
-                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 ${
-                        activeRole === 'Owner'
-                          ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg'
-                          : 'text-gray-200 hover:bg-white/10'
-                      }`}
+                      className="w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg"
                     >
-                      <div className="font-medium">Switch to Owner</div>
-                      <div className="text-xs text-gray-500 mt-1">Manage campaigns & team</div>
+                      <div className="font-medium">Owner</div>
+                      <div className="text-xs text-gray-300 mt-1">Manage campaigns & team</div>
                     </Motion.button>
                     <Motion.button
                       whileHover={{ x: 4 }}
-                      onClick={() => switchRole('Influencer')}
-                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 mt-1 ${
-                        activeRole === 'Influencer'
-                          ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg'
-                          : 'text-gray-200 hover:bg-white/10'
-                      }`}
+                      onClick={() => handleSwitchRole('Influencer')}
+                      className="w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 mt-1 text-gray-200 hover:bg-white/10 rounded-lg"
                     >
                       <div className="font-medium">Switch to Influencer</div>
                       <div className="text-xs text-gray-500 mt-1">View offers & collaborations</div>

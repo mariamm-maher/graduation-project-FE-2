@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Users, Briefcase, Handshake, TrendingUp, Activity, ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
-import { Line, Bar } from 'react-chartjs-2';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -8,6 +8,7 @@ import {
   PointElement,
   LineElement,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
@@ -21,6 +22,7 @@ ChartJS.register(
   PointElement,
   LineElement,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
@@ -28,12 +30,11 @@ ChartJS.register(
 );
 
 function OverviewDashboard() {
-  const { analytics, recentLogs, isLoading, error, fetchAnalytics, fetchRecentLogs } = useAdminStore();
+  const { analytics, isLoading, error, fetchAnalytics } = useAdminStore();
 
   useEffect(() => {
     fetchAnalytics();
-    fetchRecentLogs();
-  }, [fetchAnalytics, fetchRecentLogs]);
+  }, [fetchAnalytics]);
 
   if (isLoading) {
     return (
@@ -64,12 +65,46 @@ function OverviewDashboard() {
     );
   }
 
-  // Use real data from analytics or fallback to defaults
-  const overview = analytics?.overview || {
+  // Data mapping utility - ensures all fields exist with defaults
+  const mapAnalyticsData = (data) => {
+    if (!data) return null;
+
+    return {
+      overview: {
+        totalUsers: data.overview?.totalUsers ?? 0,
+        totalCampaigns: data.overview?.totalCampaigns ?? 0,
+        totalCollaborations: data.overview?.totalCollaborations ?? 0,
+        activeSessions: data.overview?.activeSessions ?? 0,
+        recentUsers: data.overview?.recentUsers ?? 0
+      },
+      usersByRole: {
+        owners: data.usersByRole?.owners ?? 0,
+        influencers: data.usersByRole?.influencers ?? 0
+      },
+      campaignStats: {
+        active: data.campaignStats?.active ?? 0,
+        draft: data.campaignStats?.draft ?? 0,
+        ai_generated: data.campaignStats?.ai_generated ?? 0,
+        saved: data.campaignStats?.saved ?? 0,
+        completed: data.campaignStats?.completed ?? 0,
+        cancelled: data.campaignStats?.cancelled ?? 0,
+        ...data.campaignStats
+      },
+      collaborationStats: data.collaborationStats || {},
+      recentLogs: data.recentLogs || []
+    };
+  };
+
+  // Apply data mapping
+  const mappedAnalytics = mapAnalyticsData(analytics);
+
+  // Use mapped data with fallbacks
+  const overview = mappedAnalytics?.overview || {
     totalUsers: 0,
     totalCampaigns: 0,
     totalCollaborations: 0,
-    activeSessions: 0
+    activeSessions: 0,
+    recentUsers: 0
   };
 
   const stats = [
@@ -111,21 +146,59 @@ function OverviewDashboard() {
     },
   ];
 
-  const userGrowthData = {
+  // Advanced Users by Role data
+  const ownersCount = mappedAnalytics?.usersByRole?.owners || 0;
+  const influencersCount = mappedAnalytics?.usersByRole?.influencers || 0;
+  const totalRoleUsers = ownersCount + influencersCount;
+  const ownersPercentage = totalRoleUsers > 0 ? ((ownersCount / totalRoleUsers) * 100).toFixed(1) : 0;
+  const influencersPercentage = totalRoleUsers > 0 ? ((influencersCount / totalRoleUsers) * 100).toFixed(1) : 0;
+
+  const userRoleDoughnutData = {
     labels: ['Owners', 'Influencers'],
     datasets: [
       {
-        label: 'Users by Role',
-        data: [
-          analytics?.usersByRole?.owners || 0,
-          analytics?.usersByRole?.influencers || 0
+        data: [ownersCount, influencersCount],
+        backgroundColor: [
+          'rgba(193, 182, 253, 0.9)',  // Purple for Owners
+          'rgba(116, 92, 180, 0.9)',   // Darker purple for Influencers
         ],
-        borderColor: '#C1B6FD',
-        backgroundColor: 'rgba(193, 182, 253, 0.1)',
-        fill: true,
-        tension: 0.4,
+        borderColor: [
+          '#C1B6FD',
+          '#745CB4',
+        ],
+        borderWidth: 2,
+        hoverBackgroundColor: [
+          'rgba(193, 182, 253, 1)',
+          'rgba(116, 92, 180, 1)',
+        ],
       },
     ],
+  };
+
+  const doughnutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '60%',
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        borderColor: 'rgba(193, 182, 253, 0.3)',
+        borderWidth: 1,
+        callbacks: {
+          label: function(context) {
+            const value = context.raw;
+            const percentage = totalRoleUsers > 0 ? ((value / totalRoleUsers) * 100).toFixed(1) : 0;
+            return `${context.label}: ${value} (${percentage}%)`;
+          }
+        }
+      },
+    },
   };
 
   const campaignStatusData = {
@@ -134,8 +207,8 @@ function OverviewDashboard() {
       {
         label: 'Campaigns',
         data: [
-          analytics?.campaignStats?.active || 0,
-          analytics?.campaignStats?.draft || 0
+          mappedAnalytics?.campaignStats?.active || 0,
+          mappedAnalytics?.campaignStats?.draft || 0
         ],
         backgroundColor: [
           'rgba(193, 182, 253, 0.8)',
@@ -203,46 +276,85 @@ function OverviewDashboard() {
 
   // Helper function to get action display text
   const getActionText = (log) => {
-    const email = log.meta?.email || 'Unknown user';
     const method = log.meta?.method ? ` via ${log.meta.method}` : '';
+    const targetName = log.meta?.name || log.meta?.title || '';
     
     switch (log.action) {
       case 'LOGIN':
-        return `${email} logged in${method}`;
+        return `logged in${method}`;
       case 'LOGOUT':
-        return `${email} logged out`;
-      case 'CHANGE_ROLE':
-        return `Role changed to ${log.meta?.roleName || 'unknown'}`;
+        return `logged out`;
       case 'SIGNUP':
-        return `${email} registered${method}`;
+        return `registered${method}`;
+      case 'CHANGE_ROLE':
+        return `changed role to ${log.meta?.roleName || 'unknown'}`;
       case 'UPDATE_PROFILE':
-        return `${email} updated profile`;
+        return `updated profile`;
       case 'CREATE_CAMPAIGN':
-        return 'created a new campaign';
+        return `created campaign${targetName ? ` "${targetName}"` : ''}`;
       case 'UPDATE_CAMPAIGN':
-        return 'updated a campaign';
+        return `updated campaign${targetName ? ` "${targetName}"` : ''}`;
       case 'DELETE_CAMPAIGN':
-        return 'deleted a campaign';
+        return `deleted campaign${targetName ? ` "${targetName}"` : ''}`;
       case 'CREATE_COLLABORATION':
-        return 'created a collaboration';
+        return `created collaboration${targetName ? ` "${targetName}"` : ''}`;
       case 'UPDATE_COLLABORATION':
-        return 'updated a collaboration';
+        return `updated collaboration${targetName ? ` "${targetName}"` : ''}`;
+      case 'DELETE_COLLABORATION':
+        return `deleted collaboration${targetName ? ` "${targetName}"` : ''}`;
+      case 'CREATE_CONTRACT':
+        return `created contract${targetName ? ` "${targetName}"` : ''}`;
+      case 'SIGN_CONTRACT':
+        return `signed contract${log.meta?.signerRole ? ` as ${log.meta.signerRole}` : ''}${log.meta?.fullySigned ? ' (fully signed)' : ''}`;
+      case 'CREATE_REVIEW':
+        return `left a review${log.meta?.rating ? ` (${log.meta.rating} stars)` : ''}`;
+      case 'SEND_COLLABORATION_REQUEST':
+        return `sent collaboration request`;
+      case 'ACCEPT_COLLABORATION':
+        return `accepted collaboration`;
+      case 'REJECT_COLLABORATION':
+        return `rejected collaboration`;
+      case 'COMPLETE_COLLABORATION':
+        return `completed collaboration`;
+      case 'SUBMIT_TASK':
+        return `submitted task${targetName ? ` "${targetName}"` : ''}`;
+      case 'APPROVE_TASK':
+        return `approved task${targetName ? ` "${targetName}"` : ''}`;
+      case 'CREATE_ANNOUNCEMENT':
+        return `posted announcement${targetName ? ` "${targetName}"` : ''}`;
+      case 'SEND_MESSAGE':
+        return `sent a message`;
+      case 'CREATE_CHAT':
+        return `started a chat`;
+      case 'BLOCK_USER':
+        return `blocked user`;
+      case 'UNBLOCK_USER':
+        return `unblocked user`;
+      case 'DELETE_USER':
+        return `deleted user account`;
       default:
+        // Format unknown actions nicely
         return log.action.toLowerCase().replace(/_/g, ' ');
     }
   };
 
   // Helper function to get entity type for badge color
   const getEntityType = (log) => {
-    if (log.action.includes('CAMPAIGN')) return 'campaign';
-    if (log.action.includes('COLLABORATION')) return 'collaboration';
-    if (log.action === 'LOGIN' || log.action === 'LOGOUT' || log.action === 'SIGNUP') return 'auth';
-    if (log.action === 'CHANGE_ROLE' || log.entity === 'User') return 'user';
+    const action = log.action || '';
+    if (action.includes('CAMPAIGN')) return 'campaign';
+    if (action.includes('COLLABORATION')) return 'collaboration';
+    if (action.includes('CONTRACT')) return 'contract';
+    if (action.includes('REVIEW')) return 'review';
+    if (action.includes('TASK')) return 'task';
+    if (action.includes('ANNOUNCEMENT')) return 'announcement';
+    if (action.includes('MESSAGE') || action.includes('CHAT')) return 'chat';
+    if (action === 'LOGIN' || action === 'LOGOUT' || action === 'SIGNUP') return 'auth';
+    if (action === 'CHANGE_ROLE' || action === 'BLOCK_USER' || action === 'UNBLOCK_USER' || action === 'DELETE_USER' || log.entity === 'User') return 'user';
     return 'system';
   };
 
-  // Map recentLogs to activities format
-  const logsArray = recentLogs?.recent || [];
+  // Map recentLogs to activities format (from analytics)
+  const logsArray = mappedAnalytics?.recentLogs || [];
   const recentActivities = logsArray.map((log) => ({
     id: log.id,
     user: log.meta?.email || log.actor || 'System',
@@ -286,17 +398,56 @@ function OverviewDashboard() {
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* User Growth Chart */}
+        {/* Advanced Users by Role Chart */}
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-semibold text-white">Users by Role</h3>
-              <p className="text-sm text-gray-400">Distribution of campaign owners and influencers</p>
+              <p className="text-sm text-gray-400">Distribution of owners and influencers</p>
             </div>
             <TrendingUp className="w-5 h-5 text-[#C1B6FD]" />
           </div>
-          <div className="h-64">
-            <Bar data={userGrowthData} options={chartOptions} />
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="bg-[#C1B6FD]/10 rounded-xl p-3 border border-[#C1B6FD]/20">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-3 h-3 rounded-full bg-[#C1B6FD]"></div>
+                <span className="text-xs text-gray-400">Owners</span>
+              </div>
+              <p className="text-xl font-bold text-white">{ownersCount.toLocaleString()}</p>
+              <p className="text-xs text-[#C1B6FD]">{ownersPercentage}% of total</p>
+            </div>
+            <div className="bg-[#745CB4]/10 rounded-xl p-3 border border-[#745CB4]/20">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-3 h-3 rounded-full bg-[#745CB4]"></div>
+                <span className="text-xs text-gray-400">Influencers</span>
+              </div>
+              <p className="text-xl font-bold text-white">{influencersCount.toLocaleString()}</p>
+              <p className="text-xs text-[#745CB4]">{influencersPercentage}% of total</p>
+            </div>
+          </div>
+
+          {/* Doughnut Chart */}
+          <div className="h-48 relative">
+            <Doughnut data={userRoleDoughnutData} options={doughnutOptions} />
+            {/* Center Text */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <p className="text-2xl font-bold text-white">{totalRoleUsers.toLocaleString()}</p>
+              <p className="text-xs text-gray-400">Total Users</p>
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div className="flex justify-center gap-6 mt-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-[#C1B6FD]"></div>
+              <span className="text-sm text-gray-300">Owners ({ownersPercentage}%)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-[#745CB4]"></div>
+              <span className="text-sm text-gray-300">Influencers ({influencersPercentage}%)</span>
+            </div>
           </div>
         </div>
 
@@ -354,6 +505,11 @@ function OverviewDashboard() {
                 <span className={`px-3 py-1 rounded-full text-xs font-medium shrink-0 ${
                   activity.type === 'campaign' ? 'bg-blue-500/20 text-blue-400' :
                   activity.type === 'collaboration' ? 'bg-green-500/20 text-green-400' :
+                  activity.type === 'contract' ? 'bg-yellow-500/20 text-yellow-400' :
+                  activity.type === 'review' ? 'bg-pink-500/20 text-pink-400' :
+                  activity.type === 'task' ? 'bg-orange-500/20 text-orange-400' :
+                  activity.type === 'announcement' ? 'bg-indigo-500/20 text-indigo-400' :
+                  activity.type === 'chat' ? 'bg-teal-500/20 text-teal-400' :
                   activity.type === 'user' ? 'bg-purple-500/20 text-purple-400' :
                   activity.type === 'auth' ? 'bg-cyan-500/20 text-cyan-400' :
                   'bg-gray-500/20 text-gray-400'

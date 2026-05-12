@@ -1,12 +1,13 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { 
-  CollaborationsOverview, 
+import {
+  CollaborationsOverview,
   AllCollaborations,
- 
+
   PastCollaborations,
   Contracts,
   ContractDetail,
   CreateContract,
+  CreateReview,
   Requests,
 
   Analytics,
@@ -30,6 +31,7 @@ function CollaborationsLayout() {
         {/* <Route path="contracts" element={<Contracts />} /> */}
         {/* <Route path="contracts/:id" element={<ContractDetail />} /> */}
         <Route path=":id/contract" element={<CreateContract />} />
+        <Route path=":id/review" element={<CreateReview />} />
         {/* <Route path="requests" element={<Requests />} /> */}    
         {/* <Route path="analytics" element={<Analytics />} /> */}
         {/* <Route path="board" element={<CollaborationBoard />} /> */}

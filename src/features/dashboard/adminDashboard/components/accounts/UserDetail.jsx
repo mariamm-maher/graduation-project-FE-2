@@ -127,12 +127,25 @@ function UserDetail() {
     setDeleting(true);
     try {
       const result = await deleteUser(user.id);
-      setShowDeleteModal(false);
       if (result.success) {
+        setShowDeleteModal(false);
         toast.success('User deleted');
         navigate('/dashboard/admin/users');
       } else {
-        toast.error(result.error || 'Failed to delete user');
+        // Check for foreign key constraint error
+        const errorMsg = result.error || '';
+        if (errorMsg.includes('foreign key') || errorMsg.includes('violates') || errorMsg.includes('RESTRICT')) {
+          setShowDeleteModal(false);
+          toast.error(
+            <div>
+              <p className="font-semibold">Cannot delete user with active collaborations</p>
+              <p className="text-sm">This user owns campaigns with active collaborations. Consider blocking the user instead, or delete their campaigns first.</p>
+            </div>,
+            { autoClose: 5000 }
+          );
+        } else {
+          toast.error(result.error || 'Failed to delete user');
+        }
       }
     } catch (e) {
       toast.error(e.message || 'Failed to delete user');

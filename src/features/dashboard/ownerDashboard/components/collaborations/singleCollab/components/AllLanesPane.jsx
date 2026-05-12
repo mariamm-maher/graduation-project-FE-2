@@ -1,4 +1,4 @@
-import { FilePlus2 } from 'lucide-react';
+import { FilePlus2, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { LANES, LANE_LABELS } from '../constants';
 
@@ -28,7 +28,7 @@ function fmt(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function CollabCard({ c, status, onClick, onMakeContract }) {
+function CollabCard({ c, status, onClick, onMakeContract, onMakeReview }) {
   const hasDates = c.startDate || c.endDate;
   const closedAt = c.completedAt || c.cancelledAt;
 
@@ -100,6 +100,18 @@ function CollabCard({ c, status, onClick, onMakeContract }) {
         </button>
       )}
 
+      {/* Leave Review CTA for completed */}
+      {status === 'completed' && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onMakeReview(c.id); }}
+          className="w-full mt-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-linear-to-r from-amber-500/20 to-orange-500/20 border border-amber-400/30 text-amber-300 hover:from-amber-500/30 hover:to-orange-500/30 hover:border-amber-400/50 transition-all"
+        >
+          <Star className="w-3.5 h-3.5" />
+          Leave Review
+        </button>
+      )}
+
       {/* Progress bar for live */}
       {status === 'live' && c.progress > 0 && (
         <div>
@@ -168,6 +180,9 @@ export default function AllLanesPane({ laneData, rawCollabs = [] }) {
                   }
                   onMakeContract={(id) =>
                     navigate(`/dashboard/owner/collaborations/${id}/contract`)
+                  }
+                  onMakeReview={(id) =>
+                    navigate(`/dashboard/owner/collaborations/${id}/review`)
                   }
                 />
               ))

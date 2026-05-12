@@ -1,4 +1,4 @@
-import { Briefcase, Search, Eye, Trash2, DollarSign, Calendar, Target } from 'lucide-react';
+import { Briefcase, Search, Eye, Trash2, DollarSign, Calendar, Target, TrendingUp, Users, Award, Clock, BarChart3 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import useAdminStore from '../../../../../stores/AdminStore';
@@ -9,18 +9,41 @@ function mapCampaign(c) {
   const owner = c.user ? [c.user.firstName, c.user.lastName].filter(Boolean).join(' ').trim() : '—';
   const status = c.lifecycleStage || c.status || '—';
   const name = c.campaignName || c.name || '—';
+  const budgetAmount = c.budget_amount || c.budget || 0;
+  const budgetCurrency = c.budget_currency || 'USD';
+
+  // Calculate duration
+  const startDate = c.startDate ? new Date(c.startDate) : (c.createdAt ? new Date(c.createdAt) : null);
+  const endDate = c.endDate ? new Date(c.endDate) : null;
+  let durationText = '—';
+  if (startDate && endDate) {
+    const diffDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+    durationText = `${diffDays} days`;
+  } else if (c.campaign_duration_weeks) {
+    durationText = `${c.campaign_duration_weeks} weeks`;
+  }
+
+  // Count collaborations
+  const collabCount = c.Collaborations?.length || c.collaborationsCount || c.collaborations || 0;
+
   return {
     id: c.id,
     name,
     owner,
     ownerEmail: c.user?.email,
+    ownerAvatar: c.user?.firstName?.[0] || c.user?.email?.[0] || '?',
     status: status.toLowerCase(),
     statusRaw: status,
-    budget: c.budget ?? '—',
-    startDate: c.startDate || (c.createdAt ? new Date(c.createdAt).toISOString().split('T')[0] : '—'),
-    endDate: c.endDate ?? '—',
-    collaborations: c.collaborations ?? '—',
-    reach: c.reach ?? '—',
+    budget: budgetAmount > 0 ? `$${budgetAmount.toLocaleString()} ${budgetCurrency}` : '—',
+    budgetAmount,
+    goalType: c.campaign_goal || c.goalType || '—',
+    duration: durationText,
+    durationWeeks: c.campaign_duration_weeks,
+    startDate: startDate ? startDate.toISOString().split('T')[0] : '—',
+    endDate: endDate ? endDate.toISOString().split('T')[0] : '—',
+    collaborations: collabCount,
+    reach: c.reach || c.estimatedReach || '—',
+    createdAt: c.createdAt ? new Date(c.createdAt).toISOString().split('T')[0] : '—',
     raw: c
   };
 }
@@ -73,9 +96,11 @@ function CampaignsOverview() {
   });
 
   const totalCampaigns = list.length;
-  const activeCampaigns = list.filter((c) => c.status === 'active').length;
+  const activeCampaigns = list.filter((c) => c.status === 'active' || c.status === 'live').length;
   const completedCampaigns = list.filter((c) => c.status === 'completed').length;
-  const draftCampaigns = list.filter((c) => c.status === 'draft' || c.statusRaw === 'draft').length;
+  const draftCampaigns = list.filter((c) => c.status === 'draft' || c.status === 'ai_generated').length;
+  const totalBudget = list.reduce((sum, c) => sum + (c.budgetAmount || 0), 0);
+  const totalCollaborations = list.reduce((sum, c) => sum + (c.collaborations || 0), 0);
 
   const openDeleteModal = (campaign) => {
     setCampaignToDelete(campaign);
@@ -111,47 +136,67 @@ function CampaignsOverview() {
         </div>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 hover:border-[#745CB4]/50 transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-[#745CB4]/20 flex items-center justify-center">
-              <Briefcase className="w-6 h-6 text-[#C1B6FD]" />
+      {/* Advanced Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:border-[#745CB4]/50 transition-all">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 rounded-lg bg-[#745CB4]/20 flex items-center justify-center">
+              <Briefcase className="w-5 h-5 text-[#C1B6FD]" />
             </div>
             <span className="text-xs text-[#C1B6FD] font-semibold">Total</span>
           </div>
-          <p className="text-2xl font-bold text-white">{totalCampaigns}</p>
-          <p className="text-sm text-gray-400">Total Campaigns</p>
+          <p className="text-xl font-bold text-white">{totalCampaigns}</p>
+          <p className="text-xs text-gray-400">Campaigns</p>
         </div>
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 hover:border-[#745CB4]/50 transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
-              <Target className="w-6 h-6 text-green-400" />
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:border-green-500/50 transition-all">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-green-400" />
             </div>
-            <span className="text-xs text-green-400 font-semibold">Active</span>
+            <span className="text-xs text-green-400 font-semibold">Live</span>
           </div>
-          <p className="text-2xl font-bold text-white">{activeCampaigns}</p>
-          <p className="text-sm text-gray-400">Active</p>
+          <p className="text-xl font-bold text-white">{activeCampaigns}</p>
+          <p className="text-xs text-gray-400">Active</p>
         </div>
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 hover:border-[#745CB4]/50 transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-yellow-400" />
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:border-yellow-500/50 transition-all">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-yellow-400" />
             </div>
             <span className="text-xs text-yellow-400 font-semibold">Draft</span>
           </div>
-          <p className="text-2xl font-bold text-white">{draftCampaigns}</p>
-          <p className="text-sm text-gray-400">Draft</p>
+          <p className="text-xl font-bold text-white">{draftCampaigns}</p>
+          <p className="text-xs text-gray-400">In Progress</p>
         </div>
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 hover:border-[#745CB4]/50 transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-blue-400" />
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:border-blue-500/50 transition-all">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+              <Award className="w-5 h-5 text-blue-400" />
             </div>
-            <span className="text-xs text-blue-400 font-semibold">Completed</span>
+            <span className="text-xs text-blue-400 font-semibold">Done</span>
           </div>
-          <p className="text-2xl font-bold text-white">{completedCampaigns}</p>
-          <p className="text-sm text-gray-400">Completed</p>
+          <p className="text-xl font-bold text-white">{completedCampaigns}</p>
+          <p className="text-xs text-gray-400">Completed</p>
+        </div>
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:border-purple-500/50 transition-all">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+              <DollarSign className="w-5 h-5 text-purple-400" />
+            </div>
+            <span className="text-xs text-purple-400 font-semibold">Budget</span>
+          </div>
+          <p className="text-xl font-bold text-white">${(totalBudget / 1000).toFixed(1)}k</p>
+          <p className="text-xs text-gray-400">Total</p>
+        </div>
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:border-pink-500/50 transition-all">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center">
+              <Users className="w-5 h-5 text-pink-400" />
+            </div>
+            <span className="text-xs text-pink-400 font-semibold">Collabs</span>
+          </div>
+          <p className="text-xl font-bold text-white">{totalCollaborations}</p>
+          <p className="text-xs text-gray-400">Total</p>
         </div>
       </div>
 
@@ -195,8 +240,10 @@ function CampaignsOverview() {
                 <tr className="border-b border-white/10 bg-white/5">
                   <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Campaign</th>
                   <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Owner</th>
+                  <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Goal</th>
                   <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Status</th>
                   <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Budget</th>
+                  <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Collabs</th>
                   <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Duration</th>
                   <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Actions</th>
                 </tr>
@@ -205,27 +252,58 @@ function CampaignsOverview() {
                 {filtered.map((campaign) => (
                   <tr key={campaign.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-4 px-4">
-                      <p className="font-medium text-white">{campaign.name}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center text-white font-bold">
+                          {campaign.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-white">{campaign.name}</p>
+                          <p className="text-xs text-gray-500">Created {campaign.createdAt}</p>
+                        </div>
+                      </div>
                     </td>
                     <td className="py-4 px-4">
-                      <p className="text-gray-300">{campaign.owner}</p>
-                      {campaign.ownerEmail && (
-                        <p className="text-xs text-gray-500">{campaign.ownerEmail}</p>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-[#745CB4]/30 flex items-center justify-center text-white text-sm font-medium">
+                          {campaign.ownerAvatar.toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-gray-300">{campaign.owner}</p>
+                          {campaign.ownerEmail && (
+                            <p className="text-xs text-gray-500">{campaign.ownerEmail}</p>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <span className="px-2 py-1 rounded-md text-xs bg-white/10 text-gray-300">
+                        {(campaign.goalType || '—').replace('_', ' ')}
+                      </span>
                     </td>
                     <td className="py-4 px-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(campaign.status)}`}>
                         {(campaign.status || campaign.statusRaw || '—').replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-gray-300">{campaign.budget}</td>
+                    <td className="py-4 px-4">
+                      <p className="text-gray-300 font-medium">{campaign.budget}</p>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-1">
+                        <Users className="w-4 h-4 text-[#C1B6FD]" />
+                        <span className="text-gray-300">{campaign.collaborations}</span>
+                      </div>
+                    </td>
                     <td className="py-4 px-4 text-sm text-gray-300">
-                      {campaign.startDate} {campaign.endDate ? `→ ${campaign.endDate}` : ''}
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4 text-gray-500" />
+                        {campaign.duration}
+                      </div>
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-2">
                         <Link to={`/dashboard/admin/campaigns/${campaign.id}`}>
-                          <button className="p-2 hover:bg-[#745CB4]/20 rounded-lg transition-colors" title="View">
+                          <button className="p-2 hover:bg-[#745CB4]/20 rounded-lg transition-colors" title="View Details">
                             <Eye className="w-4 h-4 text-gray-400 hover:text-[#C1B6FD]" />
                           </button>
                         </Link>

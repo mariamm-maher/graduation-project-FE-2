@@ -1,22 +1,95 @@
-import { Monitor, Smartphone, Clock, MapPin, Search } from 'lucide-react';
-import { useState } from 'react';
+import { Monitor, Smartphone, Tablet, Clock, MapPin, Search, Loader2, AlertCircle } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import adminService from '../../../../../api/adminApi';
 
-const mockSessions = [
-  { id: 1, user: 'James Radcliffe', email: 'james@adsphere.com', role: 'owner', startedAt: '2025-01-30 09:15', lastActivity: '2 min ago', device: 'Desktop', location: 'Cairo, EG' },
-  { id: 2, user: 'Sarah Johnson', email: 'sarah@example.com', role: 'influencer', startedAt: '2025-01-30 08:42', lastActivity: '15 min ago', device: 'Mobile', location: 'Alexandria, EG' },
-  { id: 3, user: 'Alex Martinez', email: 'alex@example.com', role: 'influencer', startedAt: '2025-01-30 10:00', lastActivity: '1 min ago', device: 'Desktop', location: 'Giza, EG' },
-  { id: 4, user: 'Emma Davis', email: 'emma@example.com', role: 'owner', startedAt: '2025-01-30 07:30', lastActivity: '45 min ago', device: 'Mobile', location: 'Cairo, EG' },
-  { id: 5, user: 'Mike Chen', email: 'mike@example.com', role: 'influencer', startedAt: '2025-01-29 22:00', lastActivity: '2 hours ago', device: 'Desktop', location: 'Unknown' },
-];
+// Map backend session to display shape
+function mapSession(s) {
+  const user = s.user || {};
+  const roleName = user.roles?.[0]?.name?.toLowerCase() || 'user';
+
+  // Calculate last activity relative time
+  const getRelativeTime = (date) => {
+    if (!date) return 'Unknown';
+    const now = new Date();
+    const then = new Date(date);
+    const diff = Math.floor((now - then) / 1000); // seconds
+
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)} days ago`;
+    return then.toLocaleDateString();
+  };
+
+  // Detect device type from user agent
+  const getDeviceType = (userAgent) => {
+    if (!userAgent) return 'Unknown';
+    const ua = userAgent.toLowerCase();
+    if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) return 'Mobile';
+    if (ua.includes('tablet') || ua.includes('ipad')) return 'Tablet';
+    return 'Desktop';
+  };
+
+  // Parse location from IP (simplified - shows IP as location if no geo data)
+  const getLocation = (ip) => {
+    if (!ip) return 'Unknown';
+    return ip; // Could be enhanced with geolocation service
+  };
+
+  return {
+    id: s.id,
+    user: [user.firstName, user.lastName].filter(Boolean).join(' ').trim() || user.email || 'Unknown',
+    email: user.email || '—',
+    role: roleName,
+    startedAt: s.createdAt ? new Date(s.createdAt).toLocaleString() : '—',
+    lastActivity: getRelativeTime(s.updatedAt || s.createdAt),
+    device: getDeviceType(s.userAgent),
+    location: getLocation(s.ip),
+    raw: s
+  };
+}
 
 function SessionsOverview() {
   const [search, setSearch] = useState('');
+  const [sessions, setSessions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filtered = mockSessions.filter(s =>
-    !search || s.user.toLowerCase().includes(search.toLowerCase()) || s.email.toLowerCase().includes(search.toLowerCase())
+  const fetchSessions = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await adminService.getSessions({ limit: 100 });
+      const sessionData = response.data?.sessions || [];
+      setSessions(sessionData.map(mapSession));
+    } catch (err) {
+      console.error('Failed to fetch sessions:', err);
+      setError(err.message || 'Failed to load sessions');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSessions();
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchSessions, 60000);
+    return () => clearInterval(interval);
+  }, [fetchSessions]);
+
+  const filtered = sessions.filter(s =>
+    !search ||
+    s.user.toLowerCase().includes(search.toLowerCase()) ||
+    s.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const activeSessions = mockSessions.length;
+  const activeSessions = sessions.length;
+  const todaySessions = sessions.filter(s => {
+    if (!s.raw.createdAt) return false;
+    const date = new Date(s.raw.createdAt);
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  }).length;
 
   return (
     <div className="space-y-6">
@@ -44,7 +117,7 @@ function SessionsOverview() {
             </div>
             <span className="text-xs text-[#C1B6FD] font-semibold">Today</span>
           </div>
-          <p className="text-2xl font-bold text-white">{mockSessions.filter(s => s.startedAt.startsWith('2025-01-30')).length}</p>
+          <p className="text-2xl font-bold text-white">{todaySessions}</p>
           <p className="text-sm text-gray-400">Sessions Today</p>
         </div>
       </div>
@@ -61,8 +134,22 @@ function SessionsOverview() {
         />
       </div>
 
+      {/* Error State */}
+      {error && (
+        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2">
+          <AlertCircle className="w-5 h-5" />
+          {error}
+        </div>
+      )}
+
       {/* Table */}
       <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden">
+        {isLoading ? (
+          <div className="p-12 text-center text-gray-400 flex items-center justify-center gap-3">
+            <Loader2 className="w-6 h-6 animate-spin text-[#C1B6FD]" />
+            Loading sessions...
+          </div>
+        ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -86,6 +173,7 @@ function SessionsOverview() {
                   </td>
                   <td className="py-4 px-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      s.role === 'admin' ? 'bg-red-500/20 text-red-400' :
                       s.role === 'owner' ? 'bg-[#745CB4]/20 text-[#C1B6FD]' : 'bg-green-500/20 text-green-400'
                     }`}>
                       {s.role}
@@ -95,7 +183,9 @@ function SessionsOverview() {
                   <td className="py-4 px-4 text-gray-400 text-sm">{s.lastActivity}</td>
                   <td className="py-4 px-4">
                     <span className="flex items-center gap-2 text-gray-300">
-                      {s.device === 'Desktop' ? <Monitor className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}
+                      {s.device === 'Desktop' ? <Monitor className="w-4 h-4" /> :
+                       s.device === 'Tablet' ? <Tablet className="w-4 h-4" /> :
+                       <Smartphone className="w-4 h-4" />}
                       {s.device}
                     </span>
                   </td>
@@ -110,6 +200,7 @@ function SessionsOverview() {
             </tbody>
           </table>
         </div>
+        )}
       </div>
     </div>
   );

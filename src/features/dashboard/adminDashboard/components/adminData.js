@@ -5,7 +5,7 @@ export function mapCollaboration(c) {
   const influencer = c.influencer && typeof c.influencer === 'object' ? c.influencer : {};
   const ownerName = [owner.firstName, owner.lastName].filter(Boolean).join(' ').trim() || owner.name || '—';
   const influencerName = [influencer.firstName, influencer.lastName].filter(Boolean).join(' ').trim() || influencer.name || '—';
-  const campaignName = c.campaign?.name ?? c.campaignName ?? (typeof c.campaign === 'string' ? c.campaign : '—');
+  const campaignName = c.campaign?.campaignName ?? c.campaign?.name ?? c.campaignName ?? (typeof c.campaign === 'string' ? c.campaign : '—');
   const deliverables = c.deliverables && typeof c.deliverables === 'object'
     ? { completed: c.deliverables.completed ?? 0, total: c.deliverables.total ?? 0 }
     : { completed: 0, total: 0 };

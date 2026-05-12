@@ -181,23 +181,6 @@ function CollaborationDetail() {
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex flex-wrap gap-3 pt-4 border-t border-white/10">
-          <Link to={`/dashboard/admin/collaborations/${collab.id}/messages`} className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-xl text-sm font-medium transition-all">
-            <MessageSquare className="w-4 h-4" /> Messages
-            {collab.unreadMessages > 0 && (
-              <span className="px-1.5 py-0.5 bg-red-500 rounded text-xs font-bold text-white">{collab.unreadMessages}</span>
-            )}
-          </Link>
-          <Link to={`/dashboard/admin/collaborations/${collab.id}/workspace`} className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl text-sm font-medium transition-all">
-            <FileText className="w-4 h-4" /> Workspace
-          </Link>
-          {collab.status === 'pending_review' && (
-            <Link to={`/dashboard/admin/collaborations/${collab.id}/review`} className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#745CB4] hover:bg-[#5D459D] text-white rounded-xl text-sm font-medium transition-all">
-              <Star className="w-4 h-4" /> Review & Rate
-            </Link>
-          )}
-        </div>
       </div>
     </div>
   );

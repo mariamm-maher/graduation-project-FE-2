@@ -44,7 +44,8 @@ function DiscoverInfluencers() {
     engagementRate: inf.engagementRate || 0,
     matchScore: 0, // Mock or calculate
     avgViews: '0', // Mock
-    rating: 0, // Mock
+    rating: inf.rating?.average || 0,
+    totalReviews: inf.rating?.total || 0,
     contentTypes: inf.contentTypes || [],
     collaborationTypes: inf.collaborationTypes || [],
     email: inf.user?.email,

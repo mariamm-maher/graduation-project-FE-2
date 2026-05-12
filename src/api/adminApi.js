@@ -77,10 +77,15 @@ const adminService = {
   },
 
   // Get all sessions
-  getSessions: async () => {
+  getSessions: async (params = {}) => {
     try {
-      const response = await api.get('/admin/sessions');
-      console.log('Sessions response:', response);
+      const { page = 1, limit = 50, active = false } = params;
+      const query = new URLSearchParams();
+      query.set('page', page);
+      query.set('limit', limit);
+      if (active) query.set('active', 'true');
+
+      const response = await api.get(`/admin/sessions?${query.toString()}`);
       return response.data;
     } catch (error) {
       console.error('Sessions error:', error);
@@ -229,6 +234,29 @@ const adminService = {
       throw error.response?.data?.message || 'Failed to update collaboration status';
     }
   },
+
+  // Get header stats
+  getHeaderStats: async () => {
+    try {
+      const response = await api.get('/admin/header-stats');
+      return response.data;
+    } catch (error) {
+      console.error('Header stats error:', error);
+      throw error.response?.data?.message || 'Failed to fetch header stats';
+    }
+  },
+
+  // Search across users, sessions, collaborations
+  search: async (query) => {
+    try {
+      const response = await api.get(`/admin/search?q=${encodeURIComponent(query)}`);
+      return response.data;
+    } catch (error) {
+      console.error('Search error:', error);
+      throw error.response?.data?.message || 'Search failed';
+    }
+  },
+
 };
 
 export default adminService;

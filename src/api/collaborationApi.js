@@ -345,6 +345,30 @@ const collaborationService = {
       throw error.response?.data?.message || 'Failed to final reject task';
     }
   },
+
+  // POST /api/collaborations/{id}/review
+  // Create a review for a completed collaboration
+  createReview: async (collaborationId, data) => {
+    try {
+      const response = await api.post(`/collaborations/${collaborationId}/review`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Create review error:', error);
+      throw error.response?.data?.message || 'Failed to create review';
+    }
+  },
+
+  // GET /api/collaborations/{id}/review
+  // Get review for a collaboration
+  getReview: async (collaborationId) => {
+    try {
+      const response = await api.get(`/collaborations/${collaborationId}/review`);
+      return response.data;
+    } catch (error) {
+      console.error('Get review error:', error);
+      throw error.response?.data?.message || 'Failed to fetch review';
+    }
+  },
 };
 
 export default collaborationService;

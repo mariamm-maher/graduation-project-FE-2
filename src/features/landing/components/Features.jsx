@@ -2,9 +2,9 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import { useRef } from 'react'
 import { Brain, LayoutGrid, BarChart3, Users, Calendar, Zap } from 'lucide-react'
 import aiContentImg from '../../../assets/01.png'
-import analyticsImg from '../../../assets/03.png'
-import marketImg from '../../../assets/02.png'
-import smartImg from '../../../assets/04.png'
+import analyticsImg from '../../../assets/03.jpg'
+import marketImg from '../../../assets/02.jpg'
+import smartImg from '../../../assets/04.jpg'
 
 const iconMap = {
   brain: Brain,
@@ -36,6 +36,7 @@ const features = [
     title: 'Multi-Platform Management',
     description: 'Manage all your social media accounts from one unified dashboard with seamless cross-platform posting.',
     image: marketImg,
+    objectFit: 'object-contain',
     features: [
       'Unified inbox for all platform messages',
       'Cross-platform analytics and reporting',
@@ -49,7 +50,6 @@ const features = [
     title: 'Advanced Analytics',
     description: 'Get deep insights into your campaign performance with real-time analytics and predictive modeling.',
     image: analyticsImg,
-    objectFit: 'object-contain',
     features: [
       'Real-time performance tracking',
       'Competitor analysis and benchmarking',

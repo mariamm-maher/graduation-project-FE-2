@@ -78,6 +78,15 @@ const influncerService = {
 			throw error.response?.data?.message || 'Failed to apply to campaign';
 		}
 	},
+
+	contactOwner: async (id, message) => {
+		try {
+			const response = await api.post(`/influencer/campaigns/${id}/contact`, { message });
+			return response.data;
+		} catch (error) {
+			throw error.response?.data?.message || 'Failed to send message';
+		}
+	},
 };
 
 export default influncerService;

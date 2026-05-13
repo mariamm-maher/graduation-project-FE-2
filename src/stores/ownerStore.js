@@ -264,7 +264,44 @@ const useOwnerStore = create((set) => ({
         influencerError: null,
         activeInfluencersError: null,
         pastInfluencersError: null
-    })
+    }),
+
+    // ─── Interest Messages ───────────────────────────────────────────────────
+    interestMessages: [],
+    interestMessagesLoading: false,
+    interestMessagesError: null,
+    interestMessagesUnread: 0,
+
+    fetchInterestMessages: async (params = {}) => {
+        set({ interestMessagesLoading: true, interestMessagesError: null });
+        try {
+            const response = await ownerService.getInterestMessages(params);
+            const payload = response?.data ?? response ?? {};
+            const messages = payload?.messages ?? [];
+            const unread = payload?.unreadCount ?? 0;
+            set({ interestMessages: messages, interestMessagesUnread: unread, interestMessagesLoading: false });
+            return { success: true };
+        } catch (error) {
+            const msg = typeof error === 'string' ? error : error?.message || 'Failed to fetch interest messages';
+            set({ interestMessagesError: msg, interestMessagesLoading: false });
+            return { success: false, error: msg };
+        }
+    },
+
+    markInterestMessageRead: async (id) => {
+        try {
+            await ownerService.markInterestMessageRead(id);
+            set(state => ({
+                interestMessages: state.interestMessages.map(m =>
+                    m.id === id ? { ...m, isRead: true } : m
+                ),
+                interestMessagesUnread: Math.max(0, state.interestMessagesUnread - 1)
+            }));
+            return { success: true };
+        } catch {
+            return { success: false };
+        }
+    }
 }));
 
 export default useOwnerStore;

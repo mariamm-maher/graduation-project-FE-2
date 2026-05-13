@@ -16,9 +16,9 @@ function SocialMediaOverview() {
   return (
     <div className="space-y-6">
       {/* Header with Recent Activity */}
-      <div className="flex items-start justify-between gap-6">
+      <div className="flex flex-col xl:flex-row items-start justify-between gap-6">
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-white mb-2">Social Media Channel Connection</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Social Media Channel Connection</h1>
           <p className="text-gray-400 mb-6">Manage accounts, schedule posts, and track performance</p>
           
           {/* Quick Stats & Navigation */}
@@ -53,7 +53,7 @@ function SocialMediaOverview() {
         </div>
 
         {/* Recent Activity Section */}
-        <div className="w-80 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
+      <div className="w-full xl:w-80 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-white">Recent Activity</h3>
             <Clock className="w-4 h-4 text-gray-400" />
@@ -88,10 +88,10 @@ function SocialMediaOverview() {
       </div>
 
       {/* Quick Navigation */}
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
         <Link
           to="/dashboard/owner/social-media/accounts"
-          className="group relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 overflow-hidden hover:border-blue-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20"
+          className="group relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 sm:p-8 overflow-hidden hover:border-blue-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20"
         >
           {/* Gradient Background on Hover */}
           <div className="absolute inset-0 bg-linear-to-br from-blue-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -105,7 +105,7 @@ function SocialMediaOverview() {
                 <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-blue-400 transition-colors">Connected Accounts</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 group-hover:text-blue-400 transition-colors">Connected Accounts</h3>
             <p className="text-gray-400 text-sm leading-relaxed group-hover:text-gray-300 transition-colors">Manage your social media platform connections</p>
             
             {/* Bottom Accent Line */}
@@ -115,7 +115,7 @@ function SocialMediaOverview() {
 
         <Link
           to="/dashboard/owner/social-media/create-post"
-          className="group relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 overflow-hidden hover:border-purple-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20"
+          className="group relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 sm:p-8 overflow-hidden hover:border-purple-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20"
         >
           {/* Gradient Background on Hover */}
           <div className="absolute inset-0 bg-linear-to-br from-[#C1B6FD]/20 via-[#745CB4]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -129,7 +129,7 @@ function SocialMediaOverview() {
                 <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[#C1B6FD] group-hover:translate-x-1 transition-all" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-[#C1B6FD] transition-colors">Schedule Posts</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 group-hover:text-[#C1B6FD] transition-colors">Schedule Posts</h3>
             <p className="text-gray-400 text-sm leading-relaxed group-hover:text-gray-300 transition-colors">Plan and schedule your content calendar</p>
             
             {/* Bottom Accent Line */}
@@ -139,7 +139,7 @@ function SocialMediaOverview() {
 
         <Link
           to="/dashboard/owner/social-media/create-post"
-          className="group relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 overflow-hidden hover:border-green-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/20"
+          className="group relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 sm:p-8 overflow-hidden hover:border-green-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/20"
         >
           {/* Gradient Background on Hover */}
           <div className="absolute inset-0 bg-linear-to-br from-green-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -153,7 +153,7 @@ function SocialMediaOverview() {
                 <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-green-400 group-hover:translate-x-1 transition-all" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-green-400 transition-colors">Content Library</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 group-hover:text-green-400 transition-colors">Content Library</h3>
             <p className="text-gray-400 text-sm leading-relaxed group-hover:text-gray-300 transition-colors">Browse and manage your media assets</p>
             
             {/* Bottom Accent Line */}

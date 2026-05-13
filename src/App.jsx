@@ -12,6 +12,7 @@ import GoogleCallback from './pages/GoogleCallback.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import OwnerOnboarding from './pages/ownerOnboarding.jsx';
 import InfluencerOnboarding from './pages/influncerOnboarding.jsx';
+import ResetPassword from './features/auth/ResetPassword.jsx';
 import ProtectedRoute, { AuthorizedRoute } from './pages/protectRoute.jsx';
 import NotFound from './pages/NotFound.jsx';
 import useAuthStore from './stores/authStore.js';
@@ -66,6 +67,7 @@ function App() {
         <Route path="/onboarding/campaign-owner" element={<OwnerOnboarding />} />
         <Route path="/onboarding/influencer" element={<InfluencerOnboarding />} />
         <Route path="/auth/google/callback" element={<GoogleCallback />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/404" element={<NotFound />} />
 
         <Route path="/dashboard/owner/*" element={

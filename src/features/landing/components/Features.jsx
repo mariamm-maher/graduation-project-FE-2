@@ -1,10 +1,10 @@
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useRef } from 'react'
 import { Brain, LayoutGrid, BarChart3, Users, Calendar, Zap } from 'lucide-react'
-import aiContentImg from '../../../assets/AI-Content.png'
-import analyticsImg from '../../../assets/analytics.jpeg'
-import marketImg from '../../../assets/market.jpeg'
-import smartImg from '../../../assets/smart.jpeg'
+import aiContentImg from '../../../assets/01.png'
+import analyticsImg from '../../../assets/03.jpg'
+import marketImg from '../../../assets/02.jpg'
+import smartImg from '../../../assets/04.jpg'
 
 const iconMap = {
   brain: Brain,
@@ -22,6 +22,7 @@ const features = [
     title: 'AI-Powered Content Generation',
     description: 'Our advanced AI analyzes your brand and creates engaging content that resonates with your audience.',
     image: aiContentImg,
+    objectFit: 'object-contain',
     features: [
       'Smart content suggestions based on trending topics',
       'Brand voice consistency across all platforms',
@@ -35,6 +36,7 @@ const features = [
     title: 'Multi-Platform Management',
     description: 'Manage all your social media accounts from one unified dashboard with seamless cross-platform posting.',
     image: marketImg,
+    objectFit: 'object-contain',
     features: [
       'Unified inbox for all platform messages',
       'Cross-platform analytics and reporting',
@@ -120,12 +122,14 @@ const ParallaxScene = ({ feature, index }) => {
             style={{ y: imageY, scale: imageScale, opacity }}
             className={`relative max-w-[520px] ${!isEven ? 'lg:col-start-2' : ''}`}
           >
-              <div className="group relative aspect-4/3 rounded-3xl overflow-hidden backdrop-blur-md bg-white/5 border border-white/10 transition-all duration-500 hover:border-[#745CB4]/50 hover:shadow-[0_0_30px_rgba(116,92,180,0.2)]">
+              <div className={`group relative ${feature.objectFit ? 'aspect-square' : 'aspect-4/3'} rounded-3xl overflow-hidden backdrop-blur-md border border-white/10 transition-all duration-500 hover:border-[#745CB4]/50 hover:shadow-[0_0_40px_rgba(116,92,180,0.35)] ${feature.objectFit ? 'bg-[#16102e]' : 'bg-white/5'}`}>
               {/* Feature image */}
-              <img src={feature.image} alt={feature.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover z-10 transition-transform duration-700 group-hover:scale-110" />
+              <img src={feature.image} alt={feature.title} loading="lazy" className={`absolute inset-0 w-full h-full ${feature.objectFit ?? 'object-cover'} z-10 transition-transform duration-700 group-hover:scale-105`} />
               
-              {/* Glow overlay */}
-              <div className="absolute inset-0 bg-gradient-to-b from-[#252525]/80 via-transparent to-transparent z-20" />
+              {/* Glow overlay — skip for illustration images */}
+              {!feature.objectFit && <div className="absolute inset-0 bg-gradient-to-b from-[#252525]/80 via-transparent to-transparent z-20" />}
+              {/* Subtle inner glow for illustrations */}
+              {feature.objectFit && <div className="absolute inset-0 bg-gradient-to-t from-[#16102e]/60 via-transparent to-transparent z-20 pointer-events-none" />}
             </div>
 
             {/* Floating icon badge */}
@@ -213,12 +217,14 @@ const ScrollytellingScenes = ({ features }) => {
                     transition={{ duration: 0.8 }}
                     className={`relative max-w-[520px] ${!isEven ? 'lg:col-start-2' : ''}`}
                   >
-                    <div className="group relative aspect-4/3 rounded-3xl overflow-hidden backdrop-blur-md bg-white/5 border border-white/10 transition-all duration-500 hover:border-[#745CB4]/50 hover:shadow-[0_0_30px_rgba(116,92,180,0.2)]">
+                    <div className={`group relative ${feature.objectFit ? 'aspect-square' : 'aspect-4/3'} rounded-3xl overflow-hidden backdrop-blur-md border border-white/10 transition-all duration-500 hover:border-[#745CB4]/50 hover:shadow-[0_0_40px_rgba(116,92,180,0.35)] ${feature.objectFit ? 'bg-[#16102e]' : 'bg-white/5'}`}>
                     {/* Feature image */}
-                    <img src={feature.image} alt={feature.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover z-10 transition-transform duration-700 group-hover:scale-110" />
+                    <img src={feature.image} alt={feature.title} loading="lazy" className={`absolute inset-0 w-full h-full ${feature.objectFit ?? 'object-cover'} z-10 transition-transform duration-700 group-hover:scale-105`} />
                     
-                    {/* Glow overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#252525]/80 via-transparent to-transparent z-20" />
+                    {/* Glow overlay — skip for illustration images */}
+                    {!feature.objectFit && <div className="absolute inset-0 bg-gradient-to-b from-[#252525]/80 via-transparent to-transparent z-20" />}
+                    {/* Subtle inner glow for illustrations */}
+                    {feature.objectFit && <div className="absolute inset-0 bg-gradient-to-t from-[#16102e]/60 via-transparent to-transparent z-20 pointer-events-none" />}
                   </div>
 
                   {/* Floating icon badge */}

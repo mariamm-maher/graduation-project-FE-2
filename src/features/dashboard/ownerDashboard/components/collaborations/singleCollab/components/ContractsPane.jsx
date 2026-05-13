@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import useCollaborationContractsStore from '../../../../../../../stores/CollaborationContractsStore';
+import useCollaborationStore from '../../../../../../../stores/collaborationStore';
 import ContractDetails from './ContractDetails';
 import ContractPane from './ContractPane';
 import CreateContract from './CreateContract';
@@ -10,6 +11,8 @@ export default function ContractsPane() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedContract, setSelectedContract] = useState(null);
+  const [selectedCollab, setSelectedCollab] = useState(null);
+  const [collabKey, setCollabKey] = useState(0);
 
   const {
     contracts = [],
@@ -20,6 +23,8 @@ export default function ContractsPane() {
     error,
     clearError,
   } = useCollaborationContractsStore();
+
+  const { ownerCollaborations } = useCollaborationStore();
 
   useEffect(() => {
     getMyOwnerContracts();
@@ -40,7 +45,8 @@ export default function ContractsPane() {
   };
 
   const handleCreate = async ({ collaborationId, payload }) => {
-    const result = await createContract(collaborationId, payload);
+    const id = collaborationId || selectedCollab?.id;
+    const result = await createContract(id, payload);
 
     if (result?.success) {
       toast.success('Contract created successfully');
@@ -89,8 +95,12 @@ export default function ContractsPane() {
       {view === 'create' ? (
         <CreateContract
           onCreate={handleCreate}
-          onCancel={() => setView('list')}
+          onCancel={() => { setView('list'); setSelectedCollab(null); }}
           isSubmitting={isLoading}
+          key={collabKey}
+          collaboration={selectedCollab}
+          allCollaborations={ownerCollaborations || []}
+          onCollaborationSelect={(c) => { setSelectedCollab(c); setCollabKey(k => k + 1); }}
         />
       ) : null}
 

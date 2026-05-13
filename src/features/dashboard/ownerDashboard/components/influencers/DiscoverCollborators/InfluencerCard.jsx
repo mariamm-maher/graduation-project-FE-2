@@ -64,7 +64,10 @@ function InfluencerCard({ influencer }) {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">
                 <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                <span className="text-sm font-semibold text-white">{influencer.rating}</span>
+                <span className="text-sm font-semibold text-white">{influencer.rating || '0'}</span>
+                {influencer.totalReviews > 0 && (
+                  <span className="text-xs text-gray-400">({influencer.totalReviews} reviews)</span>
+                )}
               </div>
               <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 rounded-lg">
                 {getPlatformIcon(influencer.primaryPlatform)}

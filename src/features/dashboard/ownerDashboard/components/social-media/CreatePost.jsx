@@ -118,7 +118,7 @@ function CreatePost() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Create Post</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Create Post</h1>
         <p className="text-gray-400">Compose, schedule, and manage your social posts.</p>
       </div>
 
@@ -145,7 +145,7 @@ function CreatePost() {
             ) : channelOptions.length === 0 ? (
               <p className="text-sm text-gray-400">No connected channels. Connect at least one account first.</p>
             ) : (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {channelOptions.map((channel) => (
                   <label
                     key={channel.id}
@@ -175,7 +175,7 @@ function CreatePost() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-white mb-2">Publish type</label>
               <select
@@ -237,7 +237,7 @@ function CreatePost() {
               const analyticsLoading = analyticsLoadingByPost?.[postId];
               return (
                 <div key={postId} className="border border-white/10 bg-white/5 rounded-lg p-4">
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                     <div className="flex-1">
                       <p className="text-white text-sm font-medium mb-2">{post.content || post.caption || 'Untitled post'}</p>
                       <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400">
@@ -261,12 +261,12 @@ function CreatePost() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex w-full sm:w-auto items-center gap-2">
                       <button
                         type="button"
                         onClick={() => handleLoadAnalytics(post)}
                         disabled={analyticsLoading}
-                        className="inline-flex items-center gap-1 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs text-white"
+                        className="inline-flex flex-1 sm:flex-none justify-center items-center gap-1 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs text-white"
                       >
                         {analyticsLoading ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <BarChart3 className="w-3.5 h-3.5" />}
                         Analytics
@@ -274,7 +274,7 @@ function CreatePost() {
                       <button
                         type="button"
                         onClick={() => handleDeletePost(post)}
-                        className="inline-flex items-center gap-1 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-xs text-red-300"
+                        className="inline-flex flex-1 sm:flex-none justify-center items-center gap-1 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-xs text-red-300"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         Delete

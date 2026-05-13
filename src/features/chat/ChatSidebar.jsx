@@ -28,7 +28,7 @@ export default function ChatSidebar({ rooms, activeRoomId, isLoading, connected,
   });
 
   return (
-    <aside className="flex flex-col border-b lg:border-b-0 lg:border-r border-[#745CB4]/25 bg-[#1A112C]/55 backdrop-blur-sm">
+    <aside className="flex flex-col h-full min-h-0 border-b lg:border-b-0 lg:border-r border-[#745CB4]/25 bg-[#1A112C]/55 backdrop-blur-sm">
       {/* Header */}
       <div className="px-4 pt-4 pb-3 border-b border-[#745CB4]/20 flex items-center justify-between gap-3">
         <div>
@@ -62,7 +62,7 @@ export default function ChatSidebar({ rooms, activeRoomId, isLoading, connected,
       </div>
 
       {/* Room list */}
-      <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-1">
+      <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-3 space-y-1">
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-10 text-[#9CA3AF] gap-2">
             <div className="w-5 h-5 rounded-full border-2 border-[#745CB4]/50 border-t-[#C1B6FD] animate-spin" />

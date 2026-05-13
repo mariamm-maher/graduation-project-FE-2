@@ -1,4 +1,4 @@
-import { Users, MessageSquare, CheckCircle, Clock, Star, TrendingUp, Calendar, DollarSign, Loader2, FileText } from 'lucide-react';
+import { Users, MessageSquare, Clock, Calendar, DollarSign, Loader2, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import useInfluncerStore from '../../../../../stores/influncerStore';
@@ -7,7 +7,7 @@ function CollaborationsOverview() {
   const { 
     receivedRequests = [],
     influencerCollaborations = [],
-    isInfluencerCollaborationsLoading,
+    influencerCollaborationsLoading,
     getMyInfluencerCollaborations 
   } = useInfluncerStore();
 
@@ -15,38 +15,33 @@ function CollaborationsOverview() {
     getMyInfluencerCollaborations();
   }, [getMyInfluencerCollaborations]);
 
-console.log('collaborations overview render',  influencerCollaborations  );
+  const progressMap = {
+    pending_contract_sign: 10,
+    live: 40,
+    in_progress: 70,
+    completed: 100,
+    cancelled: 0,
+  };
 
-  // Use real collaborations, mapping them to the format expected by the UI
   const collaborations = influencerCollaborations.map(collab => {
-    const brandName = collab?.owner?.ownerProfile?.businessName  || 'Unknown Brand';
-    const campaignName = collab?.campaign?.campaignName || 'Unknown Campaign';
-    const deadline = collab?.endDate || collab?.updatedAt || new Date().toISOString();
-    const budget = collab?.agreedBudget || collab?.budget || collab?.proposedBudget || 0;
     const status = collab?.status || 'pending_contract_sign';
-    const progressMap = {
-      pending_contract_sign: 10,
-      live: 25,
-      in_progress: 60,
-      completed: 100,
-      cancelled: 0,
-    };
-    
+    const owner = collab?.owner || {};
+    const brandName =
+      owner?.ownerProfile?.brand_name ||
+      `${owner?.firstName || ''} ${owner?.lastName || ''}`.trim() ||
+      'Unknown Brand';
+    const campaignName = collab?.campaign?.campaignName || 'Unknown Campaign';
+    const deadline = collab?.endDate || collab?.campaign?.endDate || collab?.updatedAt;
+    const budget = collab?.request?.counterPrice ?? collab?.request?.proposedBudget ?? collab?.agreedBudget ?? collab?.budget ?? 0;
+
     return {
       id: collab._id || collab.id,
       brand: brandName,
-      brandContact: collab?.owner?.user?.firstName ? `${collab.owner.user.firstName} ${collab.owner.user.lastName || ''}` : 'Brand Contact',
       campaign: campaignName,
       status,
       progress: progressMap[status] ?? 0,
-      unreadMessages: 0, // Would need actual message counts from API
-      deliverables: { completed: status === 'completed' ? 5 : status === 'in_progress' ? 2 : 0, total: 5 },
-      payment: status === 'completed' ? 'paid' : status === 'in_progress' ? 'processing' : 'pending',
-      rating: null,
-      avatar: '🏢',
-      deadline: new Date(deadline).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-      platforms: collab?.campaign?.platform ? [collab.campaign.platform] : [],
-      earnings: `$${Number(budget).toLocaleString()}`
+      deadline: deadline ? new Date(deadline).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'No deadline',
+      earnings: `$${Number(budget).toLocaleString()}`,
     };
   });
 
@@ -138,7 +133,7 @@ console.log('collaborations overview render',  influencerCollaborations  );
 
       {/* Collaborations List */}
       <div className="space-y-4">
-        {isInfluencerCollaborationsLoading ? (
+        {influencerCollaborationsLoading ? (
           <div className="flex items-center justify-center p-12">
             <Loader2 className="w-8 h-8 text-[#C1B6FD] animate-spin" />
           </div>
@@ -156,21 +151,13 @@ console.log('collaborations overview render',  influencerCollaborations  );
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
               <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-linear-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center text-2xl sm:text-3xl shadow-lg shrink-0">
-                  {collab.avatar}
+                  🏢
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-[#C1B6FD] transition-colors truncate">
                     {collab.brand}
                   </h3>
                   <p className="text-xs sm:text-sm text-gray-400 truncate">{collab.campaign}</p>
-                  <p className="text-xs text-gray-500 mt-1">Contact: {collab.brandContact}</p>
-                  <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    {collab.platforms.map((platform) => (
-                      <span key={platform} className="px-2 py-1 bg-white/5 rounded text-[10px] sm:text-xs text-gray-300">
-                        {platform}
-                      </span>
-                    ))}
-                  </div>
                 </div>
               </div>
 
@@ -202,27 +189,36 @@ console.log('collaborations overview render',  influencerCollaborations  );
               </div>
             </div>
 
-           
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-4">
-             
+            {/* Progress bar */}
+            <div className="mb-4">
+              <div className="flex justify-between text-xs text-gray-400 mb-1">
+                <span>Progress</span>
+                <span>{collab.progress}%</span>
+              </div>
+              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-linear-to-r from-[#745CB4] to-[#C1B6FD] transition-all duration-500"
+                  style={{ width: `${collab.progress}%` }}
+                />
+              </div>
+            </div>
 
+            <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <p className="text-xs text-gray-400 mb-2">Deadline</p>
+                <p className="text-xs text-gray-400 mb-1">Deadline</p>
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-gray-400" />
                   <span className="text-sm font-semibold text-white">{collab.deadline}</span>
                 </div>
               </div>
-            </div>
-
-            {/* Rating Section */}
-            {collab.rating && (
-              <div className="flex items-center gap-2 pt-4 border-t border-white/10">
-                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                <span className="text-sm font-semibold text-white">{collab.rating}</span>
-                <span className="text-xs text-gray-400">• Collaboration Rating</span>
+              <div>
+                <p className="text-xs text-gray-400 mb-1">Earnings</p>
+                <div className="flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm font-semibold text-white">{collab.earnings}</span>
+                </div>
               </div>
-            )}
+            </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 pt-4 border-t border-white/10">
@@ -240,13 +236,6 @@ console.log('collaborations overview render',  influencerCollaborations  );
                 </Link>
               )}
               
-              {(collab.status === 'live' || collab.status === 'in_progress') && (
-                <Link to={`/dashboard/influencer/collaborations/${collab.id}/messages`} className="flex-1">
-                  <button className="w-full px-3 sm:px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg text-xs sm:text-sm font-semibold text-blue-400 transition-all">
-                    Send Message
-                  </button>
-                </Link>
-              )}
             </div>
           </div>
         )))}

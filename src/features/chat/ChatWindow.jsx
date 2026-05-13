@@ -87,7 +87,7 @@ export default function ChatWindow({
       </header>
 
       {/* Messages */}
-      <div ref={containerRef} className="flex-1 overflow-y-auto px-4 py-5 space-y-3">
+      <div ref={containerRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-5 space-y-3">
         {isMessagesLoading && (
           <div className="flex flex-col items-center justify-center h-40 text-[#9CA3AF] gap-2">
             <div className="w-5 h-5 rounded-full border-2 border-[#745CB4]/50 border-t-[#C1B6FD] animate-spin" />

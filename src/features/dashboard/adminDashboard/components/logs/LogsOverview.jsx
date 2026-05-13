@@ -76,7 +76,6 @@ function LogsOverview() {
     level: getLogLevel(log.action),
     user: log.meta?.email || log.actor || 'System',
     action: getActionText(log.action),
-    ip: log.meta?.ip || 'N/A',
     details: getDetailsText(log),
     entity: log.entity,
     roles: log.meta?.roles || []
@@ -261,7 +260,6 @@ function LogsOverview() {
                 <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Level</th>
                 <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">User</th>
                 <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Action</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">IP Address</th>
                 <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Details</th>
               </tr>
             </thead>
@@ -277,7 +275,6 @@ function LogsOverview() {
                   </td>
                   <td className="py-4 px-4 text-white">{log.user}</td>
                   <td className="py-4 px-4 text-gray-300">{log.action}</td>
-                  <td className="py-4 px-4 text-gray-400 font-mono text-sm">{log.ip}</td>
                   <td className="py-4 px-4 text-gray-400 text-sm max-w-xs truncate" title={log.details}>
                     {log.details}
                   </td>

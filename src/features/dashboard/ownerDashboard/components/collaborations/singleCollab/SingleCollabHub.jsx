@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { RefreshCw, Search, X, Users, TrendingUp, CheckCircle, Clock, XCircle } from 'lucide-react';
 import useCollaborationStore from '../../../../../../stores/collaborationStore';
 import useCollaborationRequestsStore from '../../../../../../stores/CollaborationRequestsStore';
+import useOwnerStore from '../../../../../../stores/ownerStore';
 import { TABS, LANES, LANE_LABELS } from './constants';
 import { buildLaneData, normalizeCollaboration, normalizeRequest } from './helpers';
 import HubTabs from './components/HubTabs';
@@ -98,16 +99,21 @@ export default function SingleCollabHub() {
     };
   }, [collaborations]);
 
+  const { interestMessagesUnread } = useOwnerStore();
+
   const pendingIncoming = useMemo(
     () => (receivedRequests || []).filter(r => String(r.status).toLowerCase() === 'pending').length,
     [receivedRequests]
   );
 
-  // Tabs with badge counts
-  const tabsWithBadges = useMemo(() => TABS.map(t => ({
-    ...t,
-    badge: t.id === 'requests' && pendingIncoming > 0 ? pendingIncoming : null,
-  })), [pendingIncoming]);
+  // Tabs with badge counts (pending collab requests + unread interest messages)
+  const tabsWithBadges = useMemo(() => {
+    const requestsBadge = pendingIncoming + interestMessagesUnread;
+    return TABS.map(t => ({
+      ...t,
+      badge: t.id === 'requests' && requestsBadge > 0 ? requestsBadge : null,
+    }));
+  }, [pendingIncoming, interestMessagesUnread]);
 
   const filteredCollaborations = useMemo(() => {
     let list = collaborations;

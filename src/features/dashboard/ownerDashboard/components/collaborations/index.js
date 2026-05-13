@@ -7,6 +7,7 @@ import AllCollaborations from './AllCollaborations/AllCollaborations';
 import PastCollaborations from './PastCollaborations/pastCollboration';
 import Contracts from './Contracts/Contracts';
 import CreateContract from './Contracts/CreateContract';
+import CreateReview from './singleCollab/components/CreateReview';
 import ContractDetail from './Contracts/contractDetails';
 import Requests from './Requests/Requests';
 import Analytics from './Analytics/Analytics';
@@ -23,6 +24,7 @@ export {
   Contracts,
   ContractDetail,
   CreateContract,
+  CreateReview,
   Requests,
   Analytics,
   CollaborationBoard,

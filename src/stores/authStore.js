@@ -390,6 +390,43 @@ const useAuthStore = create(
         }
       },
 
+      // Switch active role (for users with multiple roles)
+      switchRole: async (role) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await authService.switchRole(role);
+
+          if (response && response.success) {
+            const { accessToken, role: newRole, roleId, roles } = response.data || {};
+
+            // Update token and user role
+            if (accessToken) {
+              localStorage.setItem('accessToken', accessToken);
+            }
+
+            set((state) => ({
+              user: {
+                ...state.user,
+                role: newRole,
+                roleId,
+                roles
+              },
+              token: accessToken || state.token,
+              isLoading: false,
+              error: null
+            }));
+
+            return { success: true, role: newRole, roleId };
+          }
+
+          throw new Error(response?.message || 'Failed to switch role');
+        } catch (error) {
+          const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to switch role';
+          set({ error: errorMessage, isLoading: false });
+          return { success: false, error: errorMessage };
+        }
+      },
+
       // Initialize auth state from localStorage and validate token
       initialize: async () => {
         const state = useAuthStore.getState();

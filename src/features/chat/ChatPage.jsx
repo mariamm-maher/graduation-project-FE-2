@@ -113,7 +113,7 @@ export default function ChatPage() {
   return (
     <div className="flex h-[calc(100vh-120px)] rounded-2xl border border-[#745CB4]/20 overflow-hidden bg-linear-to-b from-[#1A112C]/80 to-[#0D0818]/80 backdrop-blur-md shadow-xl">
       {/* LEFT: Sidebar */}
-      <div className="w-full max-w-[320px] flex flex-col shrink-0">
+      <div className="w-full max-w-[320px] flex flex-col shrink-0 min-h-0 h-full">
         <ChatSidebar
           rooms={chatRooms}
           activeRoomId={activeRoomId}

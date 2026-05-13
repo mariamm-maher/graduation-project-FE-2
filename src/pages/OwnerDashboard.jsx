@@ -6,7 +6,7 @@ import CompleteOwnerProfile from '../features/dashboard/ownerDashboard/component
 import CampaignsLayout from '../features/dashboard/ownerDashboard/components/campaigns/CampaignsLayout';
 import InfluencersLayout from '../features/dashboard/ownerDashboard/components/influencers/InfluencersLayout';
 import SocialMediaLayout from '../features/dashboard/ownerDashboard/components/social-media/SocialMediaLayout';
-import Settings from './Settings';
+import { SettingsPanel } from '../features/settings';
 
 function OwnerDashboard() {
   return (
@@ -23,7 +23,13 @@ function OwnerDashboard() {
           <Route path="influencers/*" element={<InfluencersLayout />} />
           <Route path="collaborations/*" element={<CollaborationsLayout />} />
           <Route path="social-media/*" element={<SocialMediaLayout />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="settings" element={
+            <div className="p-6">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Settings</h1>
+              <p className="text-sm sm:text-base text-gray-400 mb-6">Manage your account settings, privacy, and preferences</p>
+              <SettingsPanel />
+            </div>
+          } />
         </Routes>
       </div>
     </div>

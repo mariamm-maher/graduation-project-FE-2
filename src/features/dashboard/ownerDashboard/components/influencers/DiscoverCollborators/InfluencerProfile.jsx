@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   ArrowLeft,
   Loader,
@@ -46,6 +46,7 @@ function InfluencerProfile() {
   const { influencerId } = useParams();
   const routeInfluencerId = influencerId ? decodeURIComponent(String(influencerId)) : null;
   const navigate = useNavigate();
+  const fetchedRef = useRef(false);
   const {
     currentInfluencer: rawInfluencer,
     influencerLoading,
@@ -54,8 +55,11 @@ function InfluencerProfile() {
   } = useOwnerStore();
 
   useEffect(() => {
-    if (routeInfluencerId) fetchInfluencerById(routeInfluencerId);
-  }, [fetchInfluencerById, routeInfluencerId]);
+    if (routeInfluencerId && !fetchedRef.current) {
+      fetchedRef.current = true;
+      fetchInfluencerById(routeInfluencerId);
+    }
+  }, [routeInfluencerId]);
 
   const toPlatformIcon = (platformName) => {
     const p = (platformName || '').toLowerCase();
@@ -209,7 +213,7 @@ function InfluencerProfile() {
       </div>
 
       {/* Top Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-(--color-background-secondary) rounded-xl p-6">
           <div className="flex items-center gap-2 mb-3">
             <Award className="w-4 h-4 text-[#745CB4]" />
@@ -232,6 +236,20 @@ function InfluencerProfile() {
             <p className="text-[11px] font-medium uppercase tracking-widest text-(--color-text-tertiary)">Engagement Rate</p>
           </div>
           <h2 className="text-3xl font-bold text-(--color-text-primary)">{formatValue(profile?.engagementRate)}</h2>
+        </div>
+
+        <div className="bg-(--color-background-secondary) rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Star className="w-4 h-4 text-yellow-500" />
+            <p className="text-[11px] font-medium uppercase tracking-widest text-(--color-text-tertiary)">Rating</p>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <h2 className="text-3xl font-bold text-(--color-text-primary)">{insights?.rating?.average || 0}</h2>
+            <span className="text-sm text-(--color-text-tertiary)">/ 5</span>
+          </div>
+          <p className="text-xs text-(--color-text-tertiary) mt-1">
+            {insights?.rating?.total || 0} review{insights?.rating?.total !== 1 ? 's' : ''}
+          </p>
         </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -316,19 +334,56 @@ function InfluencerProfile() {
       <div className="rounded-xl p-6 sm:p-8 bg-(--color-background-primary)">
         <div className="flex items-center gap-3 mb-4">
           <Star className="w-5 h-5 text-yellow-500" />
-          <h2 className="flex-1 text-[11px] font-medium uppercase tracking-widest text-(--color-text-tertiary) pb-3 border-b border-(--color-border-tertiary) mb-4">Reviews Log</h2>
+          <h2 className="flex-1 text-[11px] font-medium uppercase tracking-widest text-(--color-text-tertiary) pb-3 border-b border-(--color-border-tertiary) mb-4">
+            Reviews ({receivedReviews.length})
+          </h2>
         </div>
         {receivedReviews.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 opacity-60">
             <Star className="w-10 h-10 mb-4 text-gray-600" />
-            <p className="text-sm font-semibold text-gray-400">No reviews found</p>
-            <p className="text-xs text-gray-500 mt-1 font-mono"></p>
+            <p className="text-sm font-semibold text-gray-400">No reviews yet</p>
+            <p className="text-xs text-gray-500 mt-1">This influencer hasn't received any reviews from owners.</p>
           </div>
         ) : (
-          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-            {receivedReviews.map((review, index) => (
-              <div key={review?.id || index} className="text-xs text-gray-300 bg-[#242430] rounded-xl p-4 font-mono break-all whitespace-pre-wrap">
-                {JSON.stringify(review, null, 2)}
+          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+            {receivedReviews.map((review) => (
+              <div key={review?.id} className="bg-[#242430] rounded-xl p-4 sm:p-5">
+                {/* Review Header */}
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-linear-to-tr from-[#745CB4] to-[#5e3fae] flex items-center justify-center text-white font-semibold text-sm">
+                      {(review?.reviewer?.firstName?.[0] || 'U').toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">
+                        {review?.reviewer?.firstName} {review?.reviewer?.lastName}
+                      </p>
+                      <p className="text-xs text-gray-500">Owner</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 bg-yellow-500/10 px-2.5 py-1 rounded-lg">
+                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                    <span className="text-sm font-semibold text-yellow-400">{review?.rating}</span>
+                  </div>
+                </div>
+
+                {/* Review Text */}
+                {review?.reviewText ? (
+                  <p className="text-sm text-gray-300 leading-relaxed mb-3">
+                    "{review.reviewText}"
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-500 italic mb-3">No written review provided.</p>
+                )}
+
+                {/* Review Date */}
+                <p className="text-xs text-gray-500">
+                  {review?.createdAt ? new Date(review.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  }) : ''}
+                </p>
               </div>
             ))}
           </div>

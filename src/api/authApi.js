@@ -130,6 +130,16 @@ const authService = {
     }
   },
 
+  // Switch active role (for users with multiple roles)
+  switchRole: async (role) => {
+    try {
+      const response = await api.post('/auth/switch-role', { role });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || 'Role switch failed';
+    }
+  },
+
   // Google Sign-In
   googleSignIn: async (idToken) => {
     try {

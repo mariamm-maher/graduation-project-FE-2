@@ -1,3 +1,469 @@
+// import { useCallback, useEffect, useMemo, useState } from 'react';
+// import axios from 'axios';
+// import { Instagram, Youtube, Twitter, Facebook, Loader, CheckCircle2 } from 'lucide-react';
+// import { toast } from 'react-toastify';
+// import { useLocation, useNavigate } from 'react-router-dom';
+// import useSocialMediaStore from '../../../../../stores/SocialMediaStore';
+
+// function ConnectedAccounts() {
+//   const { accounts, getAccounts, getStats, disconnectAccount, isLoading, error } = useSocialMediaStore();
+//   const location = useLocation();
+//   const navigate = useNavigate();
+//   const [showConnectModal, setShowConnectModal] = useState(false);
+//   const [selectedPlatform, setSelectedPlatform] = useState('');
+//   const [isRedirecting, setIsRedirecting] = useState(false);
+
+//   // Dropdown states
+//   const [platformQuery, setPlatformQuery] = useState('');
+//   const [isPlatformOpen, setIsPlatformOpen] = useState(false);
+
+//   const platformOptions = useMemo(
+//     () => [
+//       { value: 'Instagram', label: 'Instagram', icon: Instagram },
+//       { value: 'Facebook', label: 'Facebook', icon: Facebook },
+//       { value: 'Twitter', label: 'Twitter', icon: Twitter },
+//       { value: 'YouTube', label: 'YouTube', icon: Youtube },
+//       { value: 'TikTok', label: 'TikTok', icon: Instagram },
+//     ],
+//     []
+//   );
+
+//   const filteredPlatforms = platformOptions.filter((opt) =>
+//     opt.label.toLowerCase().includes(platformQuery.trim().toLowerCase())
+//   );
+//   const selectedPlatformOption = platformOptions.find((p) => p.value === selectedPlatform);
+//   const [statsLoading, setStatsLoading] = useState({});
+//   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+//   const BACKEND_ROOT_URL = API_BASE_URL.replace(/\/api\/?$/, '');
+
+//   useEffect(() => {
+//     // Remove Facebook's legacy #_=_ fragment from URL
+//     if (window.location.hash === '#_=_') {
+//       window.history.replaceState(
+//         null,
+//         document.title,
+//         window.location.pathname + window.location.search
+//       );
+//     }
+
+//     const params = new URLSearchParams(location.search);
+//     const success =
+//       params.get('connected') === 'true' ||
+//       params.get('success') === 'true';
+//     const oauthError = params.get('error');
+//     const simulated = params.get('simulated') === 'true';
+
+//     if (success) {
+//       toast.success(simulated ? 'Channel connected successfully (simulation mode)' : 'Social account connected successfully');
+//       getAccounts();
+//       navigate(location.pathname, { replace: true });
+//       return;
+//     }
+
+//     if (oauthError) {
+//       toast.error(oauthError === 'meta_failed' ? 'Meta connection failed. Please try again.' : 'Failed to connect social account. Please try again.');
+//     }
+
+//     getAccounts();
+
+//     if (oauthError) {
+//       navigate(location.pathname, { replace: true });
+//     }
+//   }, [getAccounts, location.pathname, location.search, navigate]);
+
+//   const handleConnectAccount = useCallback(
+//     async (e) => {
+//       e.preventDefault();
+//       if (!selectedPlatform) {
+//         toast.error('Please select a platform to connect');
+//         return;
+//       }
+
+//       setIsRedirecting(true);
+//       setShowConnectModal(false);
+//       const normalized = selectedPlatform.toLowerCase();
+//       let oauthEndpoint = '';
+
+//       if (['facebook', 'instagram'].includes(normalized)) {
+//         oauthEndpoint = 'meta';
+//       } else if (normalized === 'tiktok') {
+//         oauthEndpoint = 'tiktok';
+//       } else if (normalized === 'youtube') {
+//         oauthEndpoint = 'youtube';
+//       } else {
+//         setIsRedirecting(false);
+//         toast.error(`${selectedPlatform} OAuth is not configured yet.`);
+//         return;
+//       }
+
+//       try {
+//         if (oauthEndpoint === 'meta' || oauthEndpoint === 'youtube') {
+//           const token = localStorage.getItem('accessToken');
+//           if (!token) throw new Error('Access token not found. Please login again.');
+
+//           const endpointMap = {
+//             meta: `${BACKEND_ROOT_URL}/auth/meta-url`,
+//             youtube: `${BACKEND_ROOT_URL}/auth/youtube-url`,
+//           };
+
+//           const response = await axios.get(endpointMap[oauthEndpoint], {
+//             headers: { Authorization: `Bearer ${token}` },
+//           });
+//           const oauthUrl = response?.data?.data?.url;
+//           if (!oauthUrl) throw new Error(`${selectedPlatform} OAuth URL not returned`);
+//           window.location.href = oauthUrl;
+//           return;
+//         }
+
+//         if (oauthEndpoint === 'tiktok') {
+//           const token = localStorage.getItem('accessToken');
+//           if (!token) {
+//             setIsRedirecting(false);
+//             toast.error('Session expired. Please login again.');
+//             return;
+//           }
+//           try {
+//             const payload = JSON.parse(atob(token.split('.')[1]));
+//             const userId = payload.id || payload.userId || payload.sub;
+//             if (!userId) throw new Error('Could not read user from token');
+//             window.location.href = `${BACKEND_ROOT_URL}/auth/tiktok?userId=${userId}`;
+//           } catch {
+//             setIsRedirecting(false);
+//             toast.error('Failed to start TikTok connection. Please login again.');
+//           }
+//           return;
+//         }
+//       } catch (error) {
+//         setIsRedirecting(false);
+//         setShowConnectModal(true);
+//         toast.error(error?.response?.data?.message || error?.message || 'Failed to start OAuth flow');
+//       }
+//     },
+//     [BACKEND_ROOT_URL, selectedPlatform]
+//   );
+
+//   const handleDisconnect = async (account) => {
+//     const channelId = account?.id ?? account?._id;
+//     if (!channelId) {
+//       toast.error('Could not identify account to disconnect');
+//       return;
+//     }
+//     const res = await disconnectAccount(channelId);
+//     if (res?.success) {
+//       toast.success(`${account?.platform || 'Account'} disconnected`);
+//     } else {
+//       toast.error(res?.error || 'Failed to disconnect');
+//     }
+//   };
+
+//   const handleViewAnalytics = async (account) => {
+//     const id = account?.id || account?._id;
+//     const key = id || account?.platform;
+//     setStatsLoading((prev) => ({ ...prev, [key]: true }));
+//     const res = await getStats(id || account?.platform);
+//     setStatsLoading((prev) => ({ ...prev, [key]: false }));
+
+//     if (res?.success && res?.data) {
+//       useSocialMediaStore.setState((state) => ({
+//         accounts: state.accounts.map((a) =>
+//           (a.id || a._id) === id
+//             ? {
+//               ...a,
+//               followers: res.data.followersCount ?? res.data.fan_count ?? a.followers,
+//               engagement: res.data.engagement ?? a.engagement,
+//             }
+//             : a
+//         ),
+//       }));
+//       toast.success(`Analytics updated for ${account?.platform}`);
+//     } else {
+//       toast.error('Failed to load analytics');
+//     }
+//   };
+
+//   const platformIcons = {
+//     instagram: Instagram,
+//     youtube: Youtube,
+//     twitter: Twitter,
+//     facebook: Facebook,
+//     tiktok: Instagram
+//   };
+
+//   const formatMetricValue = (value) => {
+//     if (value === null || value === undefined || value === '') {
+//       return '—';
+//     }
+
+//     if (typeof value === 'number') {
+//       return value.toLocaleString();
+//     }
+
+//     return value;
+//   };
+
+//   const emptyState = (
+//     <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center">
+//       <p className="text-white font-semibold mb-2">No connected accounts yet</p>
+//       <p className="text-gray-400 mb-4">Connect a platform to start tracking performance and engagement.</p>
+//       <button
+//         onClick={() => setShowConnectModal(true)}
+//         className="px-5 py-2.5 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg font-medium hover:shadow-lg transition-all"
+//       >
+//         Connect your first account
+//       </button>
+//     </div>
+//   );
+
+//   return (
+//     <div className="space-y-6">
+//       {/* Header */}
+//       <div className="flex items-start justify-between">
+//         <div>
+//           <h1 className="text-3xl font-bold text-white mb-2">Connected Accounts</h1>
+//           <p className="text-gray-400">Manage your social media platform connections</p>
+//         </div>
+//         <button
+//           onClick={() => setShowConnectModal(true)}
+//           className="px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+//         >
+//           Connect New Account
+//         </button>
+//       </div>
+
+//       {/* Redirect Overlay */}
+//       {isRedirecting && (
+//         <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center">
+//           <div className="bg-[#171327] border border-white/15 rounded-xl px-6 py-5 text-center">
+//             <Loader className="w-6 h-6 text-[#C1B6FD] animate-spin mx-auto mb-3" />
+//             <p className="text-white font-semibold">Redirecting to {selectedPlatform}...</p>
+//             <p className="text-xs text-gray-400 mt-1">Please complete OAuth authorization in the next window.</p>
+//           </div>
+//         </div>
+//       )}
+
+//       {/* Connect Modal */}
+//       {showConnectModal && (
+//         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 rounded-xl">
+//           <div className="bg-gradient-to-br from-[#1a0933] to-[#2d1b4e] border border-white/20 rounded-xl p-6 max-w-md w-full m-4">
+//             <h2 className="text-xl font-bold text-white mb-4">Connect Social Account</h2>
+//             <form onSubmit={handleConnectAccount} className="space-y-4">
+//               <div>
+//                 <label className="block text-sm font-medium text-white mb-2">Platform</label>
+//                 <div className="relative">
+//                   <input
+//                     type="text"
+//                     value={isPlatformOpen ? platformQuery : selectedPlatformOption?.label || ''}
+//                     onChange={(e) => {
+//                       setPlatformQuery(e.target.value);
+//                       setIsPlatformOpen(true);
+//                       if (selectedPlatformOption && e.target.value !== selectedPlatformOption.label) {
+//                         setSelectedPlatform('');
+//                       }
+//                     }}
+//                     onFocus={() => {
+//                       setIsPlatformOpen(true);
+//                       setPlatformQuery('');
+//                     }}
+//                     onBlur={() =>
+//                       setTimeout(() => {
+//                         setIsPlatformOpen(false);
+//                         setPlatformQuery('');
+//                       }, 120)
+//                     }
+//                     placeholder="Search platforms"
+//                     className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD]"
+//                   />
+//                   {isPlatformOpen && (
+//                     <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+//                       {filteredPlatforms.map((option) => (
+//                         <button
+//                           key={option.value}
+//                           type="button"
+//                           onClick={() => {
+//                             setSelectedPlatform(option.value);
+//                             setPlatformQuery(option.label);
+//                             setIsPlatformOpen(false);
+//                           }}
+//                           className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+//                         >
+//                           <span className="flex items-center justify-between">
+//                             <span className="flex items-center gap-2">
+//                               <option.icon className="w-4 h-4 text-gray-300" />
+//                               {option.label}
+//                             </span>
+//                             {selectedPlatform === option.value && (
+//                               <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+//                             )}
+//                           </span>
+//                         </button>
+//                       ))}
+//                     </div>
+//                   )}
+//                 </div>
+//               </div>
+//               <div className="flex gap-3">
+//                 <button
+//                   type="submit"
+//                   disabled={isLoading || isRedirecting || !selectedPlatform}
+//                   className="flex-1 px-4 py-2 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg font-medium disabled:opacity-50"
+//                 >
+//                   {isRedirecting ? `Redirecting to ${selectedPlatform}...` : 'Connect'}
+//                 </button>
+//                 <button
+//                   type="button"
+//                   onClick={() => setShowConnectModal(false)}
+//                   className="flex-1 px-4 py-2 bg-white/5 border border-white/10 text-white rounded-lg font-medium hover:bg-white/10"
+//                 >
+//                   Cancel
+//                 </button>
+//               </div>
+//             </form>
+//           </div>
+//         </div>
+//       )}
+
+//       {error && (
+//         <div className="text-red-500 text-sm mb-4">
+//           Failed to load accounts: {error}
+//         </div>
+//       )}
+
+//       {/* Accounts Grid */}
+//       {isLoading ? (
+//         <div className="flex items-center justify-center p-8">
+//           <Loader className="w-6 h-6 text-[#C1B6FD] animate-spin" />
+//         </div>
+//       ) : accounts?.length === 0 ? (
+//         emptyState
+//       ) : (
+//         <div className="grid grid-cols-2 gap-6">
+//           {accounts.map((account) => {
+//             const platformKey = (account.platform || '').toLowerCase();
+//             const pd = account.platformData || {};
+//             const Icon = platformIcons[platformKey] || Instagram;
+//             const platformColors = {
+//               instagram: 'from-pink-500 to-purple-500',
+//               facebook: 'from-blue-600 to-blue-700',
+//               twitter: 'from-blue-400 to-blue-500',
+//               youtube: 'from-red-500 to-red-600',
+//               tiktok: 'from-black to-cyan-500'
+//             };
+//             const color = platformColors[platformKey] || 'from-gray-500 to-gray-600';
+
+//             return (
+//               <div
+//                 key={account._id || account.id}
+//                 className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all"
+//               >
+//                 <div className="flex items-start gap-4 mb-4">
+//                   <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center shrink-0 overflow-hidden`}>
+//                     {account.profilePicture ? (
+//                       <img
+//                         src={account.profilePicture}
+//                         alt={account.accountName}
+//                         className="w-full h-full object-cover rounded-xl"
+//                       />
+//                     ) : (
+//                       <Icon className="w-7 h-7 text-white" />
+//                     )}
+//                   </div>
+//                   <div className="flex-1">
+//                     <div className="flex items-center gap-2 mb-1">
+//                       <h3 className="text-lg font-bold text-white">{account.platform}</h3>
+//                       <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-lg text-xs font-semibold">
+//                         Connected
+//                       </span>
+//                       {account.isSimulated && (
+//                         <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded-lg text-xs font-semibold">
+//                           Simulated
+//                         </span>
+//                       )}
+//                     </div>
+//                     <p className="text-sm text-gray-400">{account.username || account.accountName || account.name || 'Connected'}</p>
+//                   </div>
+//                 </div>
+
+//                 <div className="grid grid-cols-3 gap-3 mb-4">
+//                   <div className="bg-white/5 rounded-lg p-3">
+//                     <p className="text-xs text-gray-400 mb-1">
+//                       {account.platform?.toLowerCase() === 'youtube' ? 'Subscribers' : 'Followers'}
+//                     </p>
+//                     <p className="text-base font-bold text-white">
+//                       {formatMetricValue(
+//                         account.platform?.toLowerCase() === 'youtube'
+//                           ? account.subscriberCount ?? pd.subscriberCount
+//                           : account.followers ??
+//                               account.followersCount ??
+//                               pd.followerCount ??
+//                               pd.followers
+//                       )}
+//                     </p>
+//                   </div>
+//                   <div className="bg-white/5 rounded-lg p-3">
+//                     <p className="text-xs text-gray-400 mb-1">Engagement</p>
+//                     <p className="text-base font-bold text-[#C1B6FD]">
+//                       {formatMetricValue(account.engagement ?? pd.engagement)}
+//                     </p>
+//                   </div>
+//                   <div className="bg-white/5 rounded-lg p-3">
+//                     <p className="text-xs text-gray-400 mb-1">Status</p>
+//                     <p className="text-xs font-semibold text-green-400">Active</p>
+//                   </div>
+//                 </div>
+
+//                 <div className="flex items-center gap-2">
+//                   <button
+//                     onClick={() => handleViewAnalytics(account)}
+//                     disabled={statsLoading[account.id || account._id || account.platform]}
+//                     className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-white font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+//                   >
+//                     {statsLoading[account.id || account._id || account.platform] ? (
+//                       <>
+//                         <Loader className="w-3 h-3 animate-spin" />
+//                         Loading...
+//                       </>
+//                     ) : (
+//                       'Analytics'
+//                     )}
+//                   </button>
+//                   <button
+//                     onClick={() => handleDisconnect(account)}
+//                     className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-sm text-red-400 font-medium transition-all"
+//                   >
+//                     Disconnect
+//                   </button>
+//                 </div>
+//               </div>
+//             );
+//           })}
+//         </div>
+//       )}
+
+//       {/* Account Health */}
+//       <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6">
+//         <h2 className="text-xl font-bold text-white mb-4">Account Health</h2>
+//         <div className="space-y-4">
+//           <div className="flex items-center justify-between">
+//             <div>
+//               <p className="text-white font-medium mb-1">Connected Accounts</p>
+//               <p className="text-sm text-gray-400">{accounts?.length || 0} accounts are properly connected</p>
+//             </div>
+//             <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-lg text-sm font-semibold">Active</span>
+//           </div>
+//           <div className="flex items-center justify-between">
+//             <div>
+//               <p className="text-white font-medium mb-1">API Connection Status</p>
+//               <p className="text-sm text-gray-400">All accounts are synced and accessible</p>
+//             </div>
+//             <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-lg text-sm font-semibold">Healthy</span>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default ConnectedAccounts;
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { Instagram, Youtube, Twitter, Facebook, Loader, CheckCircle2 } from 'lucide-react';
@@ -192,14 +658,14 @@ function ConnectedAccounts() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Connected Accounts</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Connected Accounts</h1>
           <p className="text-gray-400">Manage your social media platform connections</p>
         </div>
         <button
           onClick={() => setShowConnectModal(true)}
-          className="px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+          className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg transition-all"
         >
           Connect New Account
         </button>
@@ -305,7 +771,7 @@ function ConnectedAccounts() {
       ) : accounts?.length === 0 ? (
         emptyState
       ) : (
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {accounts.map((account) => {
             const platformKey = (account.platform || '').toLowerCase();
             const Icon = platformIcons[platformKey] || Instagram;
@@ -321,7 +787,7 @@ function ConnectedAccounts() {
             return (
               <div
                 key={account._id || account.id}
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all"
+                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 sm:p-6 hover:bg-white/10 transition-all"
               >
                 <div className="flex items-start gap-4 mb-4">
                   <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center shrink-0`}>
@@ -338,7 +804,7 @@ function ConnectedAccounts() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                   <div className="bg-white/5 rounded-lg p-3">
                     <p className="text-xs text-gray-400 mb-1">Followers</p>
                     <p className="text-base font-bold text-white">{formatMetricValue(account.followers ?? account.followersCount ?? account.fan_count)}</p>
@@ -353,7 +819,7 @@ function ConnectedAccounts() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <button
                     onClick={() => handleViewAnalytics(account)}
                     disabled={statsLoading[account.id || account._id || account.platform]}
@@ -370,7 +836,7 @@ function ConnectedAccounts() {
                   </button>
                   <button
                     onClick={() => handleDisconnect(account)}
-                    className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-sm text-red-400 font-medium transition-all"
+                    className="w-full sm:w-auto px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-sm text-red-400 font-medium transition-all"
                   >
                     Disconnect
                   </button>

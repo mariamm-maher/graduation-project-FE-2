@@ -13,7 +13,7 @@ const SOCIAL_ENDPOINTS = {
     `/channels/${identifier}/refresh-token`,
   ],
   stats: (identifier) => [
-    `/channels/${identifier}/stats`,
+    `/analytics/channels/${identifier}`,
   ],
 };
 

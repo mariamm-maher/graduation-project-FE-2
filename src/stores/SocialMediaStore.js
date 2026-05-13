@@ -67,19 +67,35 @@ const useSocialMediaStore = create((set) => ({
   getAccounts: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await socialMediaService.getAccounts();
-      const payload = response?.data ?? response ?? {};
-      const ok = response?.success === true || payload?.status === 'success' || Array.isArray(payload);
+      const res = await socialMediaService.getAccounts();
 
-      if (!ok && !payload?.accounts) {
-        throw new Error(payload?.message || 'Failed to fetch accounts');
-      }
+      const raw =
+        Array.isArray(res) ? res :
+        Array.isArray(res?.data) ? res.data :
+        Array.isArray(res?.data?.data) ? res.data.data :
+        Array.isArray(res?.channels) ? res.channels :
+        [];
 
-      const accounts = payload?.accounts || payload?.data || (Array.isArray(payload) ? payload : []);
-      set({ accounts, isLoading: false });
-      return { success: true, data: accounts };
-    } catch (error) {
-      const errorMessage = typeof error === 'string' ? error : error?.message || 'Failed to fetch accounts';
+      console.log('[STORE] raw channels received:', raw.length);
+
+      const mapped = raw.map((ch) => ({
+        id: ch.id ?? ch._id,
+        platform: ch.platform,
+        accountName: ch.accountName,
+        username: ch.accountUsername,
+        profilePicture: ch.profilePicture,
+        status: ch.status,
+        platformData: ch.platformData,
+        isSimulated: ch.platformData?.isSimulated ?? false,
+        lastSyncAt: ch.lastSyncAt,
+        createdAt: ch.createdAt,
+      }));
+
+      set({ accounts: mapped, isLoading: false });
+      return { success: true, data: mapped };
+    } catch (err) {
+      console.error('[STORE] getAccounts error:', err);
+      const errorMessage = typeof err === 'string' ? err : err?.message || 'Failed to fetch accounts';
       set({ error: errorMessage, isLoading: false });
       return { success: false, error: errorMessage };
     }

@@ -152,15 +152,30 @@ const campaignService = {
     }
   },
 
-  // Get Campaign Analytics
-  getCampaignAnalytics: async () => {
+  // Get Campaign Analytics (overview or single campaign)
+  getCampaignAnalytics: async (campaignId = null) => {
     try {
-      const response = await api.get('/campaigns/analytics');
+      const url = campaignId ? `/campaigns/${campaignId}/analytics` : '/campaigns/analytics';
+      const response = await api.get(url);
       console.log('Campaign analytics response:', response);
       return response.data;
     } catch (error) {
       console.error('Campaign analytics error:', error);
       throw error.response?.data?.message || 'Failed to fetch campaign analytics';
+    }
+  },
+
+  // Get Active Campaigns with Smart Tracking (Enhanced)
+  getActiveCampaignsWithTracking: async ({ page = 1, limit = 10 } = {}) => {
+    try {
+      const response = await api.get('/campaigns/active/enhanced', {
+        params: { page, limit },
+      });
+      console.log('Enhanced active campaigns response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Enhanced active campaigns error:', error);
+      throw error.response?.data?.message || 'Failed to fetch enhanced tracking data';
     }
   },
 
@@ -174,6 +189,58 @@ const campaignService = {
     } catch (error) {
       console.error('Cancel campaign error:', error);
       throw error.response?.data?.message || 'Failed to cancel campaign';
+    }
+  },
+
+  // Generate Campaign PDF Report
+  // GET /api/campaigns/{id}/report
+  generateCampaignReport: async (campaignId) => {
+    try {
+      const response = await api.get(`/campaigns/${campaignId}/report`, {
+        responseType: 'blob', // Important for PDF download
+      });
+      
+      // Create download link
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `campaign-report-${campaignId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Generate campaign report error:', error);
+      throw error.response?.data?.message || 'Failed to generate campaign report';
+    }
+  },
+
+  // Generate Bulk PDF Report for All Completed Campaigns
+  // GET /api/campaigns/reports/completed
+  generateBulkReport: async () => {
+    try {
+      const response = await api.get('/campaigns/reports/completed', {
+        responseType: 'blob', // Important for PDF download
+      });
+      
+      // Create download link
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `all-campaigns-report-${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Generate bulk report error:', error);
+      throw error.response?.data?.message || 'Failed to generate bulk report';
     }
   },
 };

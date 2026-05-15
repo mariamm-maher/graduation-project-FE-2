@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import CreateOwnerProfile from './createOwnerProfile';
 import useAuthStore from '../../../../stores/authStore';
 import useNotificationsStore from '../../../../stores/NotificationsStore';
+import useChatStore from '../../../../stores/ChatStore';
 
 function Header() {
   const navigate = useNavigate();
@@ -16,13 +17,17 @@ function Header() {
   const [showOwnerProfileModal, setShowOwnerProfileModal] = useState(false);
 
   const user = useAuthStore((s) => s.user);
+  const switchRole = useAuthStore((s) => s.switchRole);
+  const addRole = useAuthStore((s) => s.addRole);
+  const totalUnreadCount = useChatStore((s) => s.totalUnreadCount);
+  const fetchChatUnreadCount = useChatStore((s) => s.fetchUnreadCount);
   const searchRef = useRef(null);
 
   const {
     notifications,
     unreadCount,
     fetchNotifications,
-    fetchUnreadCount,
+    fetchUnreadCount: fetchNotifUnreadCount,
     markAsRead,
     markAllAsRead,
     deleteNotification,
@@ -47,13 +52,14 @@ function Header() {
 
   useEffect(() => {
     fetchNotifications(1, 10);
-    fetchUnreadCount();
+    fetchNotifUnreadCount();
+    fetchChatUnreadCount();
     initRealtimeNotifications();
 
     return () => {
       cleanupRealtimeNotifications();
     };
-  }, [fetchNotifications, fetchUnreadCount, initRealtimeNotifications, cleanupRealtimeNotifications]);
+  }, [fetchNotifications, fetchNotifUnreadCount, fetchChatUnreadCount, initRealtimeNotifications, cleanupRealtimeNotifications]);
 
   const handleMarkAsRead = async (notificationId) => {
     const res = await markAsRead(notificationId);
@@ -114,17 +120,23 @@ function Header() {
     console.log('Selected:', suggestion);
   };
 
-  const handleSwitchRole = (role) => {
+  const handleSwitchRole = async (role) => {
     setShowRoleDropdown(false);
-    if (role === 'Owner') {
-      navigate('/dashboard/owner');
+    if (role === 'OWNER') {
+      const userRoles = (user?.roles || []).map(r => typeof r === 'string' ? r : r?.name).filter(Boolean);
+      const hasOwnerRole = userRoles.some(r => r.toUpperCase() === 'OWNER');
+      if (hasOwnerRole) {
+        const result = await switchRole('OWNER');
+        if (result.success) {
+          toast.success('Switched to Owner');
+          navigate('/dashboard/owner');
+        } else {
+          toast.error(result.error || 'Failed to switch role');
+        }
+      } else {
+        setShowOwnerProfileModal(true);
+      }
     }
-  };
-
-  const handleContinueToOwnerSetup = () => {
-    setShowOwnerProfileModal(false);
-    // Navigate to owner profile creation/onboarding
-    navigate('/onboarding/owner');
   };
 
   const handleCloseOwnerModal = () => {
@@ -334,7 +346,11 @@ function Header() {
             className="relative p-2 hover:bg-white/5 rounded-lg transition-all duration-200"
           >
             <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-white" />
-            <span className="absolute -top-1 -right-1 bg-[#745CB4] text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold text-[10px] sm:text-xs"></span>
+            {totalUnreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-[#745CB4] text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold text-[10px] sm:text-xs">
+                {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+              </span>
+            )}
           </motion.button>
 
           <div className="hidden sm:block w-px h-8 bg-white/10"></div>
@@ -371,7 +387,7 @@ function Header() {
                   <div className="p-2">
                     <motion.button
                       whileHover={{ x: 4 }}
-                      onClick={() => handleSwitchRole('Owner')}
+                      onClick={() => handleSwitchRole('OWNER')}
                       className="w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 text-gray-200 hover:bg-white/10 rounded-lg"
                     >
                       <div className="font-medium">Switch to Owner</div>
@@ -397,7 +413,16 @@ function Header() {
         {showOwnerProfileModal && (
           <CreateOwnerProfile
             onClose={handleCloseOwnerModal}
-            onContinue={handleContinueToOwnerSetup}
+            onContinue={async () => {
+              setShowOwnerProfileModal(false);
+              const result = await addRole('OWNER');
+              if (result.success) {
+                toast.success('Owner role added! Complete your profile.');
+                navigate('/onboarding/owner');
+              } else {
+                toast.error(result.error || 'Failed to add owner role');
+              }
+            }}
           />
         )}
       </AnimatePresence>

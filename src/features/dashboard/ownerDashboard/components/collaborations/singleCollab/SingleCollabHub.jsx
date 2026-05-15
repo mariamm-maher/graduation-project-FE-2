@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { RefreshCw, Search, X, Users, TrendingUp, CheckCircle, Clock, XCircle } from 'lucide-react';
 import useCollaborationStore from '../../../../../../stores/collaborationStore';
 import useCollaborationRequestsStore from '../../../../../../stores/CollaborationRequestsStore';
@@ -11,7 +12,7 @@ import AllLanesPane from './components/AllLanesPane';
 import ContractsPane from './components/ContractsPane';
 import RequestsPane from './components/RequestsPane';
 import AnalyticsPane from './components/AnalyticsPane';
-import ChatsPane from './components/ChatsPane';
+import OwnerCollaborationChat from './components/OwnerCollaborationChat';
 import TasksPane from './components/TasksPane';
 
 const STAT_CONFIG = [
@@ -43,7 +44,8 @@ function StatCard({ Icon, label, value, color, bg }) {
 }
 
 export default function SingleCollabHub() {
-  const [activeTab, setActiveTab]         = useState('all');
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab]         = useState(searchParams.get('tab') || 'all');
   const [searchQuery, setSearchQuery]     = useState('');
   const [statusFilter, setStatusFilter]   = useState('all');
   const [isRefreshing, setIsRefreshing]   = useState(false);
@@ -286,7 +288,7 @@ export default function SingleCollabHub() {
       </div>
 
       <div className={activeTab === 'chats' ? 'block' : 'hidden'}>
-        <ChatsPane items={ownerCollaborations} />
+        <OwnerCollaborationChat />
       </div>
 
       <div className={activeTab === 'tasks' ? 'block' : 'hidden'}>

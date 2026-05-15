@@ -4,7 +4,7 @@ import CampaignsLayout from '../features/dashboard/influncerDashboard/components
 import CollaborationsLayout from '../features/dashboard/influncerDashboard/components/collaborations/CollaborationsLayout';
 import Profile from '../features/dashboard/influncerDashboard/components/profile/Profile';
 import CompleteProfileWizard from '../features/dashboard/influncerDashboard/components/profile/CompleteProfileWizard';
-import Messages from '../features/dashboard/influncerDashboard/components/messages/Messages';
+import InfluencerMessages from '../features/dashboard/influncerDashboard/components/messages/InfluencerMessages';
 import { SettingsPanel } from '../features/settings';
 
 function InfluencerDashboard() {
@@ -21,7 +21,7 @@ function InfluencerDashboard() {
           <Route path="complete-profile" element={<CompleteProfileWizard />} />
           <Route path="social-media/*" element={<div>Social Media Content</div>} />
           <Route path="analytics/*" element={<div>Performance Analytics</div>} />
-          <Route path="messages" element={<Messages />} />
+          <Route path="messages" element={<InfluencerMessages />} />
           <Route path="settings" element={
             <div className="p-6">
               <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Settings</h1>

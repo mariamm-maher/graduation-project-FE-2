@@ -39,6 +39,25 @@ function toTitle(status) {
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
+function resolveInfluencerName(item) {
+  const influencer = item?.influencer || item?.participants?.influencer || {};
+  const fromParts = `${influencer?.firstName || influencer?.user?.firstName || ''} ${
+    influencer?.lastName || influencer?.user?.lastName || ''
+  }`.trim();
+
+  return fromParts || influencer?.name || item?.influencerName || 'Unknown influencer';
+}
+
+function resolveCampaignName(item) {
+  const campaign = item?.campaign || {};
+  return (
+    campaign?.campaignName ||
+    campaign?.name ||
+    item?.campaignName ||
+    'Untitled campaign'
+  );
+}
+
 export default function AnalyticsPane({ items = [] }) {
   const [timeRange, setTimeRange] = useState('all');
 
@@ -92,7 +111,7 @@ export default function AnalyticsPane({ items = [] }) {
         durationCount += 1;
       }
 
-      const influencerName = String(item?.influencerName || 'Unknown influencer');
+      const influencerName = resolveInfluencerName(item);
       const influencerCurrent = performerMap.get(influencerName) || {
         influencerName,
         collaborations: 0,
@@ -114,7 +133,7 @@ export default function AnalyticsPane({ items = [] }) {
 
       performerMap.set(influencerName, influencerCurrent);
 
-      const campaignName = String(item?.campaignName || 'Untitled campaign');
+      const campaignName = resolveCampaignName(item);
       const campaignCurrent = campaignMap.get(campaignName) || {
         campaignName,
         collaborations: 0,

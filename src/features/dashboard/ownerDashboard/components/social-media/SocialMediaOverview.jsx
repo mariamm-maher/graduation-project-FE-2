@@ -138,7 +138,7 @@ function SocialMediaOverview() {
         </Link>
 
         <Link
-          to="/dashboard/owner/social-media/create-post"
+          to="/dashboard/owner/social-media/content-library"
           className="group relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 sm:p-8 overflow-hidden hover:border-green-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/20"
         >
           {/* Gradient Background on Hover */}

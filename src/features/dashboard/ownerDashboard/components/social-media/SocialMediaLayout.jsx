@@ -3,6 +3,7 @@ import Breadcrumb from '../Breadcrumb';
 import SocialMediaOverview from './SocialMediaOverview';
 import ConnectedAccounts from './ConnectedAccounts';
 import CreatePost from './CreatePost';
+import ContentLibrary from './ContentLibrary';
 
 
 function SocialMediaLayout() {
@@ -16,7 +17,8 @@ function SocialMediaLayout() {
         <Route path="channels" element={<ConnectedAccounts />} />
         <Route path="create-post" element={<CreatePost />} />
         <Route path="schedule" element={<CreatePost />} />
-        <Route path="content" element={<CreatePost />} />
+        <Route path="content" element={<Navigate to="content-library" replace />} />
+        <Route path="content-library" element={<ContentLibrary />} />
       </Routes>
     </div>
   );

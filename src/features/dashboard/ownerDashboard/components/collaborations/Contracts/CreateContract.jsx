@@ -3,7 +3,49 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FileText, Save, Send, Calendar, Lock, List, ArrowLeft, Loader2, Info, DollarSign } from 'lucide-react';
 import useCollaborationStore from '../../../../../../stores/collaborationStore';
 import useCollaborationContractsStore from '../../../../../../stores/CollaborationContractsStore';
+import useAuthStore from '../../../../../../stores/authStore';
 import { toast } from 'react-toastify';
+
+const MAX_AGREED_PRICE = 99999999.99;
+
+function resolvePositiveInt(...candidates) {
+  for (const candidate of candidates) {
+    if (candidate == null || candidate === '') continue;
+
+    if (typeof candidate === 'object') {
+      const nested = candidate.id ?? candidate._id ?? candidate.userId;
+      const resolved = resolvePositiveInt(nested);
+      if (resolved != null) return resolved;
+      continue;
+    }
+
+    const parsed = typeof candidate === 'number' ? candidate : parseInt(String(candidate).trim(), 10);
+    if (Number.isFinite(parsed) && parsed > 0 && parsed <= 2147483647) {
+      return parsed;
+    }
+  }
+
+  return null;
+}
+
+function resolveAgreedPrice(collaboration) {
+  let raw;
+
+  if (collaboration?.request?.counterPrice != null && collaboration.request.counterPrice !== '') {
+    raw = collaboration.request.counterPrice;
+  } else if (collaboration?.request?.proposedBudget != null && collaboration.request.proposedBudget !== '') {
+    raw = collaboration.request.proposedBudget;
+  } else if (collaboration?.agreedBudget != null && collaboration.agreedBudget !== '') {
+    raw = collaboration.agreedBudget;
+  } else {
+    return 0;
+  }
+
+  const value = typeof raw === 'number' ? raw : parseFloat(String(raw).replace(/,/g, ''));
+  if (!Number.isFinite(value) || value < 0) return 0;
+
+  return Math.round(value * 100) / 100;
+}
 
 function ReadOnlyField({ label, value }) {
   return (
@@ -25,6 +67,7 @@ function CreateContract() {
 
   const { ownerCollaborations, isOwnerCollaborationsLoading, getMyOwnerCollaborations } = useCollaborationStore();
   const { createContract, isLoading: contractLoading } = useCollaborationContractsStore();
+  const user = useAuthStore((state) => state.user);
 
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -42,37 +85,115 @@ function CreateContract() {
     }
   }, [collaboration, getMyOwnerCollaborations, ownerCollaborations.length]);
 
-  const agreedPrice =
-    collaboration?.request?.counterPrice != null
-      ? Number(collaboration.request.counterPrice)
-      : collaboration?.request?.proposedBudget != null
-      ? Number(collaboration.request.proposedBudget)
-      : collaboration?.agreedBudget ?? collaboration?.budget ?? 0;
+  const agreedPrice = collaboration ? resolveAgreedPrice(collaboration) : 0;
 
-  const campaignName = collaboration?.campaign?.campaignName || collaboration?.campaignName || '—';
-  const influencerName = collaboration?.influencer
-    ? `${collaboration.influencer.firstName || ''} ${collaboration.influencer.lastName || ''}`.trim()
-    : collaboration?.influencerName || '—';
-  const ownerId     = collaboration?.ownerId     ? String(collaboration.ownerId)     : (collaboration?.request?.ownerId ? String(collaboration.request.ownerId) : '—');
-  const influencerId = collaboration?.influencerId ? String(collaboration.influencerId) : (collaboration?.request?.influencerId ? String(collaboration.request.influencerId) : '—');
-  const campaignId  = collaboration?.campaignId  ? String(collaboration.campaignId)  : '—';
+  const resolvedOwnerId = collaboration
+    ? resolvePositiveInt(
+        collaboration.ownerId,
+        collaboration.request?.ownerId,
+        collaboration.owner?.id,
+        collaboration.owner?._id
+      )
+    : null;
+  const resolvedInfluencerId = collaboration
+    ? resolvePositiveInt(
+        collaboration.influencerId,
+        collaboration.request?.influencerId,
+        collaboration.influencer?.id,
+        collaboration.influencer?._id
+      )
+    : null;
+  const resolvedCampaignId = collaboration
+    ? resolvePositiveInt(
+        collaboration.campaignId,
+        collaboration.request?.campaignId,
+        collaboration.campaign?.id,
+        collaboration.campaign?._id
+      )
+    : null;
+
+  const campaignName =
+    collaboration?.campaign?.campaignName ||
+    collaboration?.campaign?.name ||
+    collaboration?.campaignName ||
+    '—';
+
+  const influencer = collaboration?.influencer || collaboration?.participants?.influencer || {};
+  const influencerName =
+    `${influencer?.firstName || influencer?.user?.firstName || ''} ${influencer?.lastName || influencer?.user?.lastName || ''}`.trim() ||
+    influencer?.name ||
+    collaboration?.influencerName ||
+    '—';
+
+  const owner = collaboration?.owner || collaboration?.participants?.owner || collaboration?.request?.owner || {};
+  const ownerNameFromCollab =
+    owner?.name ||
+    `${owner?.firstName || owner?.user?.firstName || ''} ${owner?.lastName || owner?.user?.lastName || ''}`.trim() ||
+    collaboration?.ownerName ||
+    '';
+  const ownerName =
+    ownerNameFromCollab ||
+    (user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : '') ||
+    '—';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === 'startDate' && value && prev.endDate && prev.endDate < value) {
+        next.endDate = value;
+      }
+      return next;
+    });
+  };
+
+  const validateDates = () => {
+    if (!formData.startDate || !formData.endDate) {
+      toast.error('Start date and end date are required.');
+      return false;
+    }
+    if (formData.endDate < formData.startDate) {
+      toast.error('End date cannot be before the start date.');
+      return false;
+    }
+    return true;
+  };
+
+  const validateAgreedPrice = () => {
+    if (agreedPrice <= 0) {
+      toast.error('A valid agreed price is required on this collaboration before creating a contract.');
+      return false;
+    }
+    if (agreedPrice > MAX_AGREED_PRICE) {
+      toast.error('Agreed price is too large. Please update the collaboration budget and try again.');
+      return false;
+    }
+    return true;
+  };
+
+  const validateContractRefs = () => {
+    if (!resolvedOwnerId || !resolvedInfluencerId || !resolvedCampaignId) {
+      toast.error('Missing collaboration data. Please go back and open the contract again.');
+      return false;
+    }
+    return true;
   };
 
   const buildPayload = (status) => ({
     agreedPrice,
-    deliverables: formData.deliverables.split('\n').filter(d => d.trim() !== ''),
+    ownerId: resolvedOwnerId,
+    influencerId: resolvedInfluencerId,
+    campaignId: resolvedCampaignId,
+    deliverables: formData.deliverables.split('\n').filter((d) => d.trim() !== ''),
     startDate: formData.startDate,
     endDate: formData.endDate,
     status,
-    notes: formData.notes,
+    notes: formData.notes || '',
   });
 
   const handleSaveDraft = async (e) => {
     e.preventDefault();
+    if (!validateDates() || !validateAgreedPrice() || !validateContractRefs()) return;
     setIsLoading(true);
     const response = await createContract(id, buildPayload('draft'));
     setIsLoading(false);
@@ -86,6 +207,7 @@ function CreateContract() {
 
   const handleSendToInfluencer = async (e) => {
     e.preventDefault();
+    if (!validateDates() || !validateAgreedPrice() || !validateContractRefs()) return;
     setIsLoading(true);
     const response = await createContract(id, buildPayload('sent'));
     setIsLoading(false);
@@ -142,13 +264,10 @@ function CreateContract() {
             <Lock className="w-4 h-4" /> From Collaboration Request
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ReadOnlyField label="Collaboration ID" value={String(collaboration.id)} />
+            <ReadOnlyField label="Campaign Name" value={campaignName} />
+            <ReadOnlyField label="Influencer Name" value={influencerName} />
+            <ReadOnlyField label="Owner Name" value={ownerName} />
             <ReadOnlyField label="Agreed Price" value={`$${Number(agreedPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} />
-            <ReadOnlyField label="Campaign" value={campaignName} />
-            <ReadOnlyField label="Influencer" value={influencerName} />
-            <ReadOnlyField label="Owner ID" value={ownerId} />
-            <ReadOnlyField label="Influencer ID" value={influencerId} />
-            <ReadOnlyField label="Campaign ID" value={campaignId} />
           </div>
         </div>
 
@@ -182,7 +301,9 @@ function CreateContract() {
                     name="endDate"
                     value={formData.endDate}
                     onChange={handleChange}
-                    className="w-full bg-black/20 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD]"
+                    min={formData.startDate || undefined}
+                    disabled={!formData.startDate}
+                    className="w-full bg-black/20 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] disabled:opacity-50 disabled:cursor-not-allowed"
                     required
                   />
                 </div>

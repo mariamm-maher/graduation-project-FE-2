@@ -96,11 +96,11 @@ function Header() {
 
   // Mock search suggestions - replace with actual data
   const searchSuggestions = [
-    { type: 'campaign', name: 'Summer Fashion Campaign', status: 'Active' },
-    { type: 'campaign', name: 'Tech Product Launch', status: 'Pending' },
-    { type: 'influencer', name: 'Sarah Johnson', followers: '125K' },
-    { type: 'influencer', name: 'Mike Chen', followers: '89K' },
-    { type: 'campaign', name: 'Holiday Sale Campaign', status: 'Completed' },
+    // { type: 'campaign', name: 'Summer Fashion Campaign', status: 'Active' },
+    // { type: 'campaign', name: 'Tech Product Launch', status: 'Pending' },
+    // { type: 'influencer', name: 'Sarah Johnson', followers: '125K' },
+    // { type: 'influencer', name: 'Mike Chen', followers: '89K' },
+    // { type: 'campaign', name: 'Holiday Sale Campaign', status: 'Completed' },
   ];
 
   const filteredSuggestions = searchQuery.trim()
@@ -276,32 +276,6 @@ function Header() {
         </div>
         
         <div className="flex items-center gap-2 sm:gap-4 flex-wrap w-full sm:w-auto">
-          {/* Team Status */}
-          <Motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="hidden items-center gap-2 sm:flex"
-          >
-            <div className="flex -space-x-2">
-              {Array.from({ length: activeVisualCount }).map((_, index) => (
-                <div
-                  key={`active-dot-${index}`}
-                  className={`w-8 h-8 rounded-full border-2 border-[#000000] ${activeDotColors[index]}`}
-                ></div>
-              ))}
-              {activeOverflowCount > 0 && (
-                <div className="w-8 h-8 rounded-full bg-[#745CB4] border-2 border-[#000000] flex items-center justify-center text-xs">
-                  +{activeOverflowCount}
-                </div>
-              )}
-            </div>
-            <span className="text-sm">
-              <span className="font-bold">{campaignStats.active}</span> of{' '}
-              <span className="font-bold">{campaignStats.total}</span>{' '}
-              <span className="text-gray-400">active</span>
-            </span>
-          </Motion.div>
 
           {/* Notifications */}
           <Motion.button

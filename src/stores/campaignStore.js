@@ -1,6 +1,49 @@
- 
 import { create } from 'zustand';
 import campaignService from '../api/campaign';
+
+function extractActiveCampaignsList(response = {}) {
+  const payload = response?.data ?? response ?? {};
+
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload.campaigns)) return payload.campaigns;
+  if (Array.isArray(payload.data)) return payload.data;
+  if (Array.isArray(payload.data?.campaigns)) return payload.data.campaigns;
+  if (Array.isArray(payload.items)) return payload.items;
+  if (Array.isArray(payload.activeCampaigns)) return payload.activeCampaigns;
+  if (Array.isArray(payload.results)) return payload.results;
+
+  return [];
+}
+
+function extractActivePagination(response = {}, campaigns = [], page = 1, limit = 10) {
+  const payload = response?.data ?? response ?? {};
+  const pagination =
+    response?.pagination ||
+    payload?.pagination ||
+    payload?.data?.pagination ||
+    null;
+
+  if (pagination) {
+    return {
+      total: pagination.total ?? campaigns.length,
+      page: pagination.page ?? page,
+      limit: pagination.limit ?? limit,
+      totalPages: pagination.totalPages ?? Math.max(1, Math.ceil((pagination.total ?? campaigns.length) / limit)),
+    };
+  }
+
+  const trackingTools = payload?.trackingTools || response?.trackingTools || null;
+  const total =
+    trackingTools?.totalActiveCampaigns ??
+    campaigns.length;
+
+  return {
+    total,
+    page,
+    limit,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
+  };
+}
 
 const useCampaignStore = create((set) => ({
   // State
@@ -210,25 +253,32 @@ const useCampaignStore = create((set) => ({
       const response = await campaignService.getActiveCampaignsWithTracking({ page, limit });
 
       if (response.status === 'success' || response.success) {
-        const campaigns = response.data || [];
-        const pagination = response.pagination || {};
+        let campaigns = extractActiveCampaignsList(response);
+        let activePagination = extractActivePagination(response, campaigns, page, limit);
+        let payload = response?.data ?? response ?? {};
+        let trackingTools = payload?.trackingTools || response?.trackingTools || null;
 
-        set({ 
-          activeCampaigns: campaigns, 
-          activeTrackingTools: { 
-            totalActiveCampaigns: pagination.total || campaigns.length,
-            enhanced: true 
-          }, 
-          activePagination: {
-            total: pagination.total || campaigns.length,
-            page: pagination.page || page,
-            limit: pagination.limit || limit,
-            totalPages: pagination.totalPages || 1,
-          }, 
-          isLoading: false, 
-          error: null 
+        if (campaigns.length === 0) {
+          const legacyResponse = await campaignService.getActiveCampaigns({ page, limit });
+          if (legacyResponse.status === 'success' || legacyResponse.success) {
+            campaigns = legacyResponse.data?.campaigns || extractActiveCampaignsList(legacyResponse);
+            trackingTools = legacyResponse.data?.trackingTools || trackingTools;
+            activePagination = extractActivePagination(legacyResponse, campaigns, page, limit);
+            payload = legacyResponse?.data ?? legacyResponse ?? {};
+          }
+        }
+
+        set({
+          activeCampaigns: campaigns,
+          activeTrackingTools: trackingTools || {
+            totalActiveCampaigns: activePagination.total,
+            enhanced: true,
+          },
+          activePagination,
+          isLoading: false,
+          error: null,
         });
-        return { success: true, data: campaigns, pagination };
+        return { success: true, data: campaigns, pagination: activePagination };
       }
 
       throw new Error(response.message || 'Failed to fetch enhanced tracking data');

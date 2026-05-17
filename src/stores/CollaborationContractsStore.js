@@ -27,7 +27,13 @@ const useCollaborationContractsStore = create((set) => ({
       }));
       return { success: true, data: contract };
     } catch (error) {
-      const errorMessage = typeof error === 'string' ? error : error?.message || 'Failed to create contract';
+      const apiData = error?.response?.data;
+      const errorMessage =
+        (typeof apiData === 'string' ? apiData : null) ||
+        apiData?.message ||
+        apiData?.error ||
+        (typeof error === 'string' ? error : error?.message) ||
+        'Failed to create contract';
       set({ error: errorMessage, isLoading: false });
       return { success: false, error: errorMessage };
     }

@@ -1,19 +1,42 @@
 import { Users, MessageSquare, Clock, Calendar, DollarSign, Loader2, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import useInfluncerStore from '../../../../../stores/influncerStore';
+import useCollaborationRequestsStore from '../../../../../stores/CollaborationRequestsStore';
+import useChatStore from '../../../../../stores/ChatStore';
+import {
+  getBrandName,
+  getCampaignName,
+  resolveAgreedPrice,
+  countPendingRequests,
+} from '../../utils/collaborationUtils';
 
 function CollaborationsOverview() {
-  const { 
-    receivedRequests = [],
+  const {
     influencerCollaborations = [],
     influencerCollaborationsLoading,
-    getMyInfluencerCollaborations 
+    getMyInfluencerCollaborations,
   } = useInfluncerStore();
+
+  const { receivedRequests = [], getMyReceivedRequests } = useCollaborationRequestsStore();
+  const { chatRooms, getChatRooms, fetchUnreadCount, totalUnreadCount } = useChatStore();
 
   useEffect(() => {
     getMyInfluencerCollaborations();
-  }, [getMyInfluencerCollaborations]);
+    getMyReceivedRequests({ page: 1, limit: 50 });
+    getChatRooms();
+    fetchUnreadCount();
+  }, [getMyInfluencerCollaborations, getMyReceivedRequests, getChatRooms, fetchUnreadCount]);
+
+  const unreadByCollabId = useMemo(() => {
+    const map = {};
+    (chatRooms || []).forEach((room) => {
+      const collabId = room.collaborationId || room?.collaboration?.id || room?.collaboration?._id;
+      if (!collabId) return;
+      map[String(collabId)] = (map[String(collabId)] || 0) + Number(room.unreadCount || 0);
+    });
+    return map;
+  }, [chatRooms]);
 
   const progressMap = {
     pending_contract_sign: 10,
@@ -23,46 +46,53 @@ function CollaborationsOverview() {
     cancelled: 0,
   };
 
-  const collaborations = influencerCollaborations.map(collab => {
+  const collaborations = influencerCollaborations.map((collab) => {
     const status = collab?.status || 'pending_contract_sign';
-    const owner = collab?.owner || {};
-    const brandName =
-      owner?.ownerProfile?.brand_name ||
-      `${owner?.firstName || ''} ${owner?.lastName || ''}`.trim() ||
-      'Unknown Brand';
-    const campaignName = collab?.campaign?.campaignName || 'Unknown Campaign';
+    const collabId = String(collab._id || collab.id);
+    const brandName = getBrandName(collab?.owner);
+    const campaignName = getCampaignName(collab);
     const deadline = collab?.endDate || collab?.campaign?.endDate || collab?.updatedAt;
-    const budget = collab?.request?.counterPrice ?? collab?.request?.proposedBudget ?? collab?.agreedBudget ?? collab?.budget ?? 0;
+    const budget = resolveAgreedPrice(collab);
+    const unreadMessages = unreadByCollabId[collabId] || collab?.unreadMessages || 0;
 
     return {
-      id: collab._id || collab.id,
+      id: collabId,
       brand: brandName,
       campaign: campaignName,
       status,
       progress: progressMap[status] ?? 0,
-      deadline: deadline ? new Date(deadline).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'No deadline',
+      deadline: deadline
+        ? new Date(deadline).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        : 'No deadline',
       earnings: `$${Number(budget).toLocaleString()}`,
+      unreadMessages,
     };
   });
 
-  const activeCollabs = collaborations.filter(c => c.status === 'live' || c.status === 'in_progress').length;
-  const pendingContractSign = collaborations.filter(c => c.status === 'pending_contract_sign').length;
-  const totalMessages = collaborations.reduce((sum, c) => sum + (c.unreadMessages || 0), 0);
-  const requestsCount = Array.isArray(receivedRequests) ? receivedRequests.length : 0;
+  const activeCollabs = collaborations.filter((c) => c.status === 'live' || c.status === 'in_progress').length;
+  const pendingContractSign = collaborations.filter((c) => c.status === 'pending_contract_sign').length;
+  const totalMessages = totalUnreadCount > 0
+    ? totalUnreadCount
+    : collaborations.reduce((sum, c) => sum + (c.unreadMessages || 0), 0);
+  const requestsCount = countPendingRequests(receivedRequests);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">My Collaborations</h1>
           <p className="text-sm sm:text-base text-gray-400">Active campaigns you're working on - accepted and in progress</p>
         </div>
-        <div className="flex w-full sm:w-auto gap-2">
+        <div className="flex w-full sm:w-auto gap-2 flex-wrap">
           <Link to="/dashboard/influencer/collaborations/contracts" className="w-full sm:w-auto">
-            <button className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-3 bg-white/10 border border-white/10 text-white rounded-xl text-sm sm:text-base font-semibold hover:bg-white/20 transition-all duration-300 w-full sm:w-auto">
+            <button className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-3 bg-white/10 border border-white/10 text-white rounded-xl text-sm sm:text-base font-semibold hover:bg-white/20 transition-all duration-300 w-full sm:w-auto relative">
               <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
               Contracts
+              {pendingContractSign > 0 && (
+                <span className="absolute -top-2 -right-2 min-w-5 h-5 sm:min-w-6 sm:h-6 px-1 bg-red-500 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold">
+                  {pendingContractSign}
+                </span>
+              )}
             </button>
           </Link>
 
@@ -71,7 +101,7 @@ function CollaborationsOverview() {
               <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
               Requests
               {requestsCount > 0 && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-red-500 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold">
+                <span className="absolute -top-2 -right-2 min-w-5 h-5 sm:min-w-6 sm:h-6 px-1 bg-red-500 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold">
                   {requestsCount}
                 </span>
               )}
@@ -80,7 +110,6 @@ function CollaborationsOverview() {
         </div>
       </div>
 
-      {/* Stats Overview */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 hover:border-green-400/30 transition-all">
           <div className="flex items-center justify-between mb-3">
@@ -131,7 +160,6 @@ function CollaborationsOverview() {
         </div>
       </div>
 
-      {/* Collaborations List */}
       <div className="space-y-4">
         {influencerCollaborationsLoading ? (
           <div className="flex items-center justify-center p-12">
@@ -143,102 +171,100 @@ function CollaborationsOverview() {
           </div>
         ) : (
           collaborations.map((collab) => (
-            <div 
-              key={collab.id} 
+            <div
+              key={collab.id}
               className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-purple-400/30 transition-all duration-300 group"
             >
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-              <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-linear-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center text-2xl sm:text-3xl shadow-lg shrink-0">
-                  🏢
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-linear-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center text-2xl sm:text-3xl shadow-lg shrink-0">
+                    🏢
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-[#C1B6FD] transition-colors truncate">
+                      {collab.campaign}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-gray-400 truncate">{collab.brand}</p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-[#C1B6FD] transition-colors truncate">
-                    {collab.brand}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-400 truncate">{collab.campaign}</p>
+
+                <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                  <span className={`px-4 py-2 rounded-lg text-sm font-semibold ${
+                    collab.status === 'pending_contract_sign'
+                      ? 'bg-amber-500/20 text-amber-400'
+                      : collab.status === 'live'
+                      ? 'bg-blue-500/20 text-blue-400'
+                      : collab.status === 'in_progress'
+                      ? 'bg-green-500/20 text-green-400'
+                      : collab.status === 'completed'
+                      ? 'bg-emerald-500/20 text-emerald-400'
+                      : 'bg-red-500/20 text-red-400'
+                  }`}>
+                    {collab.status.replace(/_/g, ' ').toUpperCase()}
+                  </span>
+
+                  {collab.unreadMessages > 0 && (
+                    <Link to="/dashboard/influencer/messages">
+                      <button className="relative px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all">
+                        <MessageSquare className="w-5 h-5" />
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white">
+                          {collab.unreadMessages}
+                        </span>
+                      </button>
+                    </Link>
+                  )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                <span className={`px-4 py-2 rounded-lg text-sm font-semibold ${
-                  collab.status === 'pending_contract_sign'
-                    ? 'bg-amber-500/20 text-amber-400'
-                    : collab.status === 'live'
-                    ? 'bg-blue-500/20 text-blue-400'
-                    : collab.status === 'in_progress'
-                    ? 'bg-green-500/20 text-green-400'
-                    : collab.status === 'completed'
-                    ? 'bg-emerald-500/20 text-emerald-400'
-                    : 'bg-red-500/20 text-red-400'
-                }`}>
-                  {collab.status.replace('_', ' ').toUpperCase()}
-                </span>
-                
-                {collab.unreadMessages > 0 && (
-                  <Link to={`/dashboard/influencer/collaborations/${collab.id}/messages`}>
-                    <button className="relative px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all">
-                      <MessageSquare className="w-5 h-5" />
-                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white">
-                        {collab.unreadMessages}
-                      </span>
+              <div className="mb-4">
+                <div className="flex justify-between text-xs text-gray-400 mb-1">
+                  <span>Progress</span>
+                  <span>{collab.progress}%</span>
+                </div>
+                <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-linear-to-r from-[#745CB4] to-[#C1B6FD] transition-all duration-500"
+                    style={{ width: `${collab.progress}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">Deadline</p>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm font-semibold text-white">{collab.deadline}</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">Earnings</p>
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm font-semibold text-white">{collab.earnings}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 pt-4 border-t border-white/10">
+                <Link to={`/dashboard/influencer/collaborations/${collab.id}/workspace`} className="flex-1">
+                  <button className="w-full px-3 sm:px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs sm:text-sm font-semibold text-gray-300 transition-all">
+                    View Workspace
+                  </button>
+                </Link>
+
+                {collab.status === 'pending_contract_sign' && (
+                  <Link to={`/dashboard/influencer/collaborations/contracts/${collab.id}`} className="flex-1 relative">
+                    <button className="w-full px-3 sm:px-4 py-2 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] rounded-lg text-xs sm:text-sm font-semibold text-white hover:shadow-lg hover:shadow-purple-500/30 transition-all">
+                      Review Contract
                     </button>
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full" />
                   </Link>
                 )}
               </div>
             </div>
-
-            {/* Progress bar */}
-            <div className="mb-4">
-              <div className="flex justify-between text-xs text-gray-400 mb-1">
-                <span>Progress</span>
-                <span>{collab.progress}%</span>
-              </div>
-              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-linear-to-r from-[#745CB4] to-[#C1B6FD] transition-all duration-500"
-                  style={{ width: `${collab.progress}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Deadline</p>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm font-semibold text-white">{collab.deadline}</span>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Earnings</p>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm font-semibold text-white">{collab.earnings}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 pt-4 border-t border-white/10">
-              <Link to={`/dashboard/influencer/collaborations/${collab.id}/workspace`} className="flex-1">
-                <button className="w-full px-3 sm:px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs sm:text-sm font-semibold text-gray-300 transition-all">
-                  View Workspace
-                </button>
-              </Link>
-              
-              {collab.status === 'pending_contract_sign' && (
-                <Link to={`/dashboard/influencer/collaborations/contracts/${collab.id}`} className="flex-1">
-                  <button className="w-full px-3 sm:px-4 py-2 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] rounded-lg text-xs sm:text-sm font-semibold text-white hover:shadow-lg hover:shadow-purple-500/30 transition-all">
-                    Review Contract
-                  </button>
-                </Link>
-              )}
-              
-            </div>
-          </div>
-        )))}
+          ))
+        )}
       </div>
     </div>
   );

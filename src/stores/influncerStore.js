@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import collaborationService from '../api/collaborationApi';
 import influncerService from '../api/influncerApi';
+import { normalizeExploreCampaign } from '../features/dashboard/influncerDashboard/utils/collaborationUtils';
 
 const useInfluncerStore = create((set) => ({
   // Received collaboration requests (for influencer)
@@ -57,6 +58,11 @@ const useInfluncerStore = create((set) => ({
   contactOwnerError: null,
   contactOwnerSuccess: false,
 
+  // Single collaboration detail
+  selectedCollaboration: null,
+  selectedCollaborationLoading: false,
+  selectedCollaborationError: null,
+
   fetchInfluencerOverview: async (params = {}) => {
     set({ overviewLoading: true, overviewError: null });
     try {
@@ -112,13 +118,18 @@ const useInfluncerStore = create((set) => ({
     try {
       const response = await influncerService.getExploreCampaigns(params);
       const payload = response?.data ?? response ?? {};
-      const ok = response?.success === true || payload?.success === true || response?.status === 200;
+      const ok = response?.success === true || payload?.success === true || response?.status === 200
+        || Array.isArray(payload) || payload?.campaigns || payload?.items;
 
-      if (!ok && !Array.isArray(payload) && !payload?.campaigns && !payload?.items) {
+      if (!ok) {
         throw new Error(response?.message || payload?.message || 'Failed to fetch discover campaigns');
       }
 
-      const campaigns = payload?.campaigns || payload?.items || payload?.data?.campaigns || payload?.data?.items || (Array.isArray(payload) ? payload : []);
+      const rawCampaigns = payload?.campaigns || payload?.items
+        || payload?.data?.campaigns || payload?.data?.items
+        || payload?.data?.data?.campaigns || payload?.data?.data?.items
+        || (Array.isArray(payload) ? payload : []);
+      const campaigns = rawCampaigns.map(normalizeExploreCampaign);
       const paginationSource = payload?.pagination || payload?.data?.pagination || {};
 
       set({
@@ -180,15 +191,16 @@ const useInfluncerStore = create((set) => ({
 
       set((state) => ({
         exploreCampaigns: state.exploreCampaigns.map((campaign) =>
-          campaign.id === id
+          String(campaign.id || campaign._id) === String(id)
             ? {
                 ...campaign,
                 hasApplied: true,
+                applied: true,
                 applicationStatus: applicationData?.status || 'applied'
               }
             : campaign
         ),
-        selectedCampaign: state.selectedCampaign?.id === id
+        selectedCampaign: String(state.selectedCampaign?.id || state.selectedCampaign?._id) === String(id)
           ? {
               ...state.selectedCampaign,
               hasApplied: true,
@@ -232,6 +244,30 @@ const useInfluncerStore = create((set) => ({
 
   resetContactOwner: () => set({ contactOwnerLoading: false, contactOwnerError: null, contactOwnerSuccess: false }),
 
+  fetchCollaborationById: async (id) => {
+    set({ selectedCollaborationLoading: true, selectedCollaborationError: null });
+    try {
+      const response = await collaborationService.getCollaborationById(id);
+      const payload = response?.data ?? response ?? {};
+      const ok = response?.success === true || payload?.status === 'success' || payload?.success === true
+        || payload?.collaboration || payload?._id || payload?.id;
+
+      if (!ok && !payload?.collaboration) {
+        throw new Error(payload?.message || response?.message || 'Failed to fetch collaboration');
+      }
+
+      const collab = payload?.collaboration ?? payload?.data ?? payload;
+      set({ selectedCollaboration: collab, selectedCollaborationLoading: false });
+      return { success: true, data: collab };
+    } catch (error) {
+      const errorMessage = typeof error === 'string'
+        ? error
+        : error?.response?.data?.message || error?.message || 'Failed to fetch collaboration';
+      set({ selectedCollaborationError: errorMessage, selectedCollaborationLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
   // Fetch my influencer collaborations
   getMyInfluencerCollaborations: async (params = {}) => {
     set({ influencerCollaborationsLoading: true, influencerCollaborationsError: null });
@@ -272,7 +308,8 @@ const useInfluncerStore = create((set) => ({
     try {
       const response = await collaborationService.getReceivedRequests({ page, limit });
       const payload = response?.data ?? response ?? {};
-      const ok = response?.success === true || payload?.status === 'success' || payload?.success === true;
+      const ok = response?.success === true || payload?.status === 'success' || payload?.success === true
+        || Array.isArray(payload) || payload?.requests || payload?.data?.requests;
 
       if (response && ok) {
         // Requests may be in payload.data.requests or payload.requests

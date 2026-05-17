@@ -108,7 +108,7 @@ function ActiveCampaignCards({ collaborations = [], kpis, loading }) {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <span className="text-xs text-gray-500">{collab.id}</span>
               <div className="flex gap-2">
                 <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white">
@@ -118,7 +118,7 @@ function ActiveCampaignCards({ collaborations = [], kpis, loading }) {
                   <BarChart3 className="w-4 h-4" />
                 </button>
               </div>
-            </div>
+            </div> */}
 
             <div className="flex gap-2 mt-3 flex-wrap">
               {(collab.platforms || []).map((tag, i) => (

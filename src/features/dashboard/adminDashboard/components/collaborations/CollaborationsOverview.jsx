@@ -46,9 +46,16 @@ function CollaborationsOverview() {
     return matchSearch;
   });
 
-  const activeCollabs = list.filter(c => c.status === 'active').length;
+  const activeCollabs = list.filter(c => ['active', 'in_progress', 'live'].includes(c.status)).length;
   const completedCollabs = list.filter(c => c.status === 'completed').length;
-  const pendingCollabs = list.filter(c => c.status === 'pending_contract_sign' || c.status === 'pending').length;
+  const pendingCollabs = list.filter(c => ['pending_contract_sign', 'pending', 'awaiting_acceptance'].includes(c.status)).length;
+
+  const hasPendingRequest = (userId) =>
+    list.some(
+      (c) =>
+        (c.ownerId === userId || c.influencerId === userId) &&
+        ['pending', 'pending_contract_sign', 'awaiting_acceptance'].includes(c.status)
+    );
   const withRating = list.filter(c => c.rating != null && c.rating > 0);
   const avgRating = withRating.length ? (withRating.reduce((s, c) => s + c.rating, 0) / withRating.length).toFixed(1) : '—';
 

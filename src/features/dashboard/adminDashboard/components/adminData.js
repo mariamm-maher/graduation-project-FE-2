@@ -44,6 +44,12 @@ export function getSessionLifecycleStatus(session) {
   if (!session) return 'unknown';
   if (session.revokedAt) return 'revoked';
   if (session.expiresAt && new Date(session.expiresAt) <= new Date()) return 'expired';
+  if (session.status) {
+    const s = String(session.status).toLowerCase();
+    if (s === 'revoked' || s === 'terminated') return 'revoked';
+    if (s === 'expired') return 'expired';
+    if (s === 'active') return 'active';
+  }
   return 'active';
 }
 

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Monitor, Handshake, Settings, LogOut, User, Menu, X, Briefcase, FileText, Bell } from 'lucide-react';
+import { LayoutDashboard, Users, Monitor, Handshake, Settings, LogOut, User, Menu, X, Briefcase, FileText, Bell, UserCog, BellRing, ShieldCheck, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -9,9 +9,23 @@ function Sidebar() {
   const location = useLocation();
   const [isHovered, setIsHovered] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [settingsExpanded, setSettingsExpanded] = useState(() =>
+    window.location.pathname.startsWith('/dashboard/admin/settings')
+  );
   const user = useAuthStore((s) => s.user);
   const getProfile = useAuthStore((s) => s.getProfile);
   const logout = useAuthStore((s) => s.logout);
+
+  const displayName = user?.fullName || user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() || 'Admin';
+  const displayRole = (user?.roles?.[0]?.name || user?.role || user?.roleName || 'Admin').charAt(0).toUpperCase() + (user?.roles?.[0]?.name || user?.role || user?.roleName || 'Admin').slice(1).toLowerCase();
+  const initials = displayName.split(' ').map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'A';
+  const avatarUrl = user?.profileImage || user?.avatar || user?.profilePicture || null;
+
+  useEffect(() => {
+    if (location.pathname.startsWith('/dashboard/admin/settings')) {
+      setSettingsExpanded(true);
+    }
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -79,13 +93,17 @@ const menuItems = [
       >
       {/* Profile Section */}
       <div className="flex items-center gap-3 pb-4 border-b border-white/10">
-        <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center shrink-0">
-          <User className="w-5 h-5 text-white" />
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center shrink-0 overflow-hidden">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-sm font-bold text-white">{initials}</span>
+          )}
         </div>
         {showLabels && (
           <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-semibold text-white whitespace-nowrap">{user?.name || user?.fullName || 'Admin'}</p>
-            <p className="text-xs text-gray-400 whitespace-nowrap">{user?.email || 'admin@adsphere.com'}</p>
+            <p className="text-sm font-semibold text-white whitespace-nowrap">{displayName}</p>
+            <p className="text-xs text-[#C1B6FD] whitespace-nowrap font-medium">{displayRole}</p>
           </div>
         )}
       </div>
@@ -122,20 +140,54 @@ const menuItems = [
 
       {/* Bottom Actions */}
       <div className="pt-4 border-t border-white/10 space-y-1">
-        <Link
-          to="/dashboard/admin/settings"
+        {/* Settings expandable */}
+        <button
+          type="button"
+          onClick={() => showLabels && setSettingsExpanded((v) => !v)}
           className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
-            location.pathname === '/dashboard/admin/settings'
-              ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg shadow-[#745CB4]/30'
+            location.pathname.startsWith('/dashboard/admin/settings')
+              ? 'bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg shadow-[#745CB4]/30'
               : 'text-gray-400 hover:text-white hover:bg-white/5'
           }`}
           title={!showLabels ? 'Settings' : ''}
         >
           <Settings className="w-5 h-5 shrink-0" />
           {showLabels && (
-            <span className="text-sm font-medium whitespace-nowrap">Settings</span>
+            <>
+              <span className="text-sm font-medium whitespace-nowrap flex-1 text-left">Settings</span>
+              {settingsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </>
           )}
-        </Link>
+        </button>
+
+        {showLabels && settingsExpanded && (
+          <div className="pl-4 space-y-1">
+            {[
+              { to: '/dashboard/admin/settings?section=password',      icon: ShieldCheck, label: 'Change Password',   section: 'password' },
+              { to: '/dashboard/admin/settings?section=profile',       icon: UserCog,     label: 'Edit Profile',      section: 'profile' },
+              { to: '/dashboard/admin/settings?section=notifications', icon: BellRing,    label: 'Notifications',     section: 'notifications' },
+              { to: '/dashboard/admin/settings?section=privacy',       icon: ShieldCheck, label: 'Privacy & Security', section: 'privacy' },
+            ].map(({ to, icon: Icon, label, section }) => {
+              const params = new URLSearchParams(location.search);
+              const activeSection = params.get('section') || 'password';
+              const isActive = location.pathname === '/dashboard/admin/settings' && activeSection === section;
+              return (
+                <Link
+                  key={section}
+                  to={to}
+                  onClick={() => setIsMobileOpen(false)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-sm ${
+                    isActive ? 'text-[#C1B6FD] bg-[#745CB4]/20' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="whitespace-nowrap">{label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
         <button 
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200"

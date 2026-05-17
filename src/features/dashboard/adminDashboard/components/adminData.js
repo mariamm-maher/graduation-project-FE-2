@@ -1,3 +1,70 @@
+export const BACKEND_USER_STATUSES = ['ACTIVE', 'BLOCKED', 'SUSPENDED', 'INCOMPLETE'];
+
+/** Normalize account status from API (any casing) to backend enum. */
+export function normalizeUserStatus(status) {
+  if (status == null || status === '' || status === '—') return null;
+  const s = String(status).trim().toUpperCase();
+  return BACKEND_USER_STATUSES.includes(s) ? s : null;
+}
+
+export function userStatusLabel(status) {
+  const labels = {
+    ACTIVE: 'Active',
+    BLOCKED: 'Blocked',
+    SUSPENDED: 'Suspended',
+    INCOMPLETE: 'Incomplete',
+  };
+  return labels[normalizeUserStatus(status)] || 'Incomplete';
+}
+
+/** Extract user object from GET /admin/users/:id response shapes. */
+export function parseAdminUserFromResponse(res) {
+  const raw = res?.data?.user ?? res?.data?.data ?? res?.user ?? res?.data;
+  if (!raw || typeof raw !== 'object' || (raw.id == null && !raw.email)) return null;
+  return raw;
+}
+
+/** Apply normalized status; fall back to list cache when single-user endpoint omits status. */
+/** Parse GET /admin/sessions response (supports multiple backend shapes). */
+export function extractSessionsList(response) {
+  if (!response) return { sessions: [], pagination: null };
+  const payload = response.data ?? response;
+  const sessions =
+    payload?.sessions ??
+    response?.sessions ??
+    (Array.isArray(payload) ? payload : []);
+  const pagination = payload?.pagination ?? response?.pagination ?? null;
+  return {
+    sessions: Array.isArray(sessions) ? sessions : [],
+    pagination,
+  };
+}
+
+export function getSessionLifecycleStatus(session) {
+  if (!session) return 'unknown';
+  if (session.revokedAt) return 'revoked';
+  if (session.expiresAt && new Date(session.expiresAt) <= new Date()) return 'expired';
+  if (session.status) {
+    const s = String(session.status).toLowerCase();
+    if (s === 'revoked' || s === 'terminated') return 'revoked';
+    if (s === 'expired') return 'expired';
+    if (s === 'active') return 'active';
+  }
+  return 'active';
+}
+
+export function normalizeAdminUser(user, usersList, id) {
+  if (!user) return null;
+  const fromUser =
+    normalizeUserStatus(user.status) ??
+    normalizeUserStatus(user.accountStatus) ??
+    normalizeUserStatus(user.userStatus);
+  const cached = (usersList || []).find((u) => String(u.id) === String(id ?? user.id));
+  const fromList = normalizeUserStatus(cached?.status);
+  const status = fromUser ?? fromList ?? 'INCOMPLETE';
+  return { ...user, status };
+}
+
 // Map backend collaboration to UI shape (owner/influencer may be objects or ids)
 export function mapCollaboration(c) {
   if (!c || typeof c !== 'object') return null;

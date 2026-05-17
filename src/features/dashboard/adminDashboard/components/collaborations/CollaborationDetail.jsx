@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, User, Users, Calendar, CheckCircle, DollarSign, MessageSquare, Star, FileText } from 'lucide-react';
+import { ArrowLeft, User, Users, Calendar, CheckCircle, DollarSign, Star } from 'lucide-react';
+import MessagingSystem from './MessagingSystem';
 import useAdminStore from '../../../../../stores/AdminStore';
 import adminService from '../../../../../api/adminApi';
 import { mapCollaboration } from '../adminData';
@@ -180,7 +181,11 @@ function CollaborationDetail() {
             <span className="text-gray-400 text-sm">/ 5</span>
           </div>
         )}
+      </div>
 
+      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6">
+        <h2 className="text-lg font-semibold text-white mb-4">Collaboration chat</h2>
+        <MessagingSystem collaborationIdFilter={id} compact />
       </div>
     </div>
   );

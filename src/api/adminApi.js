@@ -76,6 +76,21 @@ const adminService = {
     }
   },
 
+  // Normalize GET /admin/sessions body to { sessions, pagination }
+  parseSessionsResponse(response) {
+    if (!response) return { sessions: [], pagination: null };
+    const payload = response.data ?? response;
+    const sessions =
+      payload?.sessions ??
+      response?.sessions ??
+      (Array.isArray(payload) ? payload : []);
+    const pagination = payload?.pagination ?? response?.pagination ?? null;
+    return {
+      sessions: Array.isArray(sessions) ? sessions : [],
+      pagination,
+    };
+  },
+
   // Get all sessions
   getSessions: async (params = {}) => {
     try {
@@ -243,6 +258,144 @@ const adminService = {
     } catch (error) {
       console.error('Header stats error:', error);
       throw error.response?.data?.message || 'Failed to fetch header stats';
+    }
+  },
+
+  parseChatroomsResponse(response) {
+    if (!response) return { chatrooms: [], pagination: null };
+    const payload = response.data ?? response;
+    const chatrooms =
+      payload?.chatrooms ??
+      response?.chatrooms ??
+      (Array.isArray(payload) ? payload : []);
+    return {
+      chatrooms: Array.isArray(chatrooms) ? chatrooms : [],
+      pagination: payload?.pagination ?? response?.pagination ?? null,
+    };
+  },
+
+  parseChatMessagesResponse(response) {
+    if (!response) return { messages: [], chatRoom: null, pagination: null };
+    const payload = response.data ?? response;
+    const messages =
+      payload?.messages ??
+      response?.messages ??
+      (Array.isArray(payload) ? payload : []);
+    return {
+      messages: Array.isArray(messages) ? messages : [],
+      chatRoom: payload?.chatRoom ?? response?.chatRoom ?? null,
+      pagination: payload?.pagination ?? response?.pagination ?? null,
+    };
+  },
+
+  getChatrooms: async (params = {}) => {
+    try {
+      const { page = 1, limit = 50, collaborationId } = params;
+      const query = new URLSearchParams();
+      query.set('page', page);
+      query.set('limit', limit);
+      if (collaborationId) query.set('collaborationId', collaborationId);
+      const response = await api.get(`/admin/chatrooms?${query.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('Admin chatrooms error:', error);
+      throw error.response?.data?.message || 'Failed to fetch chat rooms';
+    }
+  },
+
+  getChatroomMessages: async (roomId, params = {}) => {
+    try {
+      const { page = 1, limit = 50 } = params;
+      const query = new URLSearchParams();
+      query.set('page', page);
+      query.set('limit', limit);
+      const response = await api.get(`/admin/chatrooms/${roomId}/messages?${query.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('Admin chat messages error:', error);
+      throw error.response?.data?.message || 'Failed to fetch chat messages';
+    }
+  },
+
+  // Delete collaboration
+  deleteCollaboration: async (id) => {
+    try {
+      const response = await api.delete(`/admin/collaborations/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Delete collaboration error:', error);
+      throw error.response?.data?.message || 'Failed to delete collaboration';
+    }
+  },
+
+  // Get all announcements
+  getAnnouncements: async (params = {}) => {
+    try {
+      const { page = 1, limit = 50, status } = params;
+      const query = new URLSearchParams();
+      query.set('page', page);
+      query.set('limit', limit);
+      if (status) query.set('status', status);
+      const response = await api.get(`/admin/announcements?${query.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('Announcements error:', error);
+      throw error.response?.data?.message || 'Failed to fetch announcements';
+    }
+  },
+
+  // Create announcement
+  createAnnouncement: async (data) => {
+    try {
+      const response = await api.post('/admin/announcements', data);
+      return response.data;
+    } catch (error) {
+      console.error('Create announcement error:', error);
+      throw error.response?.data?.message || 'Failed to create announcement';
+    }
+  },
+
+  // Update announcement
+  updateAnnouncement: async (id, data) => {
+    try {
+      const response = await api.put(`/admin/announcements/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Update announcement error:', error);
+      throw error.response?.data?.message || 'Failed to update announcement';
+    }
+  },
+
+  // Delete announcement
+  deleteAnnouncement: async (id) => {
+    try {
+      const response = await api.delete(`/admin/announcements/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Delete announcement error:', error);
+      throw error.response?.data?.message || 'Failed to delete announcement';
+    }
+  },
+
+  // Publish announcement
+  publishAnnouncement: async (id) => {
+    try {
+      const response = await api.patch(`/admin/announcements/${id}/publish`);
+      return response.data;
+    } catch (error) {
+      console.error('Publish announcement error:', error);
+      throw error.response?.data?.message || 'Failed to publish announcement';
+    }
+  },
+
+  // Unpublish announcement
+  unpublishAnnouncement: async (id) => {
+    try {
+      const response = await api.patch(`/admin/announcements/${id}/unpublish`);
+      return response.data;
+    } catch (error) {
+      console.error('Unpublish announcement error:', error);
+      throw error.response?.data?.message || 'Failed to unpublish announcement';
     }
   },
 

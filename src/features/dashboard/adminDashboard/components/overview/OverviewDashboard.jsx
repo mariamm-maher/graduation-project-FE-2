@@ -30,11 +30,12 @@ ChartJS.register(
 );
 
 function OverviewDashboard() {
-  const { analytics, isLoading, error, fetchAnalytics } = useAdminStore();
+  const { analytics, isLoading, error, fetchAnalytics, activeSessionsCount, fetchActiveSessionsCount } = useAdminStore();
 
   useEffect(() => {
     fetchAnalytics();
-  }, [fetchAnalytics]);
+    fetchActiveSessionsCount();
+  }, [fetchAnalytics, fetchActiveSessionsCount]);
 
   if (isLoading) {
     return (
@@ -139,9 +140,9 @@ function OverviewDashboard() {
       id: 4, 
       icon: Activity, 
       label: 'Active Sessions', 
-      value: overview.activeSessions.toLocaleString(), 
+      value: (activeSessionsCount ?? overview.activeSessions).toLocaleString(), 
       change: 'Live now', 
-      isPositive: overview.activeSessions > 0,
+      isPositive: (activeSessionsCount ?? overview.activeSessions) > 0,
       color: 'from-orange-500 to-red-500'
     },
   ];

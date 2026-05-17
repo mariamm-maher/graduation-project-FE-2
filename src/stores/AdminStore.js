@@ -9,6 +9,9 @@ const useAdminStore = create((set) => ({
   sessionsPagination: null,
   collaborations: [],
   campaigns: [],
+  announcements: [],
+  announcementsLoading: false,
+  announcementsError: null,
   recentLogs: [],
   logs: [],
   logsPagination: {
@@ -17,6 +20,7 @@ const useAdminStore = create((set) => ({
     totalLogs: 0,
     limit: 20
   },
+  activeSessionsCount: null,
   isLoading: false,
   error: null,
 
@@ -104,6 +108,24 @@ const useAdminStore = create((set) => ({
       const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch sessions';
       set({ sessions: [], error: errorMessage, isLoading: false });
       return { success: false, error: errorMessage };
+    }
+  },
+
+  // Fetch count of active sessions only (for Overview Dashboard)
+  fetchActiveSessionsCount: async () => {
+    try {
+      const response = await adminService.getSessions({ active: true, page: 1, limit: 1 });
+      const { pagination } = adminService.parseSessionsResponse(response);
+      const count =
+        pagination?.total ??
+        pagination?.totalSessions ??
+        pagination?.totalCount ??
+        pagination?.count ??
+        null;
+      if (count !== null) set({ activeSessionsCount: Number(count) });
+      return { success: true, data: count };
+    } catch (error) {
+      return { success: false };
     }
   },
 
@@ -329,6 +351,135 @@ const useAdminStore = create((set) => ({
     }
   },
 
+  // Delete collaboration
+  deleteCollaboration: async (id) => {
+    set({ error: null });
+    try {
+      await adminService.deleteCollaboration(id);
+      set((state) => ({
+        collaborations: state.collaborations.filter((c) => String(c.id) !== String(id)),
+        error: null
+      }));
+      return { success: true };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to delete collaboration';
+      set({ error: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Fetch Announcements
+  fetchAnnouncements: async (params = {}) => {
+    set({ announcementsLoading: true, announcementsError: null });
+    try {
+      const response = await adminService.getAnnouncements(params);
+      const list = response.data?.announcements ?? response.announcements ?? (Array.isArray(response.data) ? response.data : []);
+      set({
+        announcements: Array.isArray(list) ? list : [],
+        announcementsLoading: false,
+        announcementsError: null
+      });
+      return { success: true, data: Array.isArray(list) ? list : [] };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch announcements';
+      set({ announcements: [], announcementsError: errorMessage, announcementsLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Create Announcement
+  createAnnouncement: async (data) => {
+    set({ announcementsError: null });
+    try {
+      const response = await adminService.createAnnouncement(data);
+      const created = response.data?.announcement ?? response.announcement ?? response.data ?? response;
+      if (created && created.id) {
+        set((state) => ({
+          announcements: [created, ...state.announcements],
+        }));
+      }
+      return { success: true, data: created };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to create announcement';
+      set({ announcementsError: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Update Announcement
+  updateAnnouncement: async (id, data) => {
+    set({ announcementsError: null });
+    try {
+      const response = await adminService.updateAnnouncement(id, data);
+      const updated = response.data?.announcement ?? response.announcement ?? response.data ?? response;
+      set((state) => ({
+        announcements: state.announcements.map((a) =>
+          String(a.id) === String(id) ? { ...a, ...updated } : a
+        ),
+      }));
+      return { success: true, data: updated };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to update announcement';
+      set({ announcementsError: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Delete Announcement
+  deleteAnnouncement: async (id) => {
+    set({ announcementsError: null });
+    try {
+      await adminService.deleteAnnouncement(id);
+      set((state) => ({
+        announcements: state.announcements.filter((a) => String(a.id) !== String(id)),
+      }));
+      return { success: true };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to delete announcement';
+      set({ announcementsError: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Publish Announcement
+  publishAnnouncement: async (id) => {
+    set({ announcementsError: null });
+    try {
+      const response = await adminService.publishAnnouncement(id);
+      const updated = response.data?.announcement ?? response.announcement ?? null;
+      set((state) => ({
+        announcements: state.announcements.map((a) =>
+          String(a.id) === String(id)
+            ? { ...a, ...(updated || {}), status: 'published', publishedAt: updated?.publishedAt || new Date().toISOString() }
+            : a
+        ),
+      }));
+      return { success: true };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to publish announcement';
+      set({ announcementsError: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Unpublish Announcement
+  unpublishAnnouncement: async (id) => {
+    set({ announcementsError: null });
+    try {
+      await adminService.unpublishAnnouncement(id);
+      set((state) => ({
+        announcements: state.announcements.map((a) =>
+          String(a.id) === String(id) ? { ...a, status: 'draft', publishedAt: null } : a
+        ),
+      }));
+      return { success: true };
+    } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to unpublish announcement';
+      set({ announcementsError: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  },
+
   // Clear all data
   clearAdminData: () => set({ 
     analytics: null,
@@ -337,9 +488,12 @@ const useAdminStore = create((set) => ({
     sessionsPagination: null,
     collaborations: [],
     campaigns: [],
+    announcements: [],
+    announcementsError: null,
     recentLogs: [],
     logs: [],
     collaborationRequests: [],
+    activeSessionsCount: null,
     logsPagination: {
       currentPage: 1,
       totalPages: 1,

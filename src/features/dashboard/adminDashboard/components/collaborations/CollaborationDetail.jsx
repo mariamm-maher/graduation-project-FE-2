@@ -182,11 +182,6 @@ function CollaborationDetail() {
           </div>
         )}
       </div>
-
-      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">Collaboration chat</h2>
-        <MessagingSystem collaborationIdFilter={id} compact />
-      </div>
     </div>
   );
 }

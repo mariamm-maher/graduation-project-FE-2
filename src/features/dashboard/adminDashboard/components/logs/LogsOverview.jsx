@@ -69,6 +69,19 @@ function LogsOverview() {
     }
   };
 
+  // Extract IP from log data (checks multiple possible field locations)
+  const getLogIp = (log) => {
+    return (
+      log.meta?.ip ||
+      log.meta?.ipAddress ||
+      log.meta?.clientIp ||
+      log.meta?.['x-forwarded-for'] ||
+      log.ip ||
+      log.ipAddress ||
+      null
+    );
+  };
+
   // Transform API logs to display format
   const transformedLogs = (logs || []).map((log) => ({
     id: log.id,
@@ -78,7 +91,8 @@ function LogsOverview() {
     action: getActionText(log.action),
     details: getDetailsText(log),
     entity: log.entity,
-    roles: log.meta?.roles || []
+    roles: log.meta?.roles || [],
+    ip: getLogIp(log) || 'Unknown',
   }));
 
   // Filter logs
@@ -93,6 +107,7 @@ function LogsOverview() {
 
   // Calculate stats
   const totalLogs = logsPagination.totalLogs || transformedLogs.length;
+  const filteredCount = filtered.length;
   const errorLogs = transformedLogs.filter(l => l.level === 'error').length;
   const warningLogs = transformedLogs.filter(l => l.level === 'warning').length;
   const successLogs = transformedLogs.filter(l => l.level === 'success').length;
@@ -190,8 +205,11 @@ function LogsOverview() {
             </div>
             <span className="text-xs text-[#C1B6FD] font-semibold">Total</span>
           </div>
-          <p className="text-2xl font-bold text-white">{totalLogs}</p>
-          <p className="text-sm text-gray-400">Total Logs</p>
+          <p className="text-2xl font-bold text-white">
+            <span className="text-[#C1B6FD]">{filteredCount}</span>
+            <span className="text-gray-400 text-lg"> / {totalLogs}</span>
+          </p>
+          <p className="text-sm text-gray-400">Filtered / Total</p>
         </div>
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5 hover:border-red-500/50 transition-all">
           <div className="flex items-center justify-between mb-3">
@@ -259,6 +277,7 @@ function LogsOverview() {
                 <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Timestamp</th>
                 <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Level</th>
                 <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">User</th>
+                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">IP Address</th>
                 <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Action</th>
                 <th className="text-left py-4 px-4 text-sm font-semibold text-gray-400">Details</th>
               </tr>
@@ -274,6 +293,7 @@ function LogsOverview() {
                     </span>
                   </td>
                   <td className="py-4 px-4 text-white">{log.user}</td>
+                  <td className="py-4 px-4 text-gray-400 text-sm font-mono">{log.ip}</td>
                   <td className="py-4 px-4 text-gray-300">{log.action}</td>
                   <td className="py-4 px-4 text-gray-400 text-sm max-w-xs truncate" title={log.details}>
                     {log.details}

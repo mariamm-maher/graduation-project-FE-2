@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import { normalizeActiveCollaboration } from '../utils/collaborationUtils';
 import {
   StatisticsChart,
   ActiveCampaignCards,
@@ -20,6 +21,11 @@ function MainContent() {
     fetchInfluencerOverview();
   }, [fetchInfluencerOverview]);
 
+  const activeCollaborations = useMemo(
+    () => (overview?.activeCollaborations || []).map(normalizeActiveCollaboration),
+    [overview?.activeCollaborations]
+  );
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 transition-all duration-300">
       {/* Left Column - Performance Stats & Active Collaborations */}
@@ -35,7 +41,7 @@ function MainContent() {
           loading={overviewLoading}
         />
         <ActiveCampaignCards
-          collaborations={overview?.activeCollaborations}
+          collaborations={activeCollaborations}
           kpis={overview?.kpis}
           loading={overviewLoading}
         />
@@ -47,10 +53,10 @@ function MainContent() {
           profileCompletion={overview?.profileCompletion}
           loading={overviewLoading}
         />
-        <PendingCampaigns
+        {/* <PendingCampaigns
           campaigns={overview?.availableCampaigns}
           loading={overviewLoading}
-        />
+        /> */}
         <InfluencerActivity
           feed={overview?.activityFeed}
           loading={overviewLoading}

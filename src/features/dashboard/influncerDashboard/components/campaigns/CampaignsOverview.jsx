@@ -130,7 +130,6 @@ function CampaignsOverview() {
 
   const getCampaignId = (c) => String(c?._id ?? c?.id ?? c?.campaignId ?? '');
 
-  console.log("explored " , exploreCampaigns)
   useEffect(() => {
     fetchExploreCampaigns({ page: 1, limit: 20 });
   }, [fetchExploreCampaigns]);
@@ -149,6 +148,7 @@ function CampaignsOverview() {
     const q = searchQuery.toLowerCase();
     const matchSearch = !q
       || c.name?.toLowerCase().includes(q)
+      || c.campaignName?.toLowerCase().includes(q)
       || c.brand?.name?.toLowerCase().includes(q)
       || c.brand?.industry?.toLowerCase().includes(q)
       || c.campaignGoal?.toLowerCase().includes(q);
@@ -260,9 +260,9 @@ function CampaignsOverview() {
                             {campaign.name}
                           </h3>
                           <span className={`shrink-0 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                            campaign.applied ? 'bg-[#745CB4]/20 text-[#C1B6FD]' : 'bg-green-500/20 text-green-400'
+                            (campaign.applied || campaign.hasApplied) ? 'bg-[#745CB4]/20 text-[#C1B6FD]' : 'bg-green-500/20 text-green-400'
                           }`}>
-                            {campaign.applied ? 'Applied' : 'Open'}
+                            {(campaign.applied || campaign.hasApplied) ? 'Applied' : 'Open'}
                           </span>
                           {campaign.campaignGoal && (
                             <span className="shrink-0 px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/10 text-gray-300">

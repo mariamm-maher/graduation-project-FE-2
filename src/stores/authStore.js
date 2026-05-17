@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import authService from '../api/authApi';
 
 let refreshPromise = null;
@@ -34,16 +34,16 @@ const useAuthStore = create(
       
       setToken: (token) => {
         if (token) {
-          localStorage.setItem('accessToken', token);
+          sessionStorage.setItem('accessToken', token);
         } else {
-          localStorage.removeItem('accessToken');
+          sessionStorage.removeItem('accessToken');
         }
         set({ token });
       },
       
       setAuth: (user, token) => {
         if (token) {
-          localStorage.setItem('accessToken', token);
+          sessionStorage.setItem('accessToken', token);
         }
         set({ 
           user, 
@@ -84,7 +84,7 @@ const useAuthStore = create(
               token: newAccessToken,
               isAuthenticated: Boolean(state.user)
             }));
-            localStorage.setItem('accessToken', newAccessToken);
+            sessionStorage.setItem('accessToken', newAccessToken);
 
             return newAccessToken;
           } catch (error) {
@@ -95,7 +95,7 @@ const useAuthStore = create(
               error: null,
               isLoading: false
             });
-            localStorage.removeItem('accessToken');
+            sessionStorage.removeItem('accessToken');
             throw (typeof error === 'string' ? new Error(error) : error);
           } finally {
             refreshPromise = null;
@@ -144,9 +144,10 @@ const useAuthStore = create(
           }
           
           // Clear localStorage
+          sessionStorage.removeItem('accessToken');
+          sessionStorage.removeItem('auth-storage');
           localStorage.removeItem('accessToken');
           localStorage.removeItem('auth-storage');
-          localStorage.clear();
         }
       },
       
@@ -241,7 +242,7 @@ const useAuthStore = create(
               error: null
             });
             if (accessToken) {
-              localStorage.setItem('accessToken', accessToken);
+              sessionStorage.setItem('accessToken', accessToken);
             }
 
             return {
@@ -480,6 +481,7 @@ const useAuthStore = create(
     }),
     {
       name: 'auth-storage',
+      storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({
         user: state.user,
         token: state.token,

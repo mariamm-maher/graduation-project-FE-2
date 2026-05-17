@@ -49,9 +49,7 @@ function Header() {
     reconnectNotifications,
     markAsRead,
     markAllAsRead,
-    deleteNotification,
-    initRealtimeNotifications,
-    cleanupRealtimeNotifications
+    deleteNotification
   } = useNotificationsStore();
 
   // Mock search suggestions - replace with actual data
@@ -74,12 +72,7 @@ function Header() {
     fetchNotifications(1, 10);
     fetchNotifUnreadCount();
     fetchChatUnreadCount();
-    initRealtimeNotifications();
-
-    return () => {
-      cleanupRealtimeNotifications({ resetStore: true });
-    };
-  }, [resetNotifications, fetchNotifications, fetchNotifUnreadCount, fetchChatUnreadCount, initRealtimeNotifications, cleanupRealtimeNotifications]);
+  }, [resetNotifications, fetchNotifications, fetchNotifUnreadCount, fetchChatUnreadCount]);
 
   const handleMarkAsRead = async (notificationId) => {
     const res = await markAsRead(notificationId);

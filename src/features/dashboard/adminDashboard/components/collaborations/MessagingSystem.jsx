@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Search, ChevronRight, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Send, Search, ChevronRight, ChevronLeft, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import adminService from '../../../../../api/adminApi';
@@ -108,13 +108,15 @@ function MessagingSystem({ collaborationIdFilter = null, compact = false }) {
       conv.campaign.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const heightClass = compact ? 'h-[520px]' : 'h-[calc(100vh-8rem)]';
+  const heightClass = compact ? 'h-[520px]' : 'h-[calc(100vh-8rem)] min-h-[400px]';
 
   return (
-    <div className={`${heightClass} flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden rounded-3xl`}>
+    <div className={`${heightClass} flex flex-col lg:flex-row gap-0 overflow-hidden rounded-3xl`}>
       {!collaborationIdFilter && (
         <div
-          className={`${showChatList ? 'w-full lg:w-80' : 'w-0 lg:w-0'} border-r border-[#1e1e2e] flex flex-col transition-all duration-300 overflow-hidden shrink-0 rounded-3xl bg-[#0f0f1e]`}
+          className={`${
+            showChatList ? 'flex' : 'hidden'
+          } lg:flex w-full lg:w-80 border-r border-[#1e1e2e] flex-col overflow-hidden shrink-0 lg:rounded-l-3xl lg:rounded-r-none rounded-3xl bg-[#0f0f1e]`}
         >
           {showChatList && (
             <>
@@ -190,7 +192,9 @@ function MessagingSystem({ collaborationIdFilter = null, compact = false }) {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-w-0 bg-[#0a0a16] rounded-3xl overflow-hidden">
+      <div className={`${
+        !collaborationIdFilter && showChatList ? 'hidden lg:flex' : 'flex'
+      } flex-1 flex-col min-w-0 bg-[#0a0a16] lg:rounded-r-3xl lg:rounded-l-none rounded-3xl overflow-hidden`}>
         {error && (
           <div className="mx-4 mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -211,8 +215,9 @@ function MessagingSystem({ collaborationIdFilter = null, compact = false }) {
                     type="button"
                     onClick={() => setShowChatList(true)}
                     className="w-9 h-9 rounded-2xl hover:bg-[#16162a] flex items-center justify-center transition-colors lg:hidden"
+                    aria-label="Back to chat list"
                   >
-                    <ChevronRight className="w-5 h-5 text-gray-400 rotate-180" />
+                    <ChevronLeft className="w-5 h-5 text-gray-400" />
                   </button>
                 )}
                 {selectedConversation && (

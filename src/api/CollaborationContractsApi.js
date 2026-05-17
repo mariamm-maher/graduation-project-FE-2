@@ -9,7 +9,13 @@ const collaborationContractsService = {
       return response.data;
     } catch (error) {
       console.error('Create contract error:', error);
-      throw error.response?.data?.message || 'Failed to create contract';
+      const data = error.response?.data;
+      throw (
+        (typeof data === 'string' ? data : null) ||
+        data?.message ||
+        data?.error ||
+        'Failed to create contract'
+      );
     }
   },
 

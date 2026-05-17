@@ -10,19 +10,35 @@ function ActiveCampaigns() {
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
-  const { activeCampaigns: campaignsRaw, activeTrackingTools, activePagination, isLoading, error, fetchActiveCampaignsWithTracking } = useCampaignStore();
+  const {
+    activeCampaigns: campaignsRaw,
+    activeTrackingTools,
+    activePagination,
+    isLoading,
+    error,
+    fetchActiveCampaigns,
+    fetchActiveCampaignsWithTracking,
+  } = useCampaignStore();
   const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
   const totalPages = activePagination?.totalPages || 1;
-  const totalItems = activePagination?.total || activeTrackingTools?.totalActiveCampaigns || 0;
-  useEffect(() => {
-    fetchActiveCampaignsWithTracking({ page, limit: LIMIT });
-  }, [page, fetchActiveCampaignsWithTracking]);
+  const totalItems = activePagination?.total || activeTrackingTools?.totalActiveCampaigns || campaigns.length || 0;
 
-  console.log("Active campaigns:", campaigns);
+  useEffect(() => {
+    const loadActiveCampaigns = async () => {
+      const enhanced = await fetchActiveCampaignsWithTracking({ page, limit: LIMIT });
+      const enhancedList = Array.isArray(enhanced?.data) ? enhanced.data : [];
+      if (!enhanced?.success || enhancedList.length === 0) {
+        await fetchActiveCampaigns({ page, limit: LIMIT });
+      }
+    };
+    loadActiveCampaigns();
+  }, [page, fetchActiveCampaigns, fetchActiveCampaignsWithTracking]);
+
   // Client-side search filter only
-  const activeCampaigns = campaigns.filter(campaign =>
-    searchQuery === '' || campaign.campaignName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const activeCampaigns = campaigns.filter((campaign) => {
+    const name = campaign.campaignName || campaign.name || '';
+    return searchQuery === '' || name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -77,7 +93,14 @@ function ActiveCampaigns() {
             </div>
             <h3 className="text-xl font-bold text-white mb-2">Error Loading Campaigns</h3>
             <p className="text-gray-400 mb-6">{error}</p>
-            <button onClick={() => fetchActiveCampaignsWithTracking({ page, limit: LIMIT })}
+            <button
+              onClick={async () => {
+                const enhanced = await fetchActiveCampaignsWithTracking({ page, limit: LIMIT });
+                const enhancedList = Array.isArray(enhanced?.data) ? enhanced.data : [];
+                if (!enhanced?.success || enhancedList.length === 0) {
+                  await fetchActiveCampaigns({ page, limit: LIMIT });
+                }
+              }}
               className="px-6 py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all">
               Try Again
             </button>
@@ -122,7 +145,7 @@ function ActiveCampaigns() {
 
             return (
               <div
-                key={campaign.id}
+                key={campaign.id || campaign._id}
                 className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-[#C1B6FD]/30 transition-all duration-300"
               >
                 {/* ── Header ── */}
@@ -133,7 +156,7 @@ function ActiveCampaigns() {
                         onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}`)}
                         className="text-lg font-bold text-white cursor-pointer hover:text-[#C1B6FD] transition-colors truncate"
                       >
-                        {campaign.campaignName}
+                        {campaign.campaignName || campaign.name}
                       </h3>
                       <span className="px-2.5 py-0.5 bg-green-500/20 text-green-400 rounded-full text-[11px] font-bold whitespace-nowrap animate-pulse">
                         ● Active

@@ -1,7 +1,9 @@
-import { Search, Bell, MessageSquare, X, Loader2 } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { Search, Bell, MessageSquare, X, Loader2, Check, CheckCheck, MessageCircle } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import adminService from '../../../../api/adminApi';
+import notificationsService from '../../../../api/notificationsApi';
+import chatService from '../../../../api/chatApi';
 
 function Header() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -11,6 +13,19 @@ function Header() {
   const [headerStats, setHeaderStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const searchRef = useRef(null);
+
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+
+  const [showMessages, setShowMessages] = useState(false);
+  const [chatRooms, setChatRooms] = useState([]);
+  const [msgLoading, setMsgLoading] = useState(false);
+  const [unreadMsgCount, setUnreadMsgCount] = useState(0);
+
+  const notifRef = useRef(null);
+  const msgRef = useRef(null);
 
   // Fetch header stats on mount
   useEffect(() => {
@@ -93,8 +108,59 @@ function Header() {
   const handleSuggestionClick = (suggestion) => {
     setSearchQuery(suggestion.name);
     setShowSearchResults(false);
-    // Navigate to the selected item
     console.log('Selected:', suggestion);
+  };
+
+  const fetchNotifications = useCallback(async () => {
+    setNotifLoading(true);
+    try {
+      const data = await notificationsService.getNotifications({ page: 1, limit: 10 });
+      const list = data?.notifications ?? data?.data ?? (Array.isArray(data) ? data : []);
+      setNotifications(Array.isArray(list) ? list : []);
+      const unread = list.filter((n) => !n.isRead && !n.read).length;
+      setUnreadNotifCount(unread);
+    } catch (e) {
+      console.error('Notif fetch failed', e);
+    } finally {
+      setNotifLoading(false);
+    }
+  }, []);
+
+  const fetchChatRooms = useCallback(async () => {
+    setMsgLoading(true);
+    try {
+      const data = await chatService.getMyChatRooms();
+      const rooms = data?.data?.chatRooms ?? data?.chatRooms ?? (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
+      setChatRooms(Array.isArray(rooms) ? rooms : []);
+      const unread = (Array.isArray(rooms) ? rooms : []).reduce((s, r) => s + (r.unreadCount || 0), 0);
+      setUnreadMsgCount(unread);
+    } catch (e) {
+      console.error('Chat rooms fetch failed', e);
+    } finally {
+      setMsgLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+    fetchChatRooms();
+  }, [fetchNotifications, fetchChatRooms]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifications(false);
+      if (msgRef.current && !msgRef.current.contains(e.target)) setShowMessages(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleMarkAllNotifRead = async () => {
+    try {
+      await notificationsService.markAllAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true, read: true })));
+      setUnreadNotifCount(0);
+    } catch (e) { console.error(e); }
   };
 
   return (
@@ -203,81 +269,119 @@ function Header() {
         </div>
         
         <div className="flex items-center gap-2 sm:gap-4 flex-wrap w-full sm:w-auto">
-          {/* Team Status */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex items-center gap-2 hidden sm:flex"
-          >
-            <div className="flex -space-x-2">
-              {isLoading ? (
-                <div className="w-8 h-8 rounded-full bg-[#745CB4] border-2 border-[#000000] flex items-center justify-center">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                </div>
-              ) : (
-                <>
-                  {headerStats?.onlineUsers?.slice(0, 4).map((user, idx) => (
-                    <div 
-                      key={user.id} 
-                      className={`w-8 h-8 rounded-full border-2 border-[#000000] flex items-center justify-center text-xs text-white font-medium ${
-                        idx === 0 ? 'bg-[#745CB4]' : idx === 1 ? 'bg-[#5D459D]' : idx === 2 ? 'bg-[#C1B6FD]' : 'bg-[#745CB4]'
-                      }`}
-                      title={`${user.firstName} ${user.lastName}`}
-                    >
-                      {(user.firstName?.[0] || user.email?.[0] || '?').toUpperCase()}
-                    </div>
-                  ))}
-                  {headerStats?.onlineUsers?.length > 4 && (
-                    <div className="w-8 h-8 rounded-full bg-[#745CB4] border-2 border-[#000000] flex items-center justify-center text-xs text-white">
-                      +{headerStats.onlineUsers.length - 4}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-            <span className="text-sm">
-              <span className="font-bold">{headerStats?.activeSessions || 0}</span>
-              <span className="text-gray-400"> of {headerStats?.totalUsers || 0} active</span>
-            </span>
-          </motion.div>
 
           {/* Notifications */}
-          <motion.button 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.25 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="relative p-2 hover:bg-white/5 rounded-lg transition-all duration-200"
-          >
-            <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-white" />
-            {headerStats?.unreadNotifications > 0 && (
-              <>
-                <span className="absolute top-1 right-1 w-2 h-2 bg-[#C1B6FD] rounded-full shadow-lg shadow-[#C1B6FD]/50"></span>
+          <div ref={notifRef} className="relative">
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.25 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => { setShowNotifications((v) => !v); setShowMessages(false); }}
+              className="relative p-2 hover:bg-white/5 rounded-lg transition-all duration-200"
+            >
+              <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-white" />
+              {unreadNotifCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold text-[10px] sm:text-xs">
-                  {headerStats.unreadNotifications > 99 ? '99+' : headerStats.unreadNotifications}
+                  {unreadNotifCount > 99 ? '99+' : unreadNotifCount}
                 </span>
-              </>
-            )}
-          </motion.button>
+              )}
+            </motion.button>
+
+            <AnimatePresence>
+              {showNotifications && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-2 w-80 bg-[#10121f] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden"
+                >
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                    <span className="text-sm font-semibold text-white">Notifications</span>
+                    {unreadNotifCount > 0 && (
+                      <button onClick={handleMarkAllNotifRead} className="text-xs text-[#C1B6FD] hover:underline flex items-center gap-1">
+                        <CheckCheck className="w-3 h-3" /> Mark all read
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-72 overflow-y-auto">
+                    {notifLoading ? (
+                      <div className="p-6 flex justify-center"><Loader2 className="w-5 h-5 text-[#C1B6FD] animate-spin" /></div>
+                    ) : notifications.length === 0 ? (
+                      <div className="p-6 text-center text-gray-400 text-sm">No notifications</div>
+                    ) : notifications.map((n) => (
+                      <div key={n.id} className={`px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors ${!n.isRead && !n.read ? 'bg-[#745CB4]/10' : ''}`}>
+                        <p className="text-sm text-white leading-snug">{n.message || n.title || n.content}</p>
+                        <p className="text-xs text-gray-500 mt-1">{n.createdAt ? new Date(n.createdAt).toLocaleString() : ''}</p>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Messages/Chat */}
-          <motion.button 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="relative p-2 hover:bg-white/5 rounded-lg transition-all duration-200"
-          >
-            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-white" />
-            {headerStats?.recentMessages > 0 && (
-              <span className="absolute -top-1 -right-1 bg-[#745CB4] text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold text-[10px] sm:text-xs">
-                {headerStats.recentMessages > 99 ? '99+' : headerStats.recentMessages}
-              </span>
-            )}
-          </motion.button>
+          <div ref={msgRef} className="relative">
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => { setShowMessages((v) => !v); setShowNotifications(false); }}
+              className="relative p-2 hover:bg-white/5 rounded-lg transition-all duration-200"
+            >
+              <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-white" />
+              {unreadMsgCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#745CB4] text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold text-[10px] sm:text-xs">
+                  {unreadMsgCount > 99 ? '99+' : unreadMsgCount}
+                </span>
+              )}
+            </motion.button>
+
+            <AnimatePresence>
+              {showMessages && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-2 w-80 bg-[#10121f] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden"
+                >
+                  <div className="px-4 py-3 border-b border-white/10">
+                    <span className="text-sm font-semibold text-white">Messages</span>
+                  </div>
+                  <div className="max-h-72 overflow-y-auto">
+                    {msgLoading ? (
+                      <div className="p-6 flex justify-center"><Loader2 className="w-5 h-5 text-[#C1B6FD] animate-spin" /></div>
+                    ) : chatRooms.length === 0 ? (
+                      <div className="p-6 text-center text-gray-400 text-sm">No messages</div>
+                    ) : chatRooms.map((room) => {
+                      const partner = room.participants?.find((p) => !p.isAdmin) || room.participants?.[0];
+                      const name = partner ? [partner.firstName, partner.lastName].filter(Boolean).join(' ').trim() || partner.email : room.name || 'Chat Room';
+                      return (
+                        <div key={room.id} className={`flex items-start gap-3 px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors ${room.unreadCount > 0 ? 'bg-[#745CB4]/10' : ''}`}>
+                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center shrink-0">
+                            <MessageCircle className="w-4 h-4 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-white truncate">{name}</p>
+                            <p className="text-xs text-gray-400 truncate mt-0.5">{room.lastMessage?.content || 'No messages yet'}</p>
+                          </div>
+                          {room.unreadCount > 0 && (
+                            <span className="bg-[#745CB4] text-white text-xs rounded-full px-2 py-0.5 font-medium shrink-0">{room.unreadCount}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           <div className="hidden sm:block w-px h-8 bg-white/10"></div>
 

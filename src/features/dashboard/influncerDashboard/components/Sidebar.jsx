@@ -36,7 +36,7 @@ function Sidebar() {
     { id: 'collaborations', icon: Users, label: 'My Collaborations', path: '/dashboard/influencer/collaborations' },
     // { id: 'content', icon: Share2, label: 'My Content', path: '/dashboard/influencer/social-media' },
     // { id: 'analytics', icon: BarChart3, label: 'Performance', path: '/dashboard/influencer/analytics' },
-    { id: 'messages', icon: MessageCircle, label: 'Messages', path: '/dashboard/influencer/messages' },
+    // { id: 'messages', icon: MessageCircle, label: 'Messages', path: '/dashboard/influencer/messages' },
     { id: 'tasks', icon: SquareCheckBig, label: 'Collaboration Tasks', path: '/dashboard/influencer/collaborations/tasks' },
     // { id: 'profile', icon: User, label: 'My Profile', path: '/dashboard/influencer/profile' },
   ];

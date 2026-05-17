@@ -93,6 +93,19 @@ const socialMediaService = {
     }
   },
 
+  connectTikTokSimulated: async (username, displayName) => {
+    try {
+      const response = await api.post('/channels/tiktok/simulate', {
+        username,
+        displayName,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Connect TikTok simulated error:', error);
+      throw error.response?.data?.message || 'Failed to create simulated TikTok channel';
+    }
+  },
+
   getStats: async (platform) => {
     try {
       return await tryGetWithFallback(SOCIAL_ENDPOINTS.stats(platform));

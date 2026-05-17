@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import profileService from '../api/profileApi';
+import { normalizeOwnerProfile } from '../utils/normalizeOwnerProfile';
 
 const useProfileStore = create((set, get) => ({
   ownerProfile: null,

@@ -9,6 +9,11 @@ import {
 import { toast } from 'react-toastify';
 import useAuthStore from '../stores/authStore';
 import uploadService from '../api/uploadApi';
+import {
+  PLATFORM_OPTIONS,
+  normalizePlatformList,
+} from './../utils/platformUtils';
+import BrandVoiceFields from '../components/BrandVoiceFields';
 
 export default function OwnerOnboarding() {
   const navigate = useNavigate();
@@ -49,7 +54,14 @@ export default function OwnerOnboarding() {
       ageRange: '',
       gender: '',
       location: ''
-    }
+    },
+    brandTone: {
+      tone_formality: 3,
+      tone_playfulness: 3,
+      tone_boldness: 3,
+      preferred_vocabulary: [],
+      avoided_vocabulary: [],
+    },
   });
 
   const companySizes = [
@@ -248,8 +260,8 @@ export default function OwnerOnboarding() {
 
     if (currentStep < steps.length - 1) {
       // Skip previous campaign description step when answer is No.
-      if (currentStep === 10 && formData.hasPreviousCampaigns === false) {
-        setCurrentStep(12);
+      if (currentStep === 11 && formData.hasPreviousCampaigns === false) {
+        setCurrentStep(13);
         return;
       }
       setCurrentStep(prev => prev + 1);
@@ -267,8 +279,8 @@ export default function OwnerOnboarding() {
   const handleBack = () => {
     if (currentStep > 0) {
       // Jump back over conditional step when user selected No.
-      if (currentStep === 12 && formData.hasPreviousCampaigns === false) {
-        setCurrentStep(10);
+      if (currentStep === 13 && formData.hasPreviousCampaigns === false) {
+        setCurrentStep(11);
         return;
       }
       setCurrentStep(prev => prev - 1);
@@ -314,21 +326,22 @@ export default function OwnerOnboarding() {
         }
         return true;
       case 6:
+        return true;
+      case 7:
         if (formData.website && !isValidUrl(formData.website)) {
           toast.error('Please enter a valid website URL');
           return false;
         }
         return true;
-      case 7:
-        // Image upload is optional
-        return true;
       case 8:
+        return true;
+      case 9:
         if (formData.platformsUsed.length === 0) {
           toast.error('Please select at least one platform');
           return false;
         }
         return true;
-      case 9: {
+      case 10: {
         const hasInvalidCompetitorWebsite = formData.competitors.some(
           (competitor) => competitor.website.trim() && !isValidUrl(competitor.website)
         );
@@ -338,13 +351,13 @@ export default function OwnerOnboarding() {
         }
         return true;
       }
-      case 10:
+      case 11:
         if (formData.hasPreviousCampaigns === '') {
           toast.error('Please select Yes or No');
           return false;
         }
         return true;
-      case 11:
+      case 12:
         if (
           formData.hasPreviousCampaigns === true &&
           !formData.previousCampaignDescription.trim()
@@ -353,7 +366,7 @@ export default function OwnerOnboarding() {
           return false;
         }
         return true;
-      case 12:
+      case 13:
         if (!formData.targetAudience.ageRange || !formData.targetAudience.gender || !formData.targetAudience.location) {
           toast.error('Please complete all target audience fields');
           return false;
@@ -386,10 +399,10 @@ export default function OwnerOnboarding() {
         previous_campaign_description:
           formData.hasPreviousCampaigns === true ? formData.previousCampaignDescription : '',
         website: formData.website,
-        platforms: formData.platformsUsed,
+        platforms: normalizePlatformList(formData.platformsUsed),
         image: formData.imageUrl,
-        // Keep optional advanced audience details for forward compatibility.
-        targetAudience: formData.targetAudience
+        brandTone: formData.brandTone,
+        targetAudience: formData.targetAudience,
       };
 
       const res = await completeCampaignOwnerOnboarding(payload);
@@ -623,6 +636,16 @@ export default function OwnerOnboarding() {
       )
     },
     {
+      title: 'Brand Voice',
+      icon: Target,
+      component: (
+        <BrandVoiceFields
+          brandTone={formData.brandTone}
+          onChange={(brandTone) => handleChange('brandTone', brandTone)}
+        />
+      ),
+    },
+    {
       title: 'Website',
       icon: Globe,
       component: (
@@ -726,21 +749,21 @@ export default function OwnerOnboarding() {
             Which marketing platforms do you currently use?
           </label>
           <div className="grid grid-cols-2 gap-3">
-            {platforms.map((platform) => (
+            {PLATFORM_OPTIONS.map((platform) => (
               <motion.button
-                key={platform}
+                key={platform.value}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => handlePlatformToggle(platform)}
+                onClick={() => handlePlatformToggle(platform.value)}
                 className={`p-4 rounded-lg border-2 transition-all duration-300 ${
-                  formData.platformsUsed.includes(platform)
+                  normalizePlatformList(formData.platformsUsed).includes(platform.value)
                     ? 'border-[#C1B6FD] bg-[#C1B6FD]/10 text-white'
                     : 'border-white/10 bg-white/5 text-gray-300 hover:border-white/20'
                 }`}
               >
                 <span className="flex items-center justify-between">
-                  {platform}
-                  {formData.platformsUsed.includes(platform) && (
+                  {platform.label}
+                  {normalizePlatformList(formData.platformsUsed).includes(platform.value) && (
                     <CheckCircle2 className="w-5 h-5 text-[#C1B6FD]" />
                   )}
                 </span>

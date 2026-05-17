@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import socialMediaService from '../api/SocialMediaApi';
 
-const useSocialMediaStore = create((set) => ({
+const useSocialMediaStore = create((set, get) => ({
   accounts: [],
   currentAccount: null,
   stats: null,
@@ -78,18 +78,59 @@ const useSocialMediaStore = create((set) => ({
 
       console.log('[STORE] raw channels received:', raw.length);
 
-      const mapped = raw.map((ch) => ({
-        id: ch.id ?? ch._id,
-        platform: ch.platform,
-        accountName: ch.accountName,
-        username: ch.accountUsername,
-        profilePicture: ch.profilePicture,
-        status: ch.status,
-        platformData: ch.platformData,
-        isSimulated: ch.platformData?.isSimulated ?? false,
-        lastSyncAt: ch.lastSyncAt,
-        createdAt: ch.createdAt,
-      }));
+      const mapped = raw.map((ch) => {
+        const pd = ch.platformData && typeof ch.platformData === 'object' ? ch.platformData : {};
+        const handle =
+          ch.handle ?? pd.handle ?? ch.screen_name ?? pd.screen_name ?? null;
+        const channelTitle = ch.channelTitle ?? pd.channelTitle ?? null;
+        const pageName =
+          ch.name ??
+          pd.name ??
+          pd.pageName ??
+          pd.page_name ??
+          pd.page_title ??
+          null;
+        const usernameRaw =
+          ch.accountUsername ??
+          ch.username ??
+          handle ??
+          ch.screen_name ??
+          pageName ??
+          channelTitle ??
+          ch.accountName ??
+          '';
+        const isSimulated = Boolean(pd.isSimulated ?? ch.isSimulated);
+        const connectionStatus = (() => {
+          const s = (ch.status || '').toLowerCase();
+          if (isSimulated) return 'simulated';
+          if (s.includes('sync')) return 'syncing';
+          if (s.includes('error') || s === 'failed' || s === 'disconnected') return 'error';
+          return 'connected';
+        })();
+        const followers =
+          pd.followerCount ?? pd.followers ?? ch.followers ?? ch.followersCount ?? null;
+        const engagementRate =
+          pd.engagement ?? ch.engagement ?? pd.engagement_rate ?? ch.engagement_rate ?? null;
+
+        return {
+          id: ch.id ?? ch._id,
+          platform: ch.platform,
+          accountName: ch.accountName,
+          username: usernameRaw,
+          pageName,
+          handle,
+          channelTitle,
+          profilePicture: ch.profilePicture ?? pd.profilePicture ?? pd.thumbnail ?? null,
+          status: ch.status,
+          platformData: ch.platformData,
+          isSimulated,
+          connectionStatus,
+          followers,
+          engagementRate,
+          lastSyncAt: ch.lastSyncAt,
+          createdAt: ch.createdAt,
+        };
+      });
 
       set({ accounts: mapped, isLoading: false });
       return { success: true, data: mapped };
@@ -101,28 +142,56 @@ const useSocialMediaStore = create((set) => ({
     }
   },
 
-  // Get stats for a platform
-  getStats: async (platform) => {
+  connectTikTokSimulated: async (username, displayName) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await socialMediaService.getStats(platform);
-      const payload = response?.data ?? response ?? {};
-      const ok = response?.success === true || payload?.status === 'success' || payload?.stats;
-
-      if (!ok) {
-        throw new Error(payload?.message || 'Failed to fetch stats');
-      }
-
-      const stats = payload?.stats || payload?.data || payload;
-      set({ stats, isLoading: false });
-      return { success: true, data: stats };
-    } catch (error) {
-      const errorMessage = typeof error === 'string' ? error : error?.message || 'Failed to fetch stats';
-      set({ error: errorMessage, isLoading: false });
+      await socialMediaService.connectTikTokSimulated(username, displayName);
+      await get().getAccounts();
+      return { success: true };
+    } catch (err) {
+      const errorMessage =
+        typeof err === 'string' ? err : err?.message || 'Failed to connect simulated TikTok';
+      set({ error: errorMessage });
       return { success: false, error: errorMessage };
+    } finally {
+      set({ isLoading: false });
     }
   },
 
+  // Get stats for a channel (optional silent: no global isLoading, no error banner)
+  getStats: async (channelId, options = {}) => {
+    const silent = options.silent === true;
+    if (!silent) set({ isLoading: true, error: null });
+    try {
+      const response = await socialMediaService.getStats(channelId);
+
+      const data = response?.data ?? response ?? {};
+
+      set((state) => ({
+        accounts: state.accounts.map((a) =>
+          String(a.id) === String(channelId)
+            ? {
+                ...a,
+                followers: data.followers ?? data.followerCount ?? a.followers,
+                engagementRate: data.engagement ?? data.engagement_rate ?? a.engagementRate,
+                engagement: data.engagement ?? a.engagement,
+                likes: data.likes ?? a.likes,
+                reach: data.reach ?? a.reach,
+                impressions: data.impressions ?? a.impressions,
+                postsCount: data.postsCount ?? a.postsCount,
+              }
+            : a
+        ),
+        ...(silent ? {} : { isLoading: false }),
+      }));
+
+      return { success: true, data };
+    } catch (error) {
+      const errorMessage = error?.message || 'Failed to fetch stats';
+      if (!silent) set({ error: errorMessage, isLoading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
   getPosts: async () => {
     set({ postsLoading: true });
     try {

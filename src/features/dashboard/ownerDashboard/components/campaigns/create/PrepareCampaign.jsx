@@ -3,7 +3,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import useProfileStore from '../../../../../../stores/profileStore';
-import aiCampaignApi from '../../../../../../api/aiCampaignApi';
+import aiCampaignApi, { buildCampaignBriefPayload } from '../../../../../../api/aiCampaignApi';
+import {
+  PLATFORM_OPTIONS,
+  formatPlatformsForDisplay,
+  normalizePlatformList,
+} from '../../../../../../utils/platformUtils';
 
 function PrepareCampaign() {
   const navigate = useNavigate();
@@ -17,6 +22,7 @@ function PrepareCampaign() {
   const [currentStep, setCurrentStep] = useState(0);
   const [ownerEdits, setOwnerEdits] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [campaignGoalDetails, setCampaignGoalDetails] = useState('');
 
   // Audience location search-select state
   const [locationQuery, setLocationQuery] = useState('');
@@ -42,26 +48,54 @@ function PrepareCampaign() {
         : typeof ownerProfile?.target_market === 'string' && ownerProfile.target_market.trim()
           ? ownerProfile.target_market.split(',').map((item) => item.trim()).filter(Boolean)
           : [],
-      competitors: Array.isArray(ownerProfile?.competitors) ? ownerProfile.competitors : [],
+      competitors: Array.isArray(ownerProfile?.competitors)
+        ? ownerProfile.competitors.map((c) => ({
+            name: c?.name || (typeof c === 'string' ? c : ''),
+            platforms: Array.isArray(c?.platforms) ? c.platforms : [],
+            notes: c?.notes || c?.website || '',
+          }))
+        : [],
       has_previous_campaigns: Boolean(ownerProfile?.has_previous_campaigns),
       previous_campaign_description: ownerProfile?.previous_campaign_description || '',
       industry: ownerProfile?.industry || '',
       website: ownerProfile?.website || '',
-      current_channels: Array.isArray(ownerProfile?.current_channels) ? ownerProfile.current_channels : [],
-      platforms: Array.isArray(ownerProfile?.platforms) ? ownerProfile.platforms : [],
+      current_channels: normalizePlatformList(ownerProfile?.current_channels),
+      platforms: normalizePlatformList(ownerProfile?.platforms),
+      brand_tone: (() => {
+        const tone = ownerProfile?.brandTone || ownerProfile?.brand_tone;
+        return tone
+        ? {
+            tone_formality: tone.tone_formality ?? 3,
+            tone_playfulness: tone.tone_playfulness ?? 3,
+            tone_boldness: tone.tone_boldness ?? 3,
+            preferred_vocabulary: tone.preferred_vocabulary || [],
+            avoided_vocabulary: tone.avoided_vocabulary || [],
+          }
+        : {
+            tone_formality: 3,
+            tone_playfulness: 3,
+            tone_boldness: 3,
+            preferred_vocabulary: [],
+            avoided_vocabulary: [],
+          };
+      })(),
       targetAudience: {
         gender: ownerProfile?.targetAudience?.gender || '',
         ageRange: ownerProfile?.targetAudience?.ageRange || '',
         location: ownerProfile?.targetAudience?.location || '',
       },
     }),
-    [ownerProfile]
+    [ownerProfile, campaignData]
   );
 
   const ownerDraft = useMemo(
     () => ({
       ...ownerBase,
       ...ownerEdits,
+      brand_tone: {
+        ...(ownerBase.brand_tone || {}),
+        ...(ownerEdits.brand_tone || {}),
+      },
       targetAudience: {
         ...(ownerBase.targetAudience || {}),
         ...(ownerEdits.targetAudience || {}),
@@ -92,9 +126,7 @@ function PrepareCampaign() {
 
   const targetMarketOptions = ['Egypt', 'Saudi Arabia', 'UAE', 'GCC', 'MENA', 'Europe', 'USA', 'Worldwide'];
 
-  const platformOptions = ['Instagram', 'TikTok', 'Facebook', 'YouTube', 'LinkedIn', 'X (Twitter)'];
-
-
+  const platformOptions = PLATFORM_OPTIONS;
 
   const steps = useMemo(
     () => [
@@ -137,7 +169,12 @@ function PrepareCampaign() {
   };
 
   const toggleOwnerArrayValue = (field, value) => {
-    const current = Array.isArray(ownerDraft[field]) ? ownerDraft[field] : [];
+    const current =
+      field === 'platforms'
+        ? normalizePlatformList(ownerDraft[field])
+        : Array.isArray(ownerDraft[field])
+          ? ownerDraft[field]
+          : [];
     const next = current.includes(value)
       ? current.filter((item) => item !== value)
       : [...current, value];
@@ -148,7 +185,10 @@ function PrepareCampaign() {
     const current = Array.isArray(ownerDraft.competitors) ? ownerDraft.competitors : [];
     setOwnerEdits((prev) => ({
       ...prev,
-      competitors: [...current, { name: '', website: '', notes: '' }],
+      competitors: [
+        ...current,
+        { name: '', platforms: [], notes: '' },
+      ],
     }));
   };
 
@@ -180,12 +220,19 @@ function PrepareCampaign() {
 
   const buildAiDescription = () => {
     const market = Array.isArray(ownerDraft.target_market) ? ownerDraft.target_market.join(', ') : '';
-    const platforms = Array.isArray(ownerDraft.platforms) ? ownerDraft.platforms.join(', ') : '';
+    const platforms = formatPlatformsForDisplay(ownerDraft.platforms);
     const competitors = Array.isArray(ownerDraft.competitors)
       ? ownerDraft.competitors
-        .map((item) => (typeof item === 'string' ? item : item?.name || item?.website || ''))
-        .filter(Boolean)
-        .join(', ')
+          .map((c) => {
+            if (typeof c === 'string') return c;
+            const parts = [c?.name].filter(Boolean);
+            if (c?.platforms?.length) {
+              parts.push(`(${formatPlatformsForDisplay(c.platforms)})`);
+            }
+            return parts.join(' ');
+          })
+          .filter(Boolean)
+          .join(', ')
       : '';
 
     return [
@@ -269,21 +316,32 @@ function PrepareCampaign() {
     try {
       const ownerProfileForAi = {
         ...ownerDraft,
+        platforms: normalizePlatformList(ownerDraft.platforms),
+        current_channels: normalizePlatformList(ownerDraft.platforms),
+        competitors: (ownerDraft.competitors || []).map((c) => ({
+          ...c,
+          platforms: normalizePlatformList(c.platforms),
+        })),
         targetAudience: {
           ageRange: ownerDraft.targetAudience?.ageRange || '',
           gender: ownerDraft.targetAudience?.gender || 'all',
           location: ownerDraft.targetAudience?.location || '',
         },
       };
-  
-      const { payload, response } = await aiCampaignApi.generateCampaignWithProfileContext({
+
+      const payload = buildCampaignBriefPayload({
+        ownerDraft: ownerProfileForAi,
         campaignData: campaignDataForAi,
-        ownerProfile: ownerProfileForAi,
+        campaignGoalDetails,
       });
+
+      console.log('ðŸ“¦ Final payload to AI engine:', JSON.stringify(payload, null, 2));
+
+      const { payload: sentPayload, response } = await aiCampaignApi.generateWithPayload(payload);
+
+      console.log(' AI Campaign Response:', response);
   
-      console.log("✅ AI Campaign Response:", response);
-  
-      // FastAPI returns { strategy, calendar } directly — no wrapper
+      // FastAPI returns { strategy, calendar } directly â€” no wrapper
       if (!response?.strategy) {
         throw new Error('Invalid response from AI pipeline');
       }
@@ -292,14 +350,38 @@ function PrepareCampaign() {
   
       navigate('/dashboard/owner/campaigns/generated', {
         state: {
-          campaignData: payload,       // the brief you sent
-          strategy: response.strategy, // AI strategy block
-          calendar: response.calendar, // AI content calendar
+          campaignData: campaignDataForAi,
+          ownerDraft: ownerProfileForAi,
+          campaignGoalDetails,
+          strategy: response.strategy,
+          calendar: response.calendar,
+          influencer_matches: response.influencer_matches || [],
+          influencer_strategy_note: response.influencer_strategy_note || '',
+          aiPreview: {
+            strategy: response.strategy,
+            execution: {
+              contentCalendar: (response.calendar?.days || []).map((day) => ({
+                day: day.day,
+                date: day.date,
+                platform: day.channel || day.platform,
+                contentType: day.contentType || 'post',
+                task: Array.isArray(day.tasks) ? day.tasks[0] : day.task,
+                caption: day.caption || '',
+              })),
+              tactical_plan: response.strategy?.tactical_plan || null,
+            },
+            estimations: {
+              estimatedResults: { metrics: response.strategy?.kpis || [] },
+              ml_score: response.strategy?.ml_score,
+              ml_verdict: response.strategy?.ml_verdict,
+            },
+            generatedAt: new Date().toISOString(),
+          },
         },
       });
   
     } catch (error) {
-      console.error("❌ Generation error:", error);
+      console.error(" Generation error:", error);
       toast.error(error?.message || 'Failed to generate campaign', { position: 'top-right', autoClose: 4000 });
     } finally {
       setIsSubmitting(false);
@@ -319,9 +401,7 @@ function PrepareCampaign() {
       </div>
     );
   }
-console.log("campaignData", campaignData);
-console.log("ownerDraft", ownerDraft);
-console.log("compatators", campaignData?.competitors);
+
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-white/10 bg-[#1e1632]/55 backdrop-blur-md px-6 py-6 shadow-xl">
@@ -387,6 +467,18 @@ console.log("compatators", campaignData?.competitors);
                 <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                   <div className="text-xs text-gray-400">Duration</div>
                   <div className="text-white font-medium mt-1">{campaignData.durationWeeks} week(s)</div>
+                </div>
+                <div className="md:col-span-2 bg-white/5 border border-white/10 rounded-xl p-4">
+                  <label className="block text-xs text-gray-400 mb-2">
+                    Campaign Goal Details <span className="text-gray-500">(optional but recommended)</span>
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={campaignGoalDetails}
+                    onChange={(e) => setCampaignGoalDetails(e.target.value)}
+                    placeholder='e.g. "We want to reach 25-35 year old professionals in Cairo and drive app downloads during Ramadan"'
+                    className="w-full bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none resize-none"
+                  />
                 </div>
               </div>
             </div>
@@ -475,6 +567,101 @@ console.log("compatators", campaignData?.competitors);
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 resize-none"
                   />
                 </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-gray-300 mb-1">Brand Voice</label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    These sliders guide how the AI writes all content for your brand.
+                  </p>
+
+                  {[
+                    { label: 'Tone', left: 'Casual', right: 'Formal', field: 'tone_formality' },
+                    { label: 'Style', left: 'Serious', right: 'Playful', field: 'tone_playfulness' },
+                    { label: 'Energy', left: 'Subtle', right: 'Bold', field: 'tone_boldness' },
+                  ].map(({ label, left, right, field }) => {
+                    const value = ownerDraft.brand_tone?.[field] ?? 3;
+                    return (
+                      <div key={field} className="mb-4">
+                        <div className="flex justify-between text-xs text-gray-400 mb-1">
+                          <span>
+                            {label}: <span className="text-white">{left} → {right}</span>
+                          </span>
+                          <span className="text-[#C1B6FD]">{value} / 5</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-gray-500 w-14 text-right">{left}</span>
+                          <input
+                            type="range"
+                            min={1}
+                            max={5}
+                            step={1}
+                            value={value}
+                            onChange={(e) =>
+                              setOwnerEdits((prev) => ({
+                                ...prev,
+                                brand_tone: {
+                                  ...(prev.brand_tone || ownerDraft.brand_tone || {}),
+                                  [field]: Number(e.target.value),
+                                },
+                              }))
+                            }
+                            className="flex-1 accent-[#C1B6FD]"
+                          />
+                          <span className="text-xs text-gray-500 w-14">{right}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">
+                        Words you always use <span className="text-gray-500">(comma separated)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={(ownerDraft.brand_tone?.preferred_vocabulary || []).join(', ')}
+                        onChange={(e) =>
+                          setOwnerEdits((prev) => ({
+                            ...prev,
+                            brand_tone: {
+                              ...(prev.brand_tone || ownerDraft.brand_tone || {}),
+                              preferred_vocabulary: e.target.value
+                                .split(',')
+                                .map((v) => v.trim())
+                                .filter(Boolean),
+                            },
+                          }))
+                        }
+                        placeholder="e.g. craft, effortless, smart"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">
+                        Words to avoid <span className="text-gray-500">(comma separated)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={(ownerDraft.brand_tone?.avoided_vocabulary || []).join(', ')}
+                        onChange={(e) =>
+                          setOwnerEdits((prev) => ({
+                            ...prev,
+                            brand_tone: {
+                              ...(prev.brand_tone || ownerDraft.brand_tone || {}),
+                              avoided_vocabulary: e.target.value
+                                .split(',')
+                                .map((v) => v.trim())
+                                .filter(Boolean),
+                            },
+                          }))
+                        }
+                        placeholder="e.g. cheap, basic, discount"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
+                      />
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
           )}
@@ -557,45 +744,88 @@ console.log("compatators", campaignData?.competitors);
                   </div>
 
                   {(Array.isArray(ownerDraft.competitors) ? ownerDraft.competitors : []).map((competitor, index) => (
-                    <div key={`competitor-${index}`} className="grid grid-cols-1 md:grid-cols-3 gap-2 bg-white/5 border border-white/10 rounded-xl p-3">
+                    <div
+                      key={`competitor-${index}`}
+                      className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-white">
+                          Competitor {index + 1}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeCompetitor(index)}
+                          className="px-3 py-1 rounded-lg bg-red-500/20 text-red-200 hover:bg-red-500/30 text-xs"
+                        >
+                          Remove
+                        </button>
+                      </div>
+
                       <div>
-                        <label className="block text-xs text-gray-300 mb-1">Competitor Name</label>
+                        <label className="block text-xs text-gray-400 mb-1">
+                          Competitor name <span className="text-red-400">*</span>
+                        </label>
                         <input
                           type="text"
                           value={competitor?.name || ''}
                           onChange={(e) => updateCompetitor(index, 'name', e.target.value)}
-                          placeholder="Name"
+                          placeholder="e.g. Nespresso"
                           className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
                         />
                       </div>
+
                       <div>
-                        <label className="block text-xs text-gray-300 mb-1">Competitor Website</label>
+                        <label className="block text-xs text-gray-400 mb-2">
+                          Their active platforms{' '}
+                          {/* <span className="text-gray-500">(optional â€” helps AI infer their strategy)</span> */}
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {platformOptions.map((platform) => {
+                            const selected = normalizePlatformList(competitor?.platforms).includes(
+                              platform.value
+                            );
+                            return (
+                              <button
+                                key={platform.value}
+                                type="button"
+                                onClick={() => {
+                                  const current = normalizePlatformList(competitor?.platforms);
+                                  const next = current.includes(platform.value)
+                                    ? current.filter((p) => p !== platform.value)
+                                    : [...current, platform.value];
+                                  updateCompetitor(index, 'platforms', next);
+                                }}
+                                className={`px-3 py-1 rounded-full text-xs border transition ${
+                                  selected
+                                    ? 'bg-[#C1B6FD]/20 border-[#C1B6FD]/60 text-[#E9E3FF]'
+                                    : 'bg-white/5 border-white/15 text-gray-300 hover:bg-white/10'
+                                }`}
+                              >
+                                {platform.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">
+                          Notes or website{' '}
+                          <span className="text-gray-500">(optional)</span>
+                        </label>
                         <input
                           type="text"
-                          value={competitor?.website || ''}
-                          onChange={(e) => updateCompetitor(index, 'website', e.target.value)}
-                          placeholder="Website"
+                          value={competitor?.notes || ''}
+                          onChange={(e) => updateCompetitor(index, 'notes', e.target.value)}
+                          placeholder="e.g. Premium coffee brand, strong TikTok presence"
                           className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
                         />
                       </div>
-                      <div className="flex gap-2">
-                        <div className="flex-1">
-                          <label className="block text-xs text-gray-300 mb-1">Notes</label>
-                          <input
-                            type="text"
-                            value={competitor?.notes || ''}
-                            onChange={(e) => updateCompetitor(index, 'notes', e.target.value)}
-                            placeholder="Notes"
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeCompetitor(index)}
-                          className="mt-6 px-3 py-2 rounded-lg bg-red-500/20 text-red-200 hover:bg-red-500/30 text-xs"
-                        >
-                          Remove
-                        </button>
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-[#C1B6FD]/10 border border-[#C1B6FD]/20 text-[#C1B6FD]">
+                          AI will infer their strengths, weaknesses, and positioning automatically
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -624,18 +854,20 @@ console.log("compatators", campaignData?.competitors);
                   <div className="rounded-xl border border-white/10 bg-white/5 p-3">
                     <div className="flex flex-wrap gap-2">
                       {platformOptions.map((platform) => {
-                        const selected = (ownerDraft.platforms || []).includes(platform);
+                        const selected = normalizePlatformList(ownerDraft.platforms).includes(
+                          platform.value
+                        );
                         return (
                           <button
-                            key={platform}
+                            key={platform.value}
                             type="button"
-                            onClick={() => toggleOwnerArrayValue('platforms', platform)}
+                            onClick={() => toggleOwnerArrayValue('platforms', platform.value)}
                             className={`px-3 py-1.5 rounded-full text-xs border transition ${selected
                                 ? 'bg-[#C1B6FD]/20 border-[#C1B6FD]/60 text-[#E9E3FF]'
                                 : 'bg-white/5 border-white/15 text-gray-300 hover:bg-white/10'
                               }`}
                           >
-                            {platform}
+                            {platform.label}
                           </button>
                         );
                       })}

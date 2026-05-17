@@ -183,6 +183,8 @@ console.log("campaign", campaign)
   const campaignDuration = getDurationDays(campaign.startDate, campaign.endDate);
   const calendarItems = execution?.contentCalendar?.length ? execution.contentCalendar : (campaign.contentCalendar || []);
   const visibleCalendar = showAllCalendar ? calendarItems : calendarItems.slice(0, 7);
+  const brandTone = campaign.brandTone || campaign.aiSnapshot?.brandTone || activeAiVersion?.brandTone || null;
+  
 
   return (
     <motion.div
@@ -343,6 +345,34 @@ console.log("campaign", campaign)
               ))}
             </div>
           </motion.div>
+
+          {brandTone && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+              className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-[#745CB4]/20"><Megaphone className="w-5 h-5 text-[#C1B6FD]" /></div>
+                <h3 className="text-xl font-bold text-white">Brand Voice</h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                  <p className="text-xs text-gray-400">Formality</p>
+                  <p className="text-white font-semibold">{brandTone.tone_formality ?? 3} / 5</p>
+                </div>
+                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                  <p className="text-xs text-gray-400">Playfulness</p>
+                  <p className="text-white font-semibold">{brandTone.tone_playfulness ?? 3} / 5</p>
+                </div>
+                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                  <p className="text-xs text-gray-400">Boldness</p>
+                  <p className="text-white font-semibold">{brandTone.tone_boldness ?? 3} / 5</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}

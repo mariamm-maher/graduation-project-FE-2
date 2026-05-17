@@ -202,6 +202,67 @@ const useCampaignStore = create((set) => ({
     }
   },
 
+  // Fetch Active Campaigns with Smart Tracking (Enhanced)
+  fetchActiveCampaignsWithTracking: async ({ page = 1, limit = 10 } = {}) => {
+    set({ isLoading: true, error: null });
+    try {
+      // Try enhanced endpoint first
+      const response = await campaignService.getActiveCampaignsWithTracking({ page, limit });
+
+      if (response.status === 'success' || response.success) {
+        const campaigns = response.data || [];
+        const pagination = response.pagination || {};
+
+        set({ 
+          activeCampaigns: campaigns, 
+          activeTrackingTools: { 
+            totalActiveCampaigns: pagination.total || campaigns.length,
+            enhanced: true 
+          }, 
+          activePagination: {
+            total: pagination.total || campaigns.length,
+            page: pagination.page || page,
+            limit: pagination.limit || limit,
+            totalPages: pagination.totalPages || 1,
+          }, 
+          isLoading: false, 
+          error: null 
+        });
+        return { success: true, data: campaigns, pagination };
+      }
+
+      throw new Error(response.message || 'Failed to fetch enhanced tracking data');
+    } catch (error) {
+      // Fallback to legacy endpoint if enhanced fails
+      console.warn('Enhanced tracking failed, falling back to legacy:', error);
+      // Call the legacy action directly
+      const fallbackResponse = await campaignService.getActiveCampaigns({ page, limit });
+      
+      if (fallbackResponse.status === 'success' || fallbackResponse.success) {
+        const campaigns = fallbackResponse.data?.campaigns || [];
+        const trackingTools = fallbackResponse.data?.trackingTools || null;
+        const total = fallbackResponse.data?.pagination?.total ?? trackingTools?.totalActiveCampaigns ?? campaigns.length;
+        const totalPages = fallbackResponse.data?.pagination?.totalPages ?? Math.max(1, Math.ceil(total / limit));
+        
+        set({ 
+          activeCampaigns: campaigns, 
+          activeTrackingTools: trackingTools, 
+          activePagination: {
+            total,
+            page: fallbackResponse.data?.pagination?.page ?? page,
+            limit: fallbackResponse.data?.pagination?.limit ?? limit,
+            totalPages,
+          }, 
+          isLoading: false, 
+          error: null 
+        });
+        return { success: true, data: campaigns, trackingTools };
+      }
+      
+      throw new Error(fallbackResponse.message || 'Failed to fetch campaigns');
+    }
+  },
+
   // Fetch Campaigns Overview
   fetchCampaignsOverview: async () => {
     set({ isLoading: true, error: null });
@@ -293,11 +354,13 @@ const useCampaignStore = create((set) => ({
     }
   },
 
-  // Fetch Campaign Analytics
-  fetchCampaignAnalytics: async () => {
+  // Fetch Campaign Analytics (overview or single campaign)
+  fetchCampaignAnalytics: async (campaignId = null) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await campaignService.getCampaignAnalytics();
+      const response = campaignId 
+        ? await campaignService.getCampaignAnalytics(campaignId)
+        : await campaignService.getCampaignAnalytics();
       if (response.status === 'success' || response.success) {
         set({ campaignAnalytics: response.data, isLoading: false, error: null });
         return { success: true, data: response.data };

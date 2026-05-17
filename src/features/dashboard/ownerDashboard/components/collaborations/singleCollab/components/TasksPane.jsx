@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, Calendar, CheckCircle2, LayoutGrid, ListChecks, Loader2, Plus, RefreshCw, User, XCircle } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { AlertCircle, ArrowRight, Calendar, CheckCircle2, LayoutGrid, ListChecks, Loader2, Plus, RefreshCw, User, XCircle } from 'lucide-react';
 import {
   closestCorners,
   DndContext,
@@ -24,11 +25,22 @@ const STATUS_MAP = {
 };
 
 function normalizeTask(t) {
+  const raw = t?.status;
+  const key =
+    typeof raw === 'string'
+      ? raw.trim().toLowerCase().replace(/\s+/g, '_')
+      : raw;
+  const status = STATUS_MAP[key] ?? STATUS_MAP[raw] ?? (typeof key === 'string' ? key : raw);
   return {
     ...t,
     id: String(t.id),
-    status: STATUS_MAP[t.status] ?? t.status,
+    status,
   };
+}
+
+function isTaskInReview(task) {
+  const s = task?.status;
+  return s === 'review' || s === 'in_review';
 }
 
 export default function TasksPane() {
@@ -46,6 +58,7 @@ export default function TasksPane() {
   const [newTaskDue,  setNewTaskDue]    = useState('');
   const [newTaskPlatform, setNewTaskPlatform] = useState('');
   const [createLoading, setCreateLoading]     = useState(false);
+  const [approveConfirmTask, setApproveConfirmTask] = useState(null);
 
   useEffect(() => {
     getMyTasksAsOwner();
@@ -176,7 +189,7 @@ export default function TasksPane() {
   const tasksByStatus = useMemo(() => ({
     todo:        tasks.filter((t) => t.status === 'todo'),
     in_progress: tasks.filter((t) => t.status === 'in_progress'),
-    review:      tasks.filter((t) => t.status === 'review'),
+    review:      tasks.filter((t) => isTaskInReview(t)),
     completed:   tasks.filter((t) => t.status === 'completed'),
   }), [tasks]);
 
@@ -236,13 +249,76 @@ export default function TasksPane() {
   };
 
   const onOpenTaskDetails = useCallback((task) => {
-    if (task.status === 'review') {
-      if (window.confirm(`Approve task "${task.taskName}"?`)) handleApprove(task.id);
+    if (isTaskInReview(task)) {
+      setApproveConfirmTask(task);
     }
-  }, [handleApprove]);
+  }, []);
+
+  const confirmApprove = useCallback(async () => {
+    if (!approveConfirmTask) return;
+    const taskId = approveConfirmTask.id;
+    setApproveConfirmTask(null);
+    await handleApprove(taskId);
+  }, [approveConfirmTask, handleApprove]);
+
+  const modalRoot = typeof document !== 'undefined' ? document.body : null;
 
   return (
     <>
+    {approveConfirmTask && modalRoot &&
+      createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="owner-approve-task-title"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => !actionLoading && setApproveConfirmTask(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl border border-[#3f3b5a] bg-[#1e1b2e] p-6 space-y-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="owner-approve-task-title" className="text-lg font-bold text-white">
+              Approve Task
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <span className="block text-xs text-[#a09cb0] mb-1">Task name</span>
+                <div className="w-full px-3 py-2 rounded-lg bg-[#161426] border border-[#3f3b5a] text-sm text-white">
+                  {approveConfirmTask.taskName}
+                </div>
+              </div>
+              <p className="text-xs text-[#a09cb0] leading-relaxed">
+                Approve this task and move it to <span className="text-white font-medium">Completed</span>?
+              </p>
+            </div>
+            <div className="flex gap-2 justify-end pt-1">
+              <button
+                type="button"
+                onClick={() => setApproveConfirmTask(null)}
+                disabled={!!actionLoading}
+                className="px-4 py-2 rounded-lg border border-[#3f3b5a] text-[#a09cb0] text-sm hover:text-white hover:border-[#5c5780] transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmApprove}
+                disabled={!!actionLoading}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#7c5dfa] border border-[#9b87ff]/40 text-white text-sm font-semibold hover:bg-[#6d4eea] disabled:opacity-50 transition-colors shadow-lg shadow-[#7c5dfa]/20"
+              >
+                {actionLoading === approveConfirmTask.id + '_approve' ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ArrowRight className="w-4 h-4" />
+                )}
+                Approve Task
+              </button>
+            </div>
+          </div>
+        </div>,
+        modalRoot
+      )}
     {createModal && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div className="w-full max-w-md rounded-2xl border border-[#745CB4]/30 bg-[#1A112C] p-6 space-y-4 shadow-2xl">
@@ -463,7 +539,7 @@ export default function TasksPane() {
                       <button
                         type="button"
                         disabled={!!actionLoading}
-                        onClick={() => handleApprove(task.id)}
+                        onClick={() => setApproveConfirmTask(task)}
                         className="flex items-center gap-1 px-2 py-0.5 rounded bg-green-500/20 border border-green-500/30 text-green-300 text-xs hover:bg-green-500/35 disabled:opacity-40 transition-colors"
                       >
                         {actionLoading === task.id + '_approve' ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}

@@ -76,6 +76,21 @@ const adminService = {
     }
   },
 
+  // Normalize GET /admin/sessions body to { sessions, pagination }
+  parseSessionsResponse(response) {
+    if (!response) return { sessions: [], pagination: null };
+    const payload = response.data ?? response;
+    const sessions =
+      payload?.sessions ??
+      response?.sessions ??
+      (Array.isArray(payload) ? payload : []);
+    const pagination = payload?.pagination ?? response?.pagination ?? null;
+    return {
+      sessions: Array.isArray(sessions) ? sessions : [],
+      pagination,
+    };
+  },
+
   // Get all sessions
   getSessions: async (params = {}) => {
     try {
@@ -243,6 +258,62 @@ const adminService = {
     } catch (error) {
       console.error('Header stats error:', error);
       throw error.response?.data?.message || 'Failed to fetch header stats';
+    }
+  },
+
+  parseChatroomsResponse(response) {
+    if (!response) return { chatrooms: [], pagination: null };
+    const payload = response.data ?? response;
+    const chatrooms =
+      payload?.chatrooms ??
+      response?.chatrooms ??
+      (Array.isArray(payload) ? payload : []);
+    return {
+      chatrooms: Array.isArray(chatrooms) ? chatrooms : [],
+      pagination: payload?.pagination ?? response?.pagination ?? null,
+    };
+  },
+
+  parseChatMessagesResponse(response) {
+    if (!response) return { messages: [], chatRoom: null, pagination: null };
+    const payload = response.data ?? response;
+    const messages =
+      payload?.messages ??
+      response?.messages ??
+      (Array.isArray(payload) ? payload : []);
+    return {
+      messages: Array.isArray(messages) ? messages : [],
+      chatRoom: payload?.chatRoom ?? response?.chatRoom ?? null,
+      pagination: payload?.pagination ?? response?.pagination ?? null,
+    };
+  },
+
+  getChatrooms: async (params = {}) => {
+    try {
+      const { page = 1, limit = 50, collaborationId } = params;
+      const query = new URLSearchParams();
+      query.set('page', page);
+      query.set('limit', limit);
+      if (collaborationId) query.set('collaborationId', collaborationId);
+      const response = await api.get(`/admin/chatrooms?${query.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('Admin chatrooms error:', error);
+      throw error.response?.data?.message || 'Failed to fetch chat rooms';
+    }
+  },
+
+  getChatroomMessages: async (roomId, params = {}) => {
+    try {
+      const { page = 1, limit = 50 } = params;
+      const query = new URLSearchParams();
+      query.set('page', page);
+      query.set('limit', limit);
+      const response = await api.get(`/admin/chatrooms/${roomId}/messages?${query.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('Admin chat messages error:', error);
+      throw error.response?.data?.message || 'Failed to fetch chat messages';
     }
   },
 

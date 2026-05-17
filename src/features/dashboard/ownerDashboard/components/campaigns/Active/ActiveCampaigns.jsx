@@ -10,13 +10,13 @@ function ActiveCampaigns() {
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
-  const { activeCampaigns: campaignsRaw, activeTrackingTools, activePagination, isLoading, error, fetchActiveCampaigns } = useCampaignStore();
+  const { activeCampaigns: campaignsRaw, activeTrackingTools, activePagination, isLoading, error, fetchActiveCampaignsWithTracking } = useCampaignStore();
   const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
   const totalPages = activePagination?.totalPages || 1;
   const totalItems = activePagination?.total || activeTrackingTools?.totalActiveCampaigns || 0;
   useEffect(() => {
-    fetchActiveCampaigns({ page, limit: LIMIT });
-  }, [page, fetchActiveCampaigns]);
+    fetchActiveCampaignsWithTracking({ page, limit: LIMIT });
+  }, [page, fetchActiveCampaignsWithTracking]);
 
   console.log("Active campaigns:", campaigns);
   // Client-side search filter only
@@ -77,7 +77,7 @@ function ActiveCampaigns() {
             </div>
             <h3 className="text-xl font-bold text-white mb-2">Error Loading Campaigns</h3>
             <p className="text-gray-400 mb-6">{error}</p>
-            <button onClick={() => fetchActiveCampaigns({ page, limit: LIMIT })}
+            <button onClick={() => fetchActiveCampaignsWithTracking({ page, limit: LIMIT })}
               className="px-6 py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all">
               Try Again
             </button>
@@ -232,6 +232,112 @@ function ActiveCampaigns() {
                       <span className="text-purple-400">{scheduled} scheduled</span>
                       {failed > 0 && <span className="text-red-400">{failed} failed</span>}
                     </div>
+                  </div>
+                )}
+
+                {/* ── Smart Tracking: Predictions & Alerts ── */}
+                {campaign.tracking?.predictions && (
+                  <div className={`mb-4 p-3 rounded-xl border ${campaign.tracking.predictions.onTrack ? 'bg-green-500/5 border-green-500/20' : 'bg-amber-500/5 border-amber-500/20'}`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`w-2 h-2 rounded-full ${campaign.tracking.predictions.onTrack ? 'bg-green-400 animate-pulse' : 'bg-amber-400'}`} />
+                      <span className={`text-xs font-semibold ${campaign.tracking.predictions.onTrack ? 'text-green-400' : 'text-amber-400'}`}>
+                        {campaign.tracking.predictions.onTrack ? 'On Track' : 'Attention Needed'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      Predicted completion: <span className="text-white font-medium">{campaign.tracking.predictions.predictedCompletionDate || 'N/A'}</span>
+                      {campaign.tracking.trend?.velocity > 0 && (
+                        <span className="ml-2 text-[#C1B6FD]">({campaign.tracking.trend.velocity.toFixed(1)} posts/day)</span>
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                {/* ── Smart Tracking: KPI Achievement ── */}
+                {campaign.tracking?.kpis?.comparison && campaign.tracking.kpis.comparison.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-gray-400 flex items-center gap-1">
+                        <TrendingUp className="w-3.5 h-3.5 text-[#C1B6FD]" /> KPI Progress
+                      </span>
+                      <span className="text-xs text-white font-semibold">
+                        {campaign.tracking.kpis.overallAchievement || 0}% Overall
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {campaign.tracking.kpis.comparison.map((kpiItem) => (
+                        <div key={kpiItem.metric} className="flex items-center gap-3">
+                          <span className="text-[11px] text-gray-400 w-20 truncate capitalize">{kpiItem.metric.replace('_', ' ')}</span>
+                          <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${
+                                kpiItem.achievement >= 100 ? 'bg-green-400' :
+                                kpiItem.achievement >= 75 ? 'bg-blue-400' :
+                                kpiItem.achievement >= 50 ? 'bg-amber-400' : 'bg-red-400'
+                              }`}
+                              style={{ width: `${Math.min(100, kpiItem.achievement)}%` }}
+                            />
+                          </div>
+                          <span className="text-[11px] font-medium w-12 text-right">
+                            <span className={
+                              kpiItem.achievement >= 100 ? 'text-green-400' :
+                              kpiItem.achievement >= 75 ? 'text-blue-400' :
+                              kpiItem.achievement >= 50 ? 'text-amber-400' : 'text-red-400'
+                            }>
+                              {kpiItem.achievement}%
+                            </span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Smart Tracking: Performance Metrics ── */}
+                {campaign.tracking?.performance && campaign.tracking.performance.postsWithData > 0 && (
+                  <div className="grid grid-cols-4 gap-2 mb-4">
+                    <div className="bg-white/5 rounded-lg p-2 text-center">
+                      <p className="text-[10px] text-gray-400">Likes</p>
+                      <p className="text-sm font-bold text-white">{(campaign.tracking.performance.likes || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-2 text-center">
+                      <p className="text-[10px] text-gray-400">Comments</p>
+                      <p className="text-sm font-bold text-white">{(campaign.tracking.performance.comments || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-2 text-center">
+                      <p className="text-[10px] text-gray-400">Shares</p>
+                      <p className="text-sm font-bold text-white">{(campaign.tracking.performance.shares || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-2 text-center">
+                      <p className="text-[10px] text-gray-400">Eng. Rate</p>
+                      <p className="text-sm font-bold text-[#C1B6FD]">{campaign.tracking.performance.engagementRate}%</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Smart Tracking: Budget Burn ── */}
+                {campaign.tracking?.budget && campaign.tracking.budget.total > 0 && (
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-1.5 text-xs">
+                      <span className="text-gray-400 flex items-center gap-1">
+                        <DollarSign className="w-3.5 h-3.5" /> Budget Burn
+                      </span>
+                      <span className="text-white font-medium">
+                        {campaign.budget_currency} {campaign.tracking.budget.estimatedUsed?.toLocaleString()} / {campaign.tracking.budget.total?.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          campaign.tracking.budget.burnRate > 90 ? 'bg-red-400' :
+                          campaign.tracking.budget.burnRate > 75 ? 'bg-amber-400' : 'bg-green-400'
+                        }`}
+                        style={{ width: `${Math.min(100, campaign.tracking.budget.burnRate)}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-gray-500 mt-1">
+                      {campaign.tracking.budget.remaining?.toLocaleString()} {campaign.budget_currency} remaining • {campaign.tracking.budget.dailyBurnRate?.toLocaleString()}/day
+                    </p>
                   </div>
                 )}
 

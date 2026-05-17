@@ -6,6 +6,7 @@ const useAdminStore = create((set) => ({
   analytics: null,
   users: [],
   sessions: [],
+  sessionsPagination: null,
   collaborations: [],
   campaigns: [],
   recentLogs: [],
@@ -86,25 +87,22 @@ const useAdminStore = create((set) => ({
     }
   },
 
-  // Fetch Sessions
-  fetchSessions: async () => {
+  // Fetch Sessions (params: page, limit, active)
+  fetchSessions: async (params = {}) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await adminService.getSessions();
-      
-      if (response.success) {
-        set({ 
-          sessions: response.data || [],
-          isLoading: false,
-          error: null 
-        });
-        return { success: true, data: response.data };
-      }
-      
-      throw new Error(response.message || 'Failed to fetch sessions');
+      const response = await adminService.getSessions(params);
+      const { sessions, pagination } = adminService.parseSessionsResponse(response);
+      set({
+        sessions,
+        sessionsPagination: pagination,
+        isLoading: false,
+        error: null,
+      });
+      return { success: true, data: sessions, pagination };
     } catch (error) {
       const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch sessions';
-      set({ error: errorMessage, isLoading: false });
+      set({ sessions: [], error: errorMessage, isLoading: false });
       return { success: false, error: errorMessage };
     }
   },
@@ -336,6 +334,7 @@ const useAdminStore = create((set) => ({
     analytics: null,
     users: [],
     sessions: [],
+    sessionsPagination: null,
     collaborations: [],
     campaigns: [],
     recentLogs: [],

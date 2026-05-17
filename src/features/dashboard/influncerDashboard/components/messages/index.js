@@ -1,3 +1,3 @@
-import Messages from './Messages';
+import InfluencerMessages from './InfluencerMessages';
 
-export default Messages;
+export default InfluencerMessages;

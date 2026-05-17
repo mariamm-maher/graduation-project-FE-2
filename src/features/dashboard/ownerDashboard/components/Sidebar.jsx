@@ -57,7 +57,7 @@ function Sidebar() {
       )}
 
       <div 
-        className={`fixed left-0 top-0 bottom-0 pt-16 md:left-6 md:top-32 md:bottom-auto md:pt-4 flex flex-col gap-2 backdrop-blur-md md:rounded-2xl p-4 border-r md:border border-white/10 transition-all duration-300 ease-in-out z-50 overflow-y-auto w-64 bg-[#1a1a1a]/95 ${
+        className={`fixed left-0 top-0 bottom-0 pt-16 md:left-6 md:top-32 md:bottom-auto md:pt-4 flex flex-col gap-2 backdrop-blur-md md:rounded-2xl p-4 border-r md:border border-white/10 transition-all duration-300 ease-in-out z-50 w-64 bg-[#1a1a1a]/95 ${
           isHovered ? '' : 'md:w-20 md:bg-white/5'
         } ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'

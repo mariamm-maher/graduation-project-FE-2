@@ -1,21 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Crown, Users, CheckCircle2, ArrowRight, Sparkles, TrendingUp, BarChart3, Zap, Star, Building2, Rocket } from 'lucide-react';
 import { toast } from 'react-toastify';
 import useAuthStore from '../../stores/authStore';
 
-export default function RoleSelection() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [selectedRole, setSelectedRole] = useState(null);
-  const { selectRole, user, isLoading, logout } = useAuthStore();
-
-  // Get user email and userId from navigation state or auth store
-  const userEmail = location.state?.userEmail || user?.email || '';
-  const userIdFromState = location.state?.userId;
-
-  const roles = [
+const ALL_ROLES = [
     {
       id: 'campaign_owner',
       title: 'Campaign Owner',
@@ -51,7 +41,37 @@ export default function RoleSelection() {
       accentText: 'text-purple-400',
       gradient: 'from-purple-500 to-pink-500'
     }
-  ];
+];
+
+/** When adding a second role from the dashboard, only show that path (not both). */
+function resolveAddingRoleFilter(addingRole) {
+  if (!addingRole) return null;
+  const key = String(addingRole).toLowerCase();
+  if (key === 'influencer') return 'influencer';
+  if (key === 'owner' || key === 'campaign_owner' || key === 'campaign owner') return 'campaign_owner';
+  return null;
+}
+
+export default function RoleSelection() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [selectedRole, setSelectedRole] = useState(null);
+  const { selectRole, user, isLoading } = useAuthStore();
+
+  const userEmail = location.state?.userEmail || user?.email || '';
+  const userIdFromState = location.state?.userId;
+  const addingRoleFilter = resolveAddingRoleFilter(location.state?.addingRole);
+
+  const roles = useMemo(() => {
+    if (!addingRoleFilter) return ALL_ROLES;
+    return ALL_ROLES.filter((r) => r.id === addingRoleFilter);
+  }, [addingRoleFilter]);
+
+  useEffect(() => {
+    if (roles.length === 1) {
+      setSelectedRole(roles[0].id);
+    }
+  }, [roles]);
 
   const handleContinue = async () => {
     if (!selectedRole) return;
@@ -141,10 +161,18 @@ export default function RoleSelection() {
         className="text-center mb-8"
       >
         <h2 className="text-2xl sm:text-3xl font-semibold text-white mb-2 tracking-tight">
-          Choose Your Path
+          {addingRoleFilter === 'influencer'
+            ? 'Set Up Influencer Profile'
+            : addingRoleFilter === 'campaign_owner'
+              ? 'Set Up Campaign Owner Profile'
+              : 'Choose Your Path'}
         </h2>
         <p className="text-gray-400 text-base max-w-md mx-auto">
-          Select the role that best describes your objective
+          {addingRoleFilter === 'influencer'
+            ? 'Complete setup to switch to your influencer dashboard'
+            : addingRoleFilter === 'campaign_owner'
+              ? 'Complete setup to manage campaigns as an owner'
+              : 'Select the role that best describes your objective'}
         </p>
 
         {userEmail && (
@@ -161,7 +189,7 @@ export default function RoleSelection() {
       </motion.div>
 
       {/* Role Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+      <div className={`grid gap-5 mb-8 ${roles.length === 1 ? 'grid-cols-1 max-w-md mx-auto w-full' : 'grid-cols-1 md:grid-cols-2'}`}>
         {roles.map((role, index) => {
           const Icon = role.icon;
           const isSelected = selectedRole === role.id;
@@ -259,17 +287,34 @@ export default function RoleSelection() {
         </button>
 
         {/* Footer info */}
-        <div className="text-center space-y-2">
-          <p className="text-sm text-gray-400">
-            Already have an account?{' '}
+        <motion.div className="text-center space-y-2">
+          {addingRoleFilter ? (
             <button
-              onClick={() => navigate('/login')}
-              className="text-white font-medium hover:text-gray-200 transition-colors hover:underline underline-offset-4"
+              type="button"
+              onClick={() =>
+                navigate(
+                  addingRoleFilter === 'influencer'
+                    ? '/dashboard/owner'
+                    : '/dashboard/influencer'
+                )
+              }
+              className="text-sm text-gray-400 hover:text-white transition-colors"
             >
-              Sign in
+              ← Back to dashboard
             </button>
-          </p>
-        </div>
+          ) : (
+            <p className="text-sm text-gray-400">
+              Already have an account?{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/login')}
+                className="text-white font-medium hover:text-gray-200 transition-colors hover:underline underline-offset-4"
+              >
+                Sign in
+              </button>
+            </p>
+          )}
+        </motion.div>
       </motion.div>
     </div>
   );

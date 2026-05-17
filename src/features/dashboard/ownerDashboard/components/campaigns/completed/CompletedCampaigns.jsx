@@ -1,14 +1,14 @@
-import { Search, CheckCircle, Download, FileText, Calendar, DollarSign, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { Search, CheckCircle, Download, FileText, Calendar, DollarSign, ChevronLeft, ChevronRight, AlertCircle, TrendingUp, Target, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import useCampaignStore from '../../../../../../stores/campaignStore';
+import campaignService from '../../../../../../api/campaign';
 
 const LIMIT = 10;
 
 function CompletedCampaigns() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const navigate = useNavigate();
+  const [exportLoading, setExportLoading] = useState({});
 
   const { completedCampaigns: campaignsRaw, completedPagination, isLoading, error, fetchCampaigns } = useCampaignStore();
   const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
@@ -18,6 +18,33 @@ function CompletedCampaigns() {
   useEffect(() => {
     fetchCampaigns({ page, limit: LIMIT, lifecycleStage: 'completed' });
   }, [page, fetchCampaigns]);
+
+  // Handle single campaign PDF export
+  const handleExportReport = async (campaignId, e) => {
+    e?.stopPropagation();
+    setExportLoading(prev => ({ ...prev, [campaignId]: true }));
+    
+    try {
+      await campaignService.generateCampaignReport(campaignId);
+    } catch (error) {
+      alert('Failed to generate report: ' + error.message);
+    } finally {
+      setExportLoading(prev => ({ ...prev, [campaignId]: false }));
+    }
+  };
+
+  // Handle bulk export all campaigns
+  const handleExportAll = async () => {
+    setExportLoading(prev => ({ ...prev, all: true }));
+    
+    try {
+      await campaignService.generateBulkReport();
+    } catch (error) {
+      alert('Failed to generate bulk report: ' + error.message);
+    } finally {
+      setExportLoading(prev => ({ ...prev, all: false }));
+    }
+  };
 
   // Client-side search filter only
   const completedCampaigns = campaigns.filter(campaign =>
@@ -65,9 +92,22 @@ function CompletedCampaigns() {
             Historical reference and evaluation ({totalItems})
           </p>
         </div>
-        <button className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-green-500/30 transition-all flex items-center justify-center gap-2">
-          <Download className="w-5 h-5" />
-          Export All Reports
+        <button 
+          onClick={handleExportAll}
+          disabled={exportLoading.all || isLoading}
+          className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-green-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {exportLoading.all ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Download className="w-5 h-5" />
+              Export All Reports
+            </>
+          )}
         </button>
       </div>
 
@@ -211,13 +251,48 @@ function CompletedCampaigns() {
                       </p>
                     </td>
                     <td className="py-4 px-6 text-right">
-                      <button
-                        onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}/report`)}
-                        className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-medium transition-all inline-flex items-center gap-2"
-                      >
-                        <FileText className="w-4 h-4" />
-                        View Report
-                      </button>
+                      <div className="flex flex-col gap-2">
+                        {/* Completion Rate Badge */}
+                        {campaign.tracking?.content?.completionRate !== undefined && (
+                          <div className="flex items-center justify-end gap-1 text-xs">
+                            <TrendingUp className="w-3 h-3 text-green-400" />
+                            <span className={campaign.tracking.content.completionRate >= 90 ? 'text-green-400' : 'text-amber-400'}>
+                              {campaign.tracking.content.completionRate}% completion
+                            </span>
+                          </div>
+                        )}
+                        {/* Performance Summary */}
+                        {campaign.tracking?.performance?.postsWithData > 0 && (
+                          <div className="text-xs text-gray-400 text-right">
+                            {campaign.tracking.performance.totalLikes?.toLocaleString()} likes •
+                            {' '}{campaign.tracking.performance.engagementRate}% engagement
+                          </div>
+                        )}
+                        {/* KPIs Summary */}
+                        {campaign.tracking?.kpis?.comparison && campaign.tracking.kpis.comparison.length > 0 && (
+                          <div className="text-xs text-gray-400 text-right">
+                            {campaign.tracking.kpis.overallAchievement || 0}% KPI achievement
+                          </div>
+                        )}
+                        {/* Export Button */}
+                        <button
+                          onClick={(e) => handleExportReport(campaign.id, e)}
+                          disabled={exportLoading[campaign.id]}
+                          className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-medium transition-all inline-flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          {exportLoading[campaign.id] ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="w-4 h-4" />
+                              Export PDF
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -262,12 +337,54 @@ function CompletedCampaigns() {
                   </div>
                 </div>
 
+                {/* Enhanced Metrics for Mobile */}
+                {campaign.tracking?.content?.completionRate !== undefined && (
+                  <div className="flex items-center justify-between py-2 border-t border-white/10">
+                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3" /> Completion Rate
+                    </span>
+                    <span className={`text-sm font-semibold ${campaign.tracking.content.completionRate >= 90 ? 'text-green-400' : 'text-amber-400'}`}>
+                      {campaign.tracking.content.completionRate}%
+                    </span>
+                  </div>
+                )}
+                {campaign.tracking?.performance?.postsWithData > 0 && (
+                  <div className="flex items-center justify-between py-2 border-t border-white/10">
+                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <Target className="w-3 h-3" /> Engagement
+                    </span>
+                    <span className="text-sm font-semibold text-white">
+                      {campaign.tracking.performance.engagementRate}%
+                    </span>
+                  </div>
+                )}
+                {campaign.tracking?.kpis?.comparison && campaign.tracking.kpis.comparison.length > 0 && (
+                  <div className="flex items-center justify-between py-2 border-t border-white/10">
+                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <Users className="w-3 h-3" /> KPI Achievement
+                    </span>
+                    <span className="text-sm font-semibold text-white">
+                      {campaign.tracking.kpis.overallAchievement || 0}%
+                    </span>
+                  </div>
+                )}
+                
                 <button
-                  onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}/report`)}
-                  className="w-full px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+                  onClick={(e) => handleExportReport(campaign.id, e)}
+                  disabled={exportLoading[campaign.id]}
+                  className="w-full px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
                 >
-                  <FileText className="w-4 h-4" />
-                  View Report
+                  {exportLoading[campaign.id] ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" />
+                      Export PDF Report
+                    </>
+                  )}
                 </button>
               </div>
             ))}

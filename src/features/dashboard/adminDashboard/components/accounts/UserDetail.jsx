@@ -4,14 +4,19 @@ import { ArrowLeft, Mail, Shield, Calendar, Save, Trash2, User, AlertTriangle, P
 import adminService from '../../../../../api/adminApi';
 import useAdminStore from '../../../../../stores/AdminStore';
 import { toast } from 'react-toastify';
+import {
+  BACKEND_USER_STATUSES,
+  normalizeAdminUser,
+  parseAdminUserFromResponse,
+  userStatusLabel,
+} from '../adminData';
 
 const CONFIRM_ADMIN_WORD = 'admin';
-const BACKEND_STATUSES = ['ACTIVE', 'BLOCKED', 'SUSPENDED', 'INCOMPLETE'];
 
 function UserDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { collaborations, fetchCollaborations, deleteUser } = useAdminStore();
+  const { collaborations, fetchCollaborations, deleteUser, updateUserStatus } = useAdminStore();
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -36,17 +41,12 @@ function UserDetail() {
       setLoading(true);
       try {
         const res = await adminService.getUserById(id);
-        // Backend may return { data: { user } } or { data: <user> } or { user }
-        const raw =
-          res.data?.user ??
-          res.data?.data ??
-          res.user ??
-          res.data;
-        const u =
-          raw && typeof raw === 'object' && (raw.id != null || raw.email) ? raw : null;
+        const raw = parseAdminUserFromResponse(res);
+        const usersList = useAdminStore.getState().users;
+        const u = raw ? normalizeAdminUser(raw, usersList, id) : null;
         if (!cancelled && u) {
           setUser(u);
-          setEditStatus(u.status || 'ACTIVE');
+          setEditStatus(u.status || 'INCOMPLETE');
         } else if (!cancelled) {
           setUser(null);
         }
@@ -80,7 +80,10 @@ function UserDetail() {
     if (!user) return;
     setSaving(true);
     try {
-      await adminService.updateUserStatus(user.id, editStatus);
+      const result = await updateUserStatus(user.id, editStatus);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update status');
+      }
       setUser((prev) => (prev ? { ...prev, status: editStatus } : null));
       setIsEditing(false);
       toast.success('Status updated');
@@ -92,7 +95,7 @@ function UserDetail() {
   };
 
   const handleCancelEdit = () => {
-    setEditStatus(user?.status || 'ACTIVE');
+    setEditStatus(user?.status || 'INCOMPLETE');
     setIsEditing(false);
   };
 
@@ -154,7 +157,8 @@ function UserDetail() {
     }
   };
 
-  const statusLabel = (s) => (s === 'ACTIVE' ? 'Active' : s === 'BLOCKED' ? 'Blocked' : s === 'SUSPENDED' ? 'Suspended' : 'Incomplete');
+  const displayStatus = user?.status;
+  const isActiveStatus = displayStatus === 'ACTIVE';
 
   if (loading) {
     return (
@@ -204,8 +208,8 @@ function UserDetail() {
                 >
                   {roleLower}
                 </span>
-                <span className={`text-sm ${user.status === 'ACTIVE' ? 'text-green-400' : 'text-gray-500'}`}>
-                  {statusLabel(user.status)}
+                <span className={`text-sm ${isActiveStatus ? 'text-green-400' : displayStatus === 'SUSPENDED' ? 'text-yellow-400' : displayStatus === 'BLOCKED' ? 'text-red-400' : 'text-gray-500'}`}>
+                  {userStatusLabel(displayStatus)}
                 </span>
                 <span className="text-gray-500 text-sm flex items-center gap-1">
                   <Calendar className="w-3 h-3" /> Joined {createdAtStr}
@@ -261,8 +265,8 @@ function UserDetail() {
             </div>
             <div>
               <p className="text-sm text-gray-400 mb-1">Status</p>
-              <p className={`font-medium ${user.status === 'ACTIVE' ? 'text-green-400' : 'text-gray-500'}`}>
-                {statusLabel(user.status)}
+              <p className={`font-medium ${isActiveStatus ? 'text-green-400' : displayStatus === 'SUSPENDED' ? 'text-yellow-400' : displayStatus === 'BLOCKED' ? 'text-red-400' : 'text-gray-500'}`}>
+                {userStatusLabel(displayStatus)}
               </p>
             </div>
             <div>
@@ -288,9 +292,9 @@ function UserDetail() {
                 className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-[#C1B6FD]"
                 style={{ colorScheme: 'dark' }}
               >
-                {BACKEND_STATUSES.map((s) => (
+                {BACKEND_USER_STATUSES.map((s) => (
                   <option key={s} value={s} style={{ backgroundColor: '#1e1632', color: '#fff' }}>
-                    {statusLabel(s)}
+                    {userStatusLabel(s)}
                   </option>
                 ))}
               </select>

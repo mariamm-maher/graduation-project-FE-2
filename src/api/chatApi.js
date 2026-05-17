@@ -104,6 +104,18 @@ const chatService = {
     }
   },
 
+  // GET /api/chat/unread-count
+  // Get total unread message count across all rooms
+  getUnreadCount: async () => {
+    try {
+      const response = await api.get('/chat/unread-count');
+      return response.data;
+    } catch (error) {
+      console.error('Get unread count error:', error);
+      throw error.response?.data?.message || 'Failed to fetch unread count';
+    }
+  },
+
   // PATCH /api/chat/rooms/{chatRoomId}/read
   // Mark all messages in a chat room as read
   markRoomAsRead: async (chatRoomId) => {

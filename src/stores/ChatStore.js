@@ -14,11 +14,14 @@ const useChatStore = create((set) => ({
   currentRoom: null,
   activeRoomId: null,
   messages: [],
+  hasMoreMessages: false,
+  messagesPage: 1,
   connected: false,
   typingUsers: [],
   isLoading: false,
   error: null,
   isMessagesLoading: false,
+  totalUnreadCount: 0,
 
   normalizeRooms: (rooms = []) => {
     if (!Array.isArray(rooms)) return [];
@@ -110,26 +113,29 @@ const useChatStore = create((set) => ({
               status: incoming?.status || 'delivered'
             };
 
+            const isActiveRoom = String(activeRoomId) === String(roomId);
             const updatedRooms = state.chatRooms.map((room) => {
               const id = room.id || room._id;
               if (id !== roomId) return room;
-
-              const shouldIncrementUnread = String(activeRoomId) !== String(id);
               return {
                 ...room,
                 lastMessage: normalizedMessage,
-                unreadCount: shouldIncrementUnread ? Number(room.unreadCount || 0) + 1 : 0,
+                unreadCount: isActiveRoom ? 0 : Number(room.unreadCount || 0) + 1,
                 updatedAt: normalizedMessage.sentAt
               };
             });
 
-            const nextMessages = String(roomId) === String(activeRoomId)
+            const nextMessages = isActiveRoom
               ? [...state.messages, normalizedMessage].sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt))
               : state.messages;
 
+            // Recompute total unread from updated rooms
+            const totalUnreadCount = updatedRooms.reduce((sum, r) => sum + Number(r.unreadCount || 0), 0);
+
             return {
               chatRooms: updatedRooms,
-              messages: nextMessages
+              messages: nextMessages,
+              totalUnreadCount
             };
           });
         });
@@ -150,7 +156,9 @@ const useChatStore = create((set) => ({
               return { ...room, unreadCount: 0 };
             });
 
-            return { messages: updatedMessages, chatRooms: updatedRooms };
+            const totalUnreadCount = updatedRooms.reduce((sum, r) => sum + Number(r.unreadCount || 0), 0);
+
+            return { messages: updatedMessages, chatRooms: updatedRooms, totalUnreadCount };
           });
         });
 
@@ -294,6 +302,18 @@ const useChatStore = create((set) => ({
     }
   },
 
+  // Fetch total unread count from backend
+  fetchUnreadCount: async () => {
+    try {
+      const response = await chatService.getUnreadCount();
+      const count = response?.data?.unreadCount ?? 0;
+      set({ totalUnreadCount: count });
+      return count;
+    } catch {
+      return 0;
+    }
+  },
+
   // Get all chat rooms
   getChatRooms: async (params = {}) => {
     set({ isLoading: true, error: null });
@@ -308,7 +328,8 @@ const useChatStore = create((set) => ({
 
       const rawRooms = payload?.chatRooms || payload?.rooms || payload?.data || (Array.isArray(payload) ? payload : []);
       const rooms = useChatStore.getState().normalizeRooms(rawRooms);
-      set({ chatRooms: rooms, isLoading: false });
+      const totalUnreadCount = rooms.reduce((sum, r) => sum + Number(r.unreadCount || 0), 0);
+      set({ chatRooms: rooms, totalUnreadCount, isLoading: false });
       return { success: true, data: rooms };
     } catch (error) {
       const errorMessage = typeof error === 'string' ? error : error?.message || 'Failed to fetch chat rooms';
@@ -317,11 +338,11 @@ const useChatStore = create((set) => ({
     }
   },
 
-  // Get messages for a room
+  // Get messages for a room (page 1 = latest messages)
   getMessages: async (chatRoomId, params = {}) => {
     set({ isMessagesLoading: true, error: null, activeRoomId: String(chatRoomId) });
     try {
-      const response = await chatService.getMessages(chatRoomId, params);
+      const response = await chatService.getMessages(chatRoomId, { page: 1, limit: 100, ...params });
       const payload = response?.data ?? response ?? {};
       const ok = response?.success === true || payload?.status === 'success' || Array.isArray(payload) || Array.isArray(payload?.messages);
 
@@ -331,12 +352,42 @@ const useChatStore = create((set) => ({
 
       const rawMessages = payload?.messages || payload?.data || (Array.isArray(payload) ? payload : []);
       const messages = useChatStore.getState().normalizeMessages(rawMessages);
-      set({ messages, isMessagesLoading: false });
+      const pagination = payload?.pagination;
+      const hasMore = pagination?.hasMore ?? false;
+      set({ messages, isMessagesLoading: false, messagesPage: 1, hasMoreMessages: hasMore });
       return { success: true, data: messages };
     } catch (error) {
       const errorMessage = typeof error === 'string' ? error : error?.message || 'Failed to fetch messages';
       set({ error: errorMessage, isMessagesLoading: false });
       return { success: false, error: errorMessage };
+    }
+  },
+
+  // Load older messages (next page) and prepend
+  loadOlderMessages: async (chatRoomId) => {
+    const state = useChatStore.getState();
+    if (!state.hasMoreMessages || state.isMessagesLoading) return { success: false };
+
+    const nextPage = state.messagesPage + 1;
+    set({ isMessagesLoading: true });
+    try {
+      const response = await chatService.getMessages(chatRoomId, { page: nextPage, limit: 100 });
+      const payload = response?.data ?? response ?? {};
+      const rawMessages = payload?.messages || payload?.data || (Array.isArray(payload) ? payload : []);
+      const olderMessages = useChatStore.getState().normalizeMessages(rawMessages);
+      const pagination = payload?.pagination;
+      const hasMore = pagination?.hasMore ?? false;
+
+      set((prev) => {
+        const existingIds = new Set(prev.messages.map((m) => m.id));
+        const newOlder = olderMessages.filter((m) => !existingIds.has(m.id));
+        const merged = [...newOlder, ...prev.messages].sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt));
+        return { messages: merged, isMessagesLoading: false, messagesPage: nextPage, hasMoreMessages: hasMore };
+      });
+      return { success: true };
+    } catch {
+      set({ isMessagesLoading: false });
+      return { success: false };
     }
   },
 

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import useAuthStore from '../../../../stores/authStore';
+import useChatStore from '../../../../stores/ChatStore';
 import useNotificationsStore from '../../../../stores/NotificationsStore';
 import useCampaignStore from '../../../../stores/campaignStore';
 import CreateInfluencerProfile from './createInfluncerProfile';
@@ -19,11 +20,17 @@ function Header() {
   const [showInfluencerModal, setShowInfluencerModal] = useState(false);
 
   const user = useAuthStore((s) => s.user);
+  const switchRole = useAuthStore((s) => s.switchRole);
+  const addRole = useAuthStore((s) => s.addRole);
+  const totalUnreadCount = useChatStore((s) => s.totalUnreadCount);
+  const fetchChatUnreadCount = useChatStore((s) => s.fetchUnreadCount);
   const {
     notifications,
     unreadCount,
     fetchNotifications,
     fetchUnreadCount,
+    resetNotifications,
+    reconnectNotifications,
     markAsRead,
     markAllAsRead,
     deleteNotification,
@@ -33,16 +40,18 @@ function Header() {
   const fetchCampaigns = useCampaignStore((s) => s.fetchCampaigns);
   const fetchActiveCampaigns = useCampaignStore((s) => s.fetchActiveCampaigns);
 
-  // Fetch notifications on mount
+  // Fetch notifications + chat unread on mount (replace list — do not merge other users' items)
   useEffect(() => {
+    resetNotifications();
     fetchNotifications(1, 10);
     fetchUnreadCount();
+    fetchChatUnreadCount();
     initRealtimeNotifications();
 
     return () => {
-      cleanupRealtimeNotifications();
+      cleanupRealtimeNotifications({ resetStore: true });
     };
-  }, [fetchNotifications, fetchUnreadCount, initRealtimeNotifications, cleanupRealtimeNotifications]);
+  }, [resetNotifications, fetchNotifications, fetchUnreadCount, fetchChatUnreadCount, initRealtimeNotifications, cleanupRealtimeNotifications]);
 
   useEffect(() => {
     const loadCampaignStats = async () => {
@@ -134,14 +143,26 @@ function Header() {
   const handleSuggestionClick = (suggestion) => {
     setSearchQuery(suggestion.name);
     setShowSearchResults(false);
-    // Navigate to the selected item
     console.log('Selected:', suggestion);
   };
 
-  const handleSwitchRole = (role) => {
+  const handleSwitchRole = async (role) => {
     setShowRoleDropdown(false);
-    if (role === 'Influencer') {
-      navigate('/dashboard/influencer');
+    if (role === 'INFLUENCER') {
+      const userRoles = (user?.roles || []).map(r => typeof r === 'string' ? r : r?.name).filter(Boolean);
+      const hasInfluencerRole = userRoles.some(r => r.toUpperCase() === 'INFLUENCER');
+      if (hasInfluencerRole) {
+        const result = await switchRole('INFLUENCER');
+        if (result.success) {
+          await reconnectNotifications();
+          toast.success('Switched to Influencer');
+          navigate('/dashboard/influencer');
+        } else {
+          toast.error(result.error || 'Failed to switch role');
+        }
+      } else {
+        setShowInfluencerModal(true);
+      }
     }
   };
 
@@ -368,6 +389,7 @@ function Header() {
 
           {/* Messages/Chat */}
           <Motion.button 
+            onClick={() => navigate('/dashboard/owner/collaborations/overview?tab=chats')}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
@@ -376,7 +398,11 @@ function Header() {
             className="relative p-2 hover:bg-white/5 rounded-lg transition-all duration-200"
           >
             <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-white" />
-            <span className="absolute -top-1 -right-1 bg-[#745CB4] text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold text-[10px] sm:text-xs">7</span>
+            {totalUnreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-[#745CB4] text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold text-[10px] sm:text-xs">
+                {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+              </span>
+            )}
           </Motion.button>
 
           <div className="hidden sm:block w-px h-8 bg-white/10"></div>
@@ -420,7 +446,7 @@ function Header() {
                     </Motion.button>
                     <Motion.button
                       whileHover={{ x: 4 }}
-                      onClick={() => handleSwitchRole('Influencer')}
+                      onClick={() => handleSwitchRole('INFLUENCER')}
                       className="w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 mt-1 text-gray-200 hover:bg-white/10 rounded-lg"
                     >
                       <div className="font-medium">Switch to Influencer</div>

@@ -29,6 +29,8 @@ function Header() {
     unreadCount,
     fetchNotifications,
     fetchUnreadCount,
+    resetNotifications,
+    reconnectNotifications,
     markAsRead,
     markAllAsRead,
     deleteNotification,
@@ -38,17 +40,18 @@ function Header() {
   const fetchCampaigns = useCampaignStore((s) => s.fetchCampaigns);
   const fetchActiveCampaigns = useCampaignStore((s) => s.fetchActiveCampaigns);
 
-  // Fetch notifications + chat unread on mount
+  // Fetch notifications + chat unread on mount (replace list — do not merge other users' items)
   useEffect(() => {
+    resetNotifications();
     fetchNotifications(1, 10);
     fetchUnreadCount();
     fetchChatUnreadCount();
     initRealtimeNotifications();
 
     return () => {
-      cleanupRealtimeNotifications();
+      cleanupRealtimeNotifications({ resetStore: true });
     };
-  }, [fetchNotifications, fetchUnreadCount, fetchChatUnreadCount, initRealtimeNotifications, cleanupRealtimeNotifications]);
+  }, [resetNotifications, fetchNotifications, fetchUnreadCount, fetchChatUnreadCount, initRealtimeNotifications, cleanupRealtimeNotifications]);
 
   useEffect(() => {
     const loadCampaignStats = async () => {
@@ -151,6 +154,7 @@ function Header() {
       if (hasInfluencerRole) {
         const result = await switchRole('INFLUENCER');
         if (result.success) {
+          await reconnectNotifications();
           toast.success('Switched to Influencer');
           navigate('/dashboard/influencer');
         } else {

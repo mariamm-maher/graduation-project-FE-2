@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
-import { Briefcase, Sparkles, ArrowRight, X } from 'lucide-react';
+import { Sparkles, ArrowRight, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import useAuthStore from '../../../../stores/authStore';
 
-function CreateInfluencerProfile({ onClose, onContinue }) {
+function CreateInfluencerProfile({ onClose }) {
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -97,7 +99,13 @@ function CreateInfluencerProfile({ onClose, onContinue }) {
               whileTap={{ scale: 0.98 }}
               onClick={() => {
                 onClose();
-                navigate('/role-selection', { state: { addingRole: 'influencer' } });
+                navigate('/role-selection', {
+                  state: {
+                    addingRole: 'influencer',
+                    userEmail: user?.email,
+                    userId: user?.userId ?? user?.id,
+                  },
+                });
               }}
               className="flex-1 relative px-6 py-3 text-sm font-medium text-white rounded-lg overflow-hidden group"
             >

@@ -135,6 +135,13 @@ const useAuthStore = create(
             error: null,
             isLoading: false
           });
+
+          try {
+            const { default: useNotificationsStore } = await import('./NotificationsStore');
+            useNotificationsStore.getState().cleanupRealtimeNotifications({ resetStore: true });
+          } catch (storeErr) {
+            console.error('Failed to reset notifications on logout:', storeErr);
+          }
           
           // Clear localStorage
           localStorage.removeItem('accessToken');

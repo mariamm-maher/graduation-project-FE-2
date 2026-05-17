@@ -92,10 +92,24 @@ function Sidebar() {
       <nav className="flex-1 space-y-1 py-4">
         {menuItems.map((item) => {
           const Icon = item.icon;
-          // For dashboard, use exact match. For others, check if pathname starts with the path
-          const isActive = item.id === 'dashboard' 
-            ? location.pathname === item.path || location.pathname === `${item.path}/`
-            : location.pathname.startsWith(item.path);
+          // For dashboard, use exact match. For collaborations, exclude tasks sub-route
+          let isActive;
+          if (item.id === 'dashboard') {
+            isActive = location.pathname === item.path || location.pathname === `${item.path}/`;
+          } else if (item.id === 'collaborations') {
+            // Only highlight if on collaborations page itself, not on tasks, requests, contracts, or workspace
+            const basePath = item.path;
+            const currentPath = location.pathname;
+            isActive = currentPath === basePath || 
+                      currentPath === `${basePath}/` ||
+                      (currentPath.startsWith(basePath) && 
+                       !currentPath.includes('/tasks') && 
+                       !currentPath.includes('/requests') && 
+                       !currentPath.includes('/contracts') &&
+                       currentPath.split('/').length === 5); // Only base collaborations path
+          } else {
+            isActive = location.pathname.startsWith(item.path);
+          }
           return (
             <Link
               key={item.id}

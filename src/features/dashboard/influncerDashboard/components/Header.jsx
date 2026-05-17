@@ -8,6 +8,22 @@ import useAuthStore from '../../../../stores/authStore';
 import useNotificationsStore from '../../../../stores/NotificationsStore';
 import useChatStore from '../../../../stores/ChatStore';
 
+// Hide scrollbar globally for notifications panel
+const hideScrollbarStyle = document.createElement('style');
+hideScrollbarStyle.textContent = `
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+`;
+if (typeof document !== 'undefined' && !document.getElementById('hide-scrollbar-style')) {
+  hideScrollbarStyle.id = 'hide-scrollbar-style';
+  document.head.appendChild(hideScrollbarStyle);
+}
+
 function Header() {
   const navigate = useNavigate();
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
@@ -22,12 +38,15 @@ function Header() {
   const totalUnreadCount = useChatStore((s) => s.totalUnreadCount);
   const fetchChatUnreadCount = useChatStore((s) => s.fetchUnreadCount);
   const searchRef = useRef(null);
+  const notificationRef = useRef(null);
 
   const {
     notifications,
     unreadCount,
     fetchNotifications,
     fetchUnreadCount: fetchNotifUnreadCount,
+    resetNotifications,
+    reconnectNotifications,
     markAsRead,
     markAllAsRead,
     deleteNotification,
@@ -51,20 +70,23 @@ function Header() {
     : [];
 
   useEffect(() => {
+    resetNotifications();
     fetchNotifications(1, 10);
     fetchNotifUnreadCount();
     fetchChatUnreadCount();
     initRealtimeNotifications();
 
     return () => {
-      cleanupRealtimeNotifications();
+      cleanupRealtimeNotifications({ resetStore: true });
     };
-  }, [fetchNotifications, fetchNotifUnreadCount, fetchChatUnreadCount, initRealtimeNotifications, cleanupRealtimeNotifications]);
+  }, [resetNotifications, fetchNotifications, fetchNotifUnreadCount, fetchChatUnreadCount, initRealtimeNotifications, cleanupRealtimeNotifications]);
 
   const handleMarkAsRead = async (notificationId) => {
     const res = await markAsRead(notificationId);
     if (res?.success) {
       toast.success('Marked as read');
+    } else {
+      toast.error(res?.error || 'Failed to mark notification as read');
     }
   };
 
@@ -72,6 +94,8 @@ function Header() {
     const res = await markAllAsRead();
     if (res?.success) {
       toast.success('All notifications marked as read');
+    } else {
+      toast.error(res?.error || 'Failed to mark notifications as read');
     }
   };
 
@@ -79,6 +103,8 @@ function Header() {
     const res = await deleteNotification(notificationId);
     if (res?.success) {
       toast.success('Notification deleted');
+    } else {
+      toast.error(res?.error || 'Failed to delete notification');
     }
   };
 
@@ -93,6 +119,20 @@ function Header() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Close notifications panel when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotificationsPanel(false);
+      }
+    };
+
+    if (showNotificationsPanel) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showNotificationsPanel]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -128,6 +168,7 @@ function Header() {
       if (hasOwnerRole) {
         const result = await switchRole('OWNER');
         if (result.success) {
+          await reconnectNotifications();
           toast.success('Switched to Owner');
           navigate('/dashboard/owner');
         } else {
@@ -249,91 +290,98 @@ function Header() {
         </div>
         
         <div className="flex items-center gap-2 sm:gap-4 flex-wrap w-full sm:w-auto">
-       
-
           {/* Notifications */}
-          <motion.button 
-            onClick={() => setShowNotificationsPanel(!showNotificationsPanel)}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.25 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="relative p-2 hover:bg-white/5 rounded-lg transition-all duration-200"
-          >
-            <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-white" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-4 h-4 px-1 sm:min-w-5 sm:h-5 sm:px-1.5 flex items-center justify-center font-bold text-[10px] sm:text-xs">
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </span>
-            )}
-          </motion.button>
+          <motion.div ref={notificationRef} className="relative">
+            <motion.button
+              type="button"
+              onClick={() => setShowNotificationsPanel(!showNotificationsPanel)}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.25 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="relative p-2 hover:bg-white/5 rounded-lg transition-all duration-200"
+            >
+              <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-white" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-4 h-4 px-1 sm:min-w-5 sm:h-5 sm:px-1.5 flex items-center justify-center font-bold text-[10px] sm:text-xs">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </motion.button>
 
-          {/* Notifications Panel */}
-          <AnimatePresence>
-            {showNotificationsPanel && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-16 right-0 w-[calc(100vw-2rem)] sm:w-80 md:w-96 max-w-sm bg-linear-to-br from-[#1a0933] to-[#2d1b4e] border border-white/20 rounded-xl shadow-2xl z-50"
-              >
-                <div className="p-4 border-b border-white/10 flex items-center justify-between">
-                  <h3 className="text-white font-bold">Notifications</h3>
-                  <div className="flex gap-2">
-                    {unreadCount > 0 && (
-                      <button
-                        onClick={handleMarkAllAsRead}
-                        className="text-xs text-[#C1B6FD] hover:text-white transition"
-                      >
-                        Mark all as read
-                      </button>
-                    )}
+            {/* Notifications Panel */}
+            <AnimatePresence>
+              {showNotificationsPanel && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-16 -right-2 w-72 sm:w-80 md:w-96 bg-linear-to-b from-[#241A3A]/70 to-[#1A112C]/70 backdrop-blur-md border border-[#745CB4]/25 rounded-lg shadow-2xl z-50"
+                >
+                  <div className="p-4 border-b border-[#745CB4]/25 flex items-center justify-between">
+                    <h3 className="text-white font-bold">Notifications</h3>
+                    <div className="flex gap-2">
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={handleMarkAllAsRead}
+                          className="text-xs text-[#C1B6FD] hover:text-white transition"
+                        >
+                          Mark all as read
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="max-h-96 overflow-y-auto">
-                  {notifications?.length === 0 ? (
-                    <div className="p-4 text-center text-gray-400 text-sm">No notifications</div>
-                  ) : (
-                    notifications.map((notif) => (
-                      <div
-                        key={notif._id || notif.id}
-                        className={`p-4 border-b border-white/5 hover:bg-white/5 transition ${
-                          !notif.isRead ? 'bg-white/10' : ''
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1">
-                            <p className="text-sm text-white font-medium">{notif.title || notif.message}</p>
-                            <p className="text-xs text-gray-400 mt-1">{notif.description || notif.message}</p>
-                            <p className="text-xs text-gray-500 mt-2">{new Date(notif.createdAt).toLocaleString()}</p>
-                          </div>
-                          <div className="flex gap-2">
-                            {!notif.isRead && (
+                  <div 
+                    className="max-h-96 overflow-y-auto hide-scrollbar"
+                    style={{
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none',
+                    }}
+                  >
+                    {notifications?.length === 0 ? (
+                      <div className="p-4 text-center text-gray-400 text-sm">No notifications</div>
+                    ) : (
+                      notifications.map((notif) => (
+                        <div
+                          key={notif._id || notif.id}
+                          className={`p-4 border-b border-[#745CB4]/15 hover:bg-[#745CB4]/10 transition ${
+                            !notif.isRead ? 'bg-[#745CB4]/20' : ''
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <p className="text-sm text-white font-medium">{notif.title || notif.message}</p>
+                              <p className="text-xs text-gray-400 mt-1">{notif.description || notif.message}</p>
+                              <p className="text-xs text-gray-500 mt-2">{new Date(notif.createdAt).toLocaleString()}</p>
+                            </div>
+                            <div className="flex gap-2">
+                              {!notif.isRead && (
+                                <button
+                                  onClick={() => handleMarkAsRead(notif._id || notif.id)}
+                                  title="Mark as read"
+                                  className="p-1 rounded hover:bg-[#745CB4]/20 text-[#C1B6FD]"
+                                >
+                                  <Check className="w-4 h-4" />
+                                </button>
+                              )}
                               <button
-                                onClick={() => handleMarkAsRead(notif._id || notif.id)}
-                                title="Mark as read"
-                                className="p-1 rounded hover:bg-white/10 text-[#C1B6FD]"
+                                onClick={() => handleDeleteNotification(notif._id || notif.id)}
+                                title="Delete"
+                                className="p-1 rounded hover:bg-red-500/20 text-red-400"
                               >
-                                <Check className="w-4 h-4" />
+                                <Trash2 className="w-4 h-4" />
                               </button>
-                            )}
-                            <button
-                              onClick={() => handleDeleteNotification(notif._id || notif.id)}
-                              title="Delete"
-                              className="p-1 rounded hover:bg-red-500/20 text-red-400"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                      ))
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
 
           {/* Messages/Chat */}
           <motion.button 

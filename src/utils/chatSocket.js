@@ -78,7 +78,12 @@ export const connectChatSocket = async () => {
       });
       bindAuthRecoveryListener(socketInstance);
     } else {
+      const previousToken = socketInstance.auth?.token;
       socketInstance.auth = { ...(socketInstance.auth || {}), token };
+      // Reconnect when the JWT changes (e.g. role switch) so socket rooms match the active user
+      if (socketInstance.connected && previousToken && previousToken !== token) {
+        socketInstance.disconnect();
+      }
     }
 
     if (!socketInstance.connected) {

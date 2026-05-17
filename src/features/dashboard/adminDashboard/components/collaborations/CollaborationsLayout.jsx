@@ -8,7 +8,7 @@ function CollaborationsLayout() {
     <div>
       <Routes>
         <Route index element={<CollaborationsOverview />} />
-        <Route path="messages" element={<MessagingSystem />} />
+        {/* <Route path="messages" element={<MessagingSystem />} /> */}
         <Route path=":id" element={<CollaborationDetail />} />
       </Routes>
     </div>

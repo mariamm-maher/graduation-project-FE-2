@@ -91,13 +91,6 @@ function CollaborationsOverview() {
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Collaborations</h1>
           <p className="text-sm sm:text-base text-gray-400">View and manage all influencer collaborations</p>
         </div>
-        <Link
-          to="/dashboard/admin/collaborations/messages"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#745CB4] hover:bg-[#5D459D] text-white rounded-xl text-sm font-medium transition-all"
-        >
-          <MessageSquare className="w-4 h-4" />
-          Collaboration chats
-        </Link>
       </div>
 
       {error && (
@@ -268,13 +261,13 @@ function CollaborationsOverview() {
                             <Eye className="w-4 h-4" />
                           </button>
                         </Link>
-                        <button
+                        {/* <button
                           onClick={() => openDeleteModal(collab)}
                           className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-all"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>
@@ -286,7 +279,7 @@ function CollaborationsOverview() {
       </div>
 
       {/* Delete Modal */}
-      {showDeleteModal && collabToDelete && (
+      {/* {showDeleteModal && collabToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => !deleting && setShowDeleteModal(false)}>
           <div className="bg-[#1a1a3e] border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-white mb-2">Delete collaboration</h3>
@@ -303,7 +296,7 @@ function CollaborationsOverview() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

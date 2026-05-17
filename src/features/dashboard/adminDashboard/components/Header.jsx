@@ -269,44 +269,6 @@ function Header() {
         </div>
         
         <div className="flex items-center gap-2 sm:gap-4 flex-wrap w-full sm:w-auto">
-          {/* Team Status */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex items-center gap-2 hidden sm:flex"
-          >
-            <div className="flex -space-x-2">
-              {isLoading ? (
-                <div className="w-8 h-8 rounded-full bg-[#745CB4] border-2 border-[#000000] flex items-center justify-center">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                </div>
-              ) : (
-                <>
-                  {headerStats?.onlineUsers?.slice(0, 4).map((user, idx) => (
-                    <div 
-                      key={user.id} 
-                      className={`w-8 h-8 rounded-full border-2 border-[#000000] flex items-center justify-center text-xs text-white font-medium ${
-                        idx === 0 ? 'bg-[#745CB4]' : idx === 1 ? 'bg-[#5D459D]' : idx === 2 ? 'bg-[#C1B6FD]' : 'bg-[#745CB4]'
-                      }`}
-                      title={`${user.firstName} ${user.lastName}`}
-                    >
-                      {(user.firstName?.[0] || user.email?.[0] || '?').toUpperCase()}
-                    </div>
-                  ))}
-                  {headerStats?.onlineUsers?.length > 4 && (
-                    <div className="w-8 h-8 rounded-full bg-[#745CB4] border-2 border-[#000000] flex items-center justify-center text-xs text-white">
-                      +{headerStats.onlineUsers.length - 4}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-            <span className="text-sm">
-              <span className="font-bold">{Math.min(headerStats?.activeSessions || 0, headerStats?.totalUsers || 0)}</span>
-              <span className="text-gray-400"> of {headerStats?.totalUsers || 0} active</span>
-            </span>
-          </motion.div>
 
           {/* Notifications */}
           <div ref={notifRef} className="relative">

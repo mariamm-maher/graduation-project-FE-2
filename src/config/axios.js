@@ -29,7 +29,7 @@ const processQueue = (error, token = null) => {
 // Request interceptor to add token to requests
 api.interceptors.request.use(
   (config) => {
-    const accessToken = localStorage.getItem('accessToken');
+    const accessToken = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
 
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
@@ -37,13 +37,13 @@ api.interceptors.request.use(
     }
 
     // Backward compatibility with existing persisted auth state.
-    const authStorage = localStorage.getItem('auth-storage');
+    const authStorage = sessionStorage.getItem('auth-storage') || localStorage.getItem('auth-storage');
     if (authStorage) {
       try {
         const { state } = JSON.parse(authStorage);
         if (state?.token) {
           config.headers.Authorization = `Bearer ${state.token}`;
-          localStorage.setItem('accessToken', state.token);
+          sessionStorage.setItem('accessToken', state.token);
         }
       } catch (parseError) {
         console.error('Failed to parse auth-storage token:', parseError);
@@ -102,13 +102,13 @@ api.interceptors.response.use(
         if (refreshResponse.data.success) {
           const newAccessToken = refreshResponse.data.data.accessToken;
 
-          // Update token in localStorage
-          localStorage.setItem('accessToken', newAccessToken);
-          const authStorage = localStorage.getItem('auth-storage');
+          // Update token in sessionStorage
+          sessionStorage.setItem('accessToken', newAccessToken);
+          const authStorage = sessionStorage.getItem('auth-storage');
           if (authStorage) {
             const parsed = JSON.parse(authStorage);
             parsed.state.token = newAccessToken;
-            localStorage.setItem('auth-storage', JSON.stringify(parsed));
+            sessionStorage.setItem('auth-storage', JSON.stringify(parsed));
           }
 
           // Update default header
@@ -127,6 +127,8 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         isRefreshing = false;
         
+        sessionStorage.removeItem('accessToken');
+        sessionStorage.removeItem('auth-storage');
         localStorage.removeItem('accessToken');
         localStorage.removeItem('auth-storage');
         window.location.href = '/login';
@@ -138,6 +140,8 @@ api.interceptors.response.use(
     // For other 401 errors or non-401 errors, handle normally
     if (error.response?.status === 401 && originalRequest._retry) {
       // Already tried to refresh, clear auth and redirect
+      sessionStorage.removeItem('accessToken');
+      sessionStorage.removeItem('auth-storage');
       localStorage.removeItem('accessToken');
       localStorage.removeItem('auth-storage');
       window.location.href = '/login';

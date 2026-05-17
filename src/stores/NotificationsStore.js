@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { toast } from 'react-toastify';
 import notificationsService from '../api/notificationsApi';
-import { acquireChatSocket, getChatSocket, releaseChatSocket, disconnectChatSocket } from '../utils/chatSocket';
+import { connectNotificationSocket, getNotificationSocket, disconnectNotificationSocket } from '../utils/notificationSocket';
 import useAuthStore from './authStore';
 import { isValidNotificationType } from '../constants/notificationTypes';
 
@@ -60,6 +60,11 @@ const safeNotificationId = (notification) => {
   return getNotificationId(normalized);
 };
 
+const isForCurrentUser = (userId) => {
+  if (userId == null) return true;
+  const currentUserId = useAuthStore.getState().user?.id ?? useAuthStore.getState().user?.userId;
+  return currentUserId == null || Number(userId) === Number(currentUserId);
+};
 
 const useNotificationsStore = create((set, get) => ({
   notifications: [],
@@ -116,9 +121,15 @@ const useNotificationsStore = create((set, get) => ({
     const normalized = normalizeNotification(notification);
     if (!normalized) return;
 
-    set((state) => ({
-      notifications: mergeUniqueNotifications(state.notifications, [normalized])
-    }));
+    set((state) => {
+      const notificationId = getNotificationId(normalized);
+      const exists = state.notifications.some((item) => getNotificationId(item) === notificationId);
+
+      return {
+        notifications: mergeUniqueNotifications(state.notifications, [normalized]),
+        unreadCount: !exists && !normalized.isRead ? state.unreadCount + 1 : state.unreadCount
+      };
+    });
   },
 
   setUnreadCount: (count) => {
@@ -201,7 +212,7 @@ const useNotificationsStore = create((set, get) => ({
     (async () => {
       let socket;
       try {
-        socket = await acquireChatSocket();
+        socket = await connectNotificationSocket();
       } catch (err) {
         console.error('Failed to acquire socket for notifications:', err);
         return;
@@ -213,10 +224,17 @@ const useNotificationsStore = create((set, get) => ({
       }
       socket.__notificationListenersAttached = true;
 
+      const syncNotifications = () => {
+        useNotificationsStore.getState().fetchNotifications(1, 10);
+        useNotificationsStore.getState().fetchUnreadCount();
+      };
+
       socket.emit('subscribe_notifications');
+      syncNotifications();
 
       socket.on('connect', () => {
         socket.emit('subscribe_notifications');
+        syncNotifications();
       });
 
       socket.on('notification', (notification) => {
@@ -244,22 +262,25 @@ const useNotificationsStore = create((set, get) => ({
         }
       });
 
-      socket.on('notification_count_updated', ({ unreadCount }) => {
+      socket.on('notification_count_updated', ({ userId, unreadCount }) => {
+        if (!isForCurrentUser(userId)) return;
         useNotificationsStore.getState().setUnreadCount(unreadCount);
       });
 
-      socket.on('notification_read', ({ notificationId }) => {
+      socket.on('notification_read', ({ userId, notificationId }) => {
+        if (!isForCurrentUser(userId)) return;
         useNotificationsStore.getState().markAsRead(notificationId, { syncWithServer: false });
       });
 
-      socket.on('all_notifications_read', () => {
+      socket.on('all_notifications_read', ({ userId } = {}) => {
+        if (!isForCurrentUser(userId)) return;
         useNotificationsStore.getState().markAllAsRead({ syncWithServer: false });
       });
     })();
   },
 
   cleanupRealtimeNotifications: ({ resetStore = true } = {}) => {
-    const socket = getChatSocket();
+    const socket = getNotificationSocket();
     if (socket && socket.__notificationListenersAttached) {
       socket.off('connect');
       socket.off('notification');
@@ -267,8 +288,8 @@ const useNotificationsStore = create((set, get) => ({
       socket.off('notification_read');
       socket.off('all_notifications_read');
       socket.__notificationListenersAttached = false;
-      releaseChatSocket();
     }
+    disconnectNotificationSocket();
     if (resetStore) {
       get().resetNotifications();
     }
@@ -277,7 +298,6 @@ const useNotificationsStore = create((set, get) => ({
   /** Call after role switch or login so socket room matches the active account. */
   reconnectNotifications: async () => {
     get().cleanupRealtimeNotifications({ resetStore: true });
-    disconnectChatSocket();
     await get().fetchNotifications(1, 10);
     await get().fetchUnreadCount();
     get().initRealtimeNotifications();

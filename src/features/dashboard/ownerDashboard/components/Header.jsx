@@ -33,9 +33,7 @@ function Header() {
     reconnectNotifications,
     markAsRead,
     markAllAsRead,
-    deleteNotification,
-    initRealtimeNotifications,
-    cleanupRealtimeNotifications
+    deleteNotification
   } = useNotificationsStore();
   const fetchCampaigns = useCampaignStore((s) => s.fetchCampaigns);
   const fetchActiveCampaigns = useCampaignStore((s) => s.fetchActiveCampaigns);
@@ -46,12 +44,7 @@ function Header() {
     fetchNotifications(1, 10);
     fetchUnreadCount();
     fetchChatUnreadCount();
-    initRealtimeNotifications();
-
-    return () => {
-      cleanupRealtimeNotifications({ resetStore: true });
-    };
-  }, [resetNotifications, fetchNotifications, fetchUnreadCount, fetchChatUnreadCount, initRealtimeNotifications, cleanupRealtimeNotifications]);
+  }, [resetNotifications, fetchNotifications, fetchUnreadCount, fetchChatUnreadCount]);
 
   useEffect(() => {
     const loadCampaignStats = async () => {

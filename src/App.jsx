@@ -16,12 +16,16 @@ import ResetPassword from './features/auth/ResetPassword.jsx';
 import ProtectedRoute, { AuthorizedRoute } from './pages/protectRoute.jsx';
 import NotFound from './pages/NotFound.jsx';
 import useAuthStore from './stores/authStore.js';
+import useNotificationsStore from './stores/NotificationsStore.js';
 import ScrollToTop from './components/ui/ScrollToTop.jsx';
-import { acquireChatSocket, releaseChatSocket } from './utils/chatSocket.js';
 
 function App() {
   const initialize = useAuthStore((state) => state.initialize);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const initRealtimeNotifications = useNotificationsStore((state) => state.initRealtimeNotifications);
+  const cleanupRealtimeNotifications = useNotificationsStore((state) => state.cleanupRealtimeNotifications);
+  const fetchNotifications = useNotificationsStore((state) => state.fetchNotifications);
+  const fetchUnreadCount = useNotificationsStore((state) => state.fetchUnreadCount);
 
   // Initialize auth state from localStorage when app loads
   useEffect(() => {
@@ -29,31 +33,16 @@ function App() {
   }, [initialize]);
 
   useEffect(() => {
-    if (!isAuthenticated) return undefined;
+    if (!isAuthenticated) {
+      cleanupRealtimeNotifications({ resetStore: true });
+      return undefined;
+    }
 
-    let isActive = true;
-    let acquired = false;
-
-    (async () => {
-      try {
-        await acquireChatSocket();
-        if (isActive) {
-          acquired = true;
-        } else {
-          releaseChatSocket();
-        }
-      } catch (error) {
-        console.error('App-level socket bootstrap failed:', error);
-      }
-    })();
-
-    return () => {
-      isActive = false;
-      if (acquired) {
-        releaseChatSocket();
-      }
-    };
-  }, [isAuthenticated]);
+    fetchNotifications(1, 10);
+    fetchUnreadCount();
+    initRealtimeNotifications();
+    return undefined;
+  }, [isAuthenticated, fetchNotifications, fetchUnreadCount, initRealtimeNotifications, cleanupRealtimeNotifications]);
 
   return (
     <Router>

@@ -28,7 +28,16 @@ function mapSession(s, usersList = []) {
   const user = s.user || {};
   const userId = s.userId ?? user.id;
   const cached = usersList.find((u) => String(u.id) === String(userId));
-  const roleName = (user.roles?.[0]?.name ?? cached?.roles?.[0]?.name ?? '').toLowerCase() || 'user';
+  const roleName = (
+    user.roles?.[0]?.name ??
+    user.role ??
+    user.roleName ??
+    cached?.roles?.[0]?.name ??
+    cached?.role ??
+    cached?.roleName ??
+    s.userRole ??
+    ''
+  ).toLowerCase() || 'user';
   const lifecycle = getSessionLifecycleStatus(s);
 
   return {

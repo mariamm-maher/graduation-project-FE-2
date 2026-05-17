@@ -7,7 +7,7 @@ import { toast } from 'react-toastify';
 // Map backend campaign to display; backend: id, campaignName?, lifecycleStage, user (owner), goalType?, createdAt?
 function mapCampaign(c) {
   const owner = c.user ? [c.user.firstName, c.user.lastName].filter(Boolean).join(' ').trim() : '—';
-  const status = c.lifecycleStage || c.status || '—';
+  const status = c.lifecycleStage || c.lifecycle_stage || c.status || c.campaignStatus || c.stage || '—';
   const name = c.campaignName || c.name || '—';
   const budgetAmount = c.budget_amount || c.budget || 0;
   const budgetCurrency = c.budget_currency || 'USD';
@@ -96,9 +96,9 @@ function CampaignsOverview() {
   });
 
   const totalCampaigns = list.length;
-  const activeCampaigns = list.filter((c) => c.status === 'active' || c.status === 'live').length;
+  const activeCampaigns = list.filter((c) => ['active', 'live', 'running', 'published'].includes(c.status)).length;
   const completedCampaigns = list.filter((c) => c.status === 'completed').length;
-  const draftCampaigns = list.filter((c) => c.status === 'draft' || c.status === 'ai_generated').length;
+  const draftCampaigns = list.filter((c) => ['draft', 'ai_generated', 'pending'].includes(c.status)).length;
   const totalBudget = list.reduce((sum, c) => sum + (c.budgetAmount || 0), 0);
   const totalCollaborations = list.reduce((sum, c) => sum + (c.collaborations || 0), 0);
 

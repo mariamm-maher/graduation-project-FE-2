@@ -317,6 +317,88 @@ const adminService = {
     }
   },
 
+  // Delete collaboration
+  deleteCollaboration: async (id) => {
+    try {
+      const response = await api.delete(`/admin/collaborations/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Delete collaboration error:', error);
+      throw error.response?.data?.message || 'Failed to delete collaboration';
+    }
+  },
+
+  // Get all announcements
+  getAnnouncements: async (params = {}) => {
+    try {
+      const { page = 1, limit = 50, status } = params;
+      const query = new URLSearchParams();
+      query.set('page', page);
+      query.set('limit', limit);
+      if (status) query.set('status', status);
+      const response = await api.get(`/admin/announcements?${query.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('Announcements error:', error);
+      throw error.response?.data?.message || 'Failed to fetch announcements';
+    }
+  },
+
+  // Create announcement
+  createAnnouncement: async (data) => {
+    try {
+      const response = await api.post('/admin/announcements', data);
+      return response.data;
+    } catch (error) {
+      console.error('Create announcement error:', error);
+      throw error.response?.data?.message || 'Failed to create announcement';
+    }
+  },
+
+  // Update announcement
+  updateAnnouncement: async (id, data) => {
+    try {
+      const response = await api.put(`/admin/announcements/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Update announcement error:', error);
+      throw error.response?.data?.message || 'Failed to update announcement';
+    }
+  },
+
+  // Delete announcement
+  deleteAnnouncement: async (id) => {
+    try {
+      const response = await api.delete(`/admin/announcements/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Delete announcement error:', error);
+      throw error.response?.data?.message || 'Failed to delete announcement';
+    }
+  },
+
+  // Publish announcement
+  publishAnnouncement: async (id) => {
+    try {
+      const response = await api.patch(`/admin/announcements/${id}/publish`);
+      return response.data;
+    } catch (error) {
+      console.error('Publish announcement error:', error);
+      throw error.response?.data?.message || 'Failed to publish announcement';
+    }
+  },
+
+  // Unpublish announcement
+  unpublishAnnouncement: async (id) => {
+    try {
+      const response = await api.patch(`/admin/announcements/${id}/unpublish`);
+      return response.data;
+    } catch (error) {
+      console.error('Unpublish announcement error:', error);
+      throw error.response?.data?.message || 'Failed to unpublish announcement';
+    }
+  },
+
   // Search across users, sessions, collaborations
   search: async (query) => {
     try {

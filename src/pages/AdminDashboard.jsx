@@ -13,7 +13,7 @@ import {
 } from '../features/dashboard/adminDashboard/components';
 import UserDetail from '../features/dashboard/adminDashboard/components/accounts/UserDetail';
 import CampaignDetail from '../features/dashboard/adminDashboard/components/campaigns/CampaignDetail';
-import { SettingsPanel } from '../features/settings';
+import AdminSettingsPage from '../features/dashboard/adminDashboard/components/settings/AdminSettingsPage';
 
 function AdminDashboard() {
   return (
@@ -31,13 +31,7 @@ function AdminDashboard() {
           <Route path="collaborations/*" element={<CollaborationsLayout />} />
           <Route path="logs" element={<LogsOverview />} />
           <Route path="announcements" element={<AnnouncementsOverview />} />
-          <Route path="settings" element={
-            <div className="p-6">
-              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Settings</h1>
-              <p className="text-sm sm:text-base text-gray-400 mb-6">Manage your account settings, privacy, and preferences</p>
-              <SettingsPanel />
-            </div>
-          } />
+          <Route path="settings" element={<AdminSettingsPage />} />
         </Routes>
       </div>
     </div>

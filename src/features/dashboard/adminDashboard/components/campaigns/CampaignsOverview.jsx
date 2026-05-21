@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import useAdminStore from '../../../../../stores/AdminStore';
 import { toast } from 'react-toastify';
 
-// Map backend campaign to display; backend: id, campaignName?, lifecycleStage, user (owner), goalType?, createdAt?
+// Map backend campaign to display
 function mapCampaign(c) {
   const owner = c.user ? [c.user.firstName, c.user.lastName].filter(Boolean).join(' ').trim() : '—';
   const status = c.lifecycleStage || c.lifecycle_stage || c.status || c.campaignStatus || c.stage || '—';
@@ -23,8 +23,14 @@ function mapCampaign(c) {
     durationText = `${c.campaign_duration_weeks} weeks`;
   }
 
-  // Count collaborations
-  const collabCount = c.Collaborations?.length || c.collaborationsCount || c.collaborations || 0;
+  // const collabCount = c.Collaborations?.length || 
+  //                    c.collaborationsCount || 
+  //                    c._count?.collaborations || 
+  //                    c.collaborations || 0;
+
+const collabCount =
+  c._count?.collaborations ??
+  (Array.isArray(c.collaborations) ? c.collaborations.length : 0);
 
   return {
     id: c.id,
@@ -52,7 +58,7 @@ const LIFECYCLE_OPTIONS = [
   { value: 'all', label: 'All Status' },
   { value: 'draft', label: 'Draft' },
   { value: 'ai_generated', label: 'AI Generated' },
-  { value: 'active', label: 'Active' },
+  { value: 'saved', label: 'Saved' },
   { value: 'completed', label: 'Completed' }
 ];
 
@@ -67,13 +73,23 @@ function getStatusColor(status) {
 }
 
 function CampaignsOverview() {
-  const { campaigns, isLoading, error, fetchCampaigns, deleteCampaign } = useAdminStore();
+  const { 
+    campaigns, 
+    collaborations,
+    isLoading, 
+    error, 
+    fetchCampaigns, 
+    fetchCollaborations,   // ← مهم
+    deleteCampaign 
+  } = useAdminStore();
+
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Load Campaigns
   const loadCampaigns = useCallback(() => {
     fetchCampaigns({
       page: 1,
@@ -82,9 +98,17 @@ function CampaignsOverview() {
     });
   }, [statusFilter, fetchCampaigns]);
 
+  // Load Collaborations (للحصول على Total)
+  const loadCollaborations = useCallback(() => {
+    if (fetchCollaborations) {
+      fetchCollaborations();
+    }
+  }, [fetchCollaborations]);
+
   useEffect(() => {
     loadCampaigns();
-  }, [loadCampaigns]);
+    loadCollaborations();     // ← بنحمله هنا
+  }, [loadCampaigns, loadCollaborations]);
 
   const list = (campaigns || []).map(mapCampaign);
   const filtered = list.filter((c) => {
@@ -96,11 +120,14 @@ function CampaignsOverview() {
   });
 
   const totalCampaigns = list.length;
-  const activeCampaigns = list.filter((c) => ['active', 'live', 'running', 'published'].includes(c.status)).length;
+  const aiCampaigns = list.filter((c) => 'ai_generated'.includes(c.status)).length;
+  const savedCampaigns = list.filter((c) => 'saved'.includes(c.status)).length;
   const completedCampaigns = list.filter((c) => c.status === 'completed').length;
-  const draftCampaigns = list.filter((c) => ['draft', 'ai_generated', 'pending'].includes(c.status)).length;
+  const draftCampaigns = list.filter((c) => ['draft'].includes(c.status)).length;
   const totalBudget = list.reduce((sum, c) => sum + (c.budgetAmount || 0), 0);
-  const totalCollaborations = list.reduce((sum, c) => sum + (c.collaborations || 0), 0);
+  
+  // Total Collaborations
+  const totalCollaborations = (collaborations || []).length;
 
   const openDeleteModal = (campaign) => {
     setCampaignToDelete(campaign);
@@ -137,7 +164,7 @@ function CampaignsOverview() {
       )}
 
       {/* Advanced Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4">
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:border-[#745CB4]/50 transition-all">
           <div className="flex items-center justify-between mb-2">
             <div className="w-10 h-10 rounded-lg bg-[#745CB4]/20 flex items-center justify-center">
@@ -155,8 +182,18 @@ function CampaignsOverview() {
             </div>
             <span className="text-xs text-green-400 font-semibold">Live</span>
           </div>
-          <p className="text-xl font-bold text-white">{activeCampaigns}</p>
-          <p className="text-xs text-gray-400">Active</p>
+          <p className="text-xl font-bold text-white">{aiCampaigns}</p>
+          <p className="text-xs text-gray-400">Ai Generated</p>
+        </div>
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:border-green-500/50 transition-all">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-green-400" />
+            </div>
+            <span className="text-xs text-green-400 font-semibold">Live</span>
+          </div>
+          <p className="text-xl font-bold text-white">{savedCampaigns}</p>
+          <p className="text-xs text-gray-400">Saved</p>
         </div>
         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:border-yellow-500/50 transition-all">
           <div className="flex items-center justify-between mb-2">
@@ -200,7 +237,7 @@ function CampaignsOverview() {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters & Table remain the same as before */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -227,7 +264,7 @@ function CampaignsOverview() {
         </select>
       </div>
 
-      {/* Table */}
+      {/* Table - (نفس الكود السابق) */}
       <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden">
         {isLoading ? (
           <div className="p-12 text-center text-gray-400">Loading campaigns...</div>
@@ -324,6 +361,7 @@ function CampaignsOverview() {
         )}
       </div>
 
+      {/* Delete Modal */}
       {showDeleteModal && campaignToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => !deleting && setShowDeleteModal(false)}>
           <div className="bg-[#1a1a3e] border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-xl" onClick={(e) => e.stopPropagation()}>

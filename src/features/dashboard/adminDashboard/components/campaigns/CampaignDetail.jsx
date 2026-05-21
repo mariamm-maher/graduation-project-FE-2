@@ -5,7 +5,7 @@ import adminService from '../../../../../api/adminApi';
 import useAdminStore from '../../../../../stores/AdminStore';
 import { toast } from 'react-toastify';
 
-const LIFECYCLE_OPTIONS = ['draft', 'ai_generated', 'active', 'completed', 'cancelled'];
+const LIFECYCLE_OPTIONS = ['draft', 'ai_generated', 'saved', 'completed', 'cancelled'];
 
 const GOAL_OPTIONS = ['Awareness', 'Leads', 'Sales', 'Retention', 'Re-engagement'];
 

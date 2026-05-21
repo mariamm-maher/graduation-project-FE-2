@@ -128,10 +128,10 @@ function Sidebar() {
         {/* Bottom Actions - Settings Simplified */}
         <div className="pt-4 border-t border-white/10 space-y-1">
         <Link
-          to="/dashboard/influencer/settings"
+          to="/dashboard/admin/settings"
           onClick={() => setIsMobileOpen(false)}
           className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
-            location.pathname === '/dashboard/influencer/settings'
+            location.pathname === '/dashboard/admin/settings'
               ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg shadow-[#745CB4]/30'
               : 'text-gray-400 hover:text-white hover:bg-white/5'
           }`}

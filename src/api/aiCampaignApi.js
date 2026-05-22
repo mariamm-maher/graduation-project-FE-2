@@ -36,7 +36,7 @@ const normaliseCompetitors = (rawList) => {
     .filter((c) => c && typeof c.name === 'string' && c.name.trim().length > 0)
     .map((c) => ({
       name: c.name.trim(),
-      platforms: normalizePlatformList(c.platforms),
+      platforms: Array.isArray(c.platforms) ? c.platforms.map(normalisePlatform) : [],
       notes: typeof c.notes === 'string' ? c.notes.trim() : '',
     }));
 };

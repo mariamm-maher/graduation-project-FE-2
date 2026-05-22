@@ -80,6 +80,14 @@ function TaskCard({ task, onOpenDetails }) {
         {task.description}
       </p>
 
+      {/* Submission Indicator */}
+      {(task?.submissionUrl || task?.submissionNote) && (
+        <div className="flex items-center gap-1.5 mb-3 px-2 py-1 rounded bg-[#745CB4]/20 border border-[#745CB4]/30">
+          <div className="w-1.5 h-1.5 rounded-full bg-[#C1B6FD] animate-pulse" />
+          <span className="text-xs text-[#C1B6FD]">Submission received</span>
+        </div>
+      )}
+
       {/* Tags */}
       {task.tags && task.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">

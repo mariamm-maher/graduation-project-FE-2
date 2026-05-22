@@ -288,6 +288,33 @@ export default function TasksPane() {
                   {approveConfirmTask.taskName}
                 </div>
               </div>
+
+              {/* Submission Details */}
+              {(approveConfirmTask?.submissionUrl || approveConfirmTask?.submissionNote) && (
+                <div className="space-y-3 p-3 rounded-lg bg-[#241A3A]/50 border border-[#745CB4]/20">
+                  <p className="text-xs font-semibold text-[#C1B6FD]">Influencer Submission</p>
+                  {approveConfirmTask?.submissionUrl && (
+                    <div>
+                      <span className="block text-xs text-[#9CA3AF] mb-1">Submission URL</span>
+                      <a
+                        href={approveConfirmTask.submissionUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-400 hover:text-blue-300 break-all"
+                      >
+                        {approveConfirmTask.submissionUrl}
+                      </a>
+                    </div>
+                  )}
+                  {approveConfirmTask?.submissionNote && (
+                    <div>
+                      <span className="block text-xs text-[#9CA3AF] mb-1">Submission Note</span>
+                      <p className="text-sm text-white">{approveConfirmTask.submissionNote}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <p className="text-xs text-[#a09cb0] leading-relaxed">
                 Approve this task and move it to <span className="text-white font-medium">Completed</span>?
               </p>

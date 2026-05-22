@@ -17,8 +17,8 @@ function SocialMediaLayout() {
         <Route path="channels" element={<ConnectedAccounts />} />
         <Route path="create-post" element={<CreatePost />} />
         <Route path="schedule" element={<CreatePost />} />
-        <Route path="content" element={<Navigate to="content-library" replace />} />
-        <Route path="content-library" element={<ContentLibrary />} />
+        {/* <Route path="content" element={<Navigate to="content-library" replace />} /> */}
+        {/* <Route path="content-library" element={<ContentLibrary />} /> */}
       </Routes>
     </div>
   );

@@ -223,52 +223,7 @@ function CampaignAnalytics() {
         </div>
       </div>
 
-      {/* ── AI Adoption ── */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
-          <Cpu className="w-5 h-5 text-[#C1B6FD]" /> AI Adoption
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          <StatCard icon={null} label="Campaigns w/ AI"    value={ai.campaignsWithAIVersion}    accent="text-[#C1B6FD]" />
-          <StatCard icon={null} label="Adoption Rate"      value={`${ai.aiAdoptionRatePercent ?? 0}%`} accent="text-[#C1B6FD]" />
-          <StatCard icon={null} label="Total Versions"     value={ai.totalVersions}             accent="text-white" />
-          <StatCard icon={null} label="Active Versions"    value={ai.activeVersions}            accent="text-green-400" />
-          <StatCard icon={null} label="Avg Versions/Campaign" value={ai.averageVersionsPerCampaign} accent="text-gray-300" />
-        </div>
-        <div className="mt-4 h-2 bg-white/10 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-linear-to-r from-[#745CB4] to-[#C1B6FD] rounded-full transition-all duration-700"
-            style={{ width: `${ai.aiAdoptionRatePercent ?? 0}%` }}
-          />
-        </div>
-        <p className="text-xs text-gray-500 mt-1">{ai.aiAdoptionRatePercent ?? 0}% of campaigns use AI</p>
-      </div>
-
-      {/* ── Timeline ── */}
-      {monthEntries.length > 0 && (
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-5">
-            <Calendar className="w-5 h-5 text-blue-400" /> Campaigns by Month
-          </h2>
-          {(() => {
-            const max = Math.max(...monthEntries.map(([, v]) => v), 1);
-            return (
-              <div className="flex items-end gap-2 h-28">
-                {monthEntries.map(([month, count]) => (
-                  <div key={month} className="flex-1 flex flex-col items-center gap-1 min-w-0">
-                    <span className="text-[10px] text-white font-bold">{count}</span>
-                    <div
-                      className="w-full bg-linear-to-t from-[#745CB4] to-[#C1B6FD] rounded-t-md transition-all duration-700"
-                      style={{ height: `${Math.round((count / max) * 80)}px` }}
-                    />
-                    <span className="text-[9px] text-gray-500 truncate w-full text-center">{month.slice(-5)}</span>
-                  </div>
-                ))}
-              </div>
-            );
-          })()}
-        </div>
-      )}
+    
     </div>
   );
 }

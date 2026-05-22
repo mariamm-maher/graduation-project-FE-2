@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Sparkles, Target, DollarSign, Clock, Globe, PieChart, Megaphone, Calendar, ChevronUp, ChevronDown, Users, Layers, Zap } from 'lucide-react';
+import useOwnerStore from '../../../../../../stores/ownerStore';
 
 const formatLabel = (value) =>
   String(value || '')
@@ -17,6 +19,7 @@ export default function GeneratedCampaignStrategy({
   influencerStrategyNote = '',
 }) {
   const [showAllCalendar, setShowAllCalendar] = useState(false);
+  const [influencerDetails, setInfluencerDetails] = useState({});
   const calendarItems = execution?.contentCalendar || [];
   const calendarMeta = execution?.calendar_meta || {};
   const visibleCalendar = showAllCalendar ? calendarItems : calendarItems.slice(0, 7);
@@ -24,6 +27,33 @@ export default function GeneratedCampaignStrategy({
   const campaignHooks = strategy?.campaign_hooks || [];
   const kpis = Array.isArray(strategy?.kpis) ? strategy.kpis : [];
   const hashtags = execution?.campaign_hashtags || [];
+
+  const { fetchInfluencerById } = useOwnerStore();
+
+  // Fetch influencer details when matches change
+  useEffect(() => {
+    const fetchInfluencerDetails = async () => {
+      if (!influencerMatches?.length) return;
+      
+      const detailsMap = {};
+      await Promise.all(
+        influencerMatches.map(async (match) => {
+          try {
+            const result = await fetchInfluencerById(match.influencer_id);
+            if (result?.success && result?.data) {
+              console.log('Influencer details:', result.data);
+              detailsMap[match.influencer_id] = result.data;
+            }
+          } catch (err) {
+            console.warn(`Failed to fetch influencer ${match.influencer_id}:`, err);
+          }
+        })
+      );
+      setInfluencerDetails(detailsMap);
+    };
+
+    fetchInfluencerDetails();
+  }, [influencerMatches, fetchInfluencerById]);
 
   return (
     <div className="lg:col-span-2 space-y-6">
@@ -141,22 +171,7 @@ export default function GeneratedCampaignStrategy({
         </motion.div>
       )}
 
-      {kpis.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.295 }}
-          className="bg-white/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6"
-        >
-          <h3 className="text-xl font-bold text-white mb-4">Target KPIs</h3>
-          <ul className="space-y-2">
-            {kpis.map((kpi, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
-                <Target className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span>{typeof kpi === 'string' ? kpi : (kpi.target || kpi.label || JSON.stringify(kpi))}</span>
-              </li>
-            ))}
-          </ul>
-        </motion.div>
-      )}
+   
 
       {/* Platform Selection */}
       <motion.div
@@ -365,24 +380,35 @@ export default function GeneratedCampaignStrategy({
             <p className="text-sm text-gray-400 mb-4">{influencerStrategyNote}</p>
           )}
           <div className="space-y-3">
-            {influencerMatches.map((match) => (
-              <div
-                key={match.influencer_id}
-                className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
-              >
-                <div>
-                  <p className="text-white font-semibold">Influencer #{match.influencer_id}</p>
-                  <p className="text-sm text-gray-400 mt-1">{match.fit_reasoning}</p>
-                  <p className="text-xs text-[#C1B6FD] mt-2 capitalize">
-                    {formatLabel(match.suggested_collaboration_type)}
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-2xl font-bold text-emerald-400">{Number(match.fit_score || 0).toFixed(1)}</p>
-                  <p className="text-xs text-gray-500">fit score</p>
-                </div>
-              </div>
-            ))}
+            {influencerMatches.map((match) => {
+              const details = influencerDetails[match.influencer_id];
+              const user = details?.user;
+              const firstName = user?.firstName || details?.firstName || match.first_name;
+              const lastName = user?.lastName || details?.lastName || match.last_name;
+              const email = user?.email || details?.email || match.email;
+              const displayName = firstName || lastName
+                ? `${firstName || ''} ${lastName || ''}`.trim()
+                : `Influencer #${match.influencer_id}`;
+
+              return (
+                <Link
+                  key={match.influencer_id}
+                  to={`/dashboard/owner/influencers/${match.influencer_id}/profile`}
+                  className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 hover:border-[#C1B6FD]/30 hover:bg-white/[0.07] transition-all cursor-pointer"
+                >
+                  <div className="flex-1">
+                    <p className="text-white font-semibold">{displayName}</p>
+                    {email && (
+                      <p className="text-sm text-gray-400 mt-1">{email}</p>
+                    )}
+                    <p className="text-sm text-gray-500 mt-1">{match.fit_reasoning}</p>
+                    <p className="text-xs text-[#C1B6FD] mt-2 capitalize">
+                      {formatLabel(match.suggested_collaboration_type)}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </motion.div>
       )}

@@ -26,29 +26,7 @@ export default function GeneratedCampaignSidebar({
 
         {estimations?.estimatedResults && (
           <>
-            {/* Scenario & Confidence */}
-            <div className="p-4 bg-gradient-to-br from-[#745CB4]/10 to-[#C1B6FD]/5 rounded-xl border border-[#C1B6FD]/20 mb-5">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs text-gray-400">Scenario</span>
-                <span className="text-white font-bold capitalize px-3 py-1 bg-white/10 rounded-full text-xs">
-                  {estimations.estimatedResults.scenario}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-400">Confidence</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-20 bg-white/10 rounded-full h-2 overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${estimations.estimatedResults.confidenceLevel}%` }}
-                      transition={{ duration: 1.2, delay: 0.5 }}
-                      className="h-full bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] rounded-full"
-                    />
-                  </div>
-                  <span className="text-[#C1B6FD] font-bold text-sm">{estimations.estimatedResults.confidenceLevel}%</span>
-                </div>
-              </div>
-            </div>
+          
 
             {/* Metrics */}
             <div className="space-y-4">

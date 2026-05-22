@@ -1,235 +1,230 @@
-import { Activity, MessageSquare, DollarSign, TrendingUp } from 'lucide-react';
+import {
+  LayoutGrid, Radio, Trophy, Rocket, Gem,
+  GitBranch, Crosshair, FolderOpen, DollarSign,
+  ScanEye, Magnet, Wallet, Repeat, Flame
+} from 'lucide-react';
+import { useEffect } from 'react';
+import useCampaignStore from '../../../../../stores/campaignStore';
 
-const dates = [
-  { date: '01', day: 'Sat' },
-  { date: '02', day: 'Sun' },
-  { date: '03', day: 'Mon' },
-  { date: '04', day: 'Tue' },
-  { date: '05', day: 'Wed' },
-  { date: '06', day: 'Thu' },
-  { date: '07', day: 'Fri' },
-  { date: '08', day: 'Sat' },
-  { date: '09', day: 'Sun' },
-  { date: '10', day: 'Mon' },
-  { date: '11', day: 'Tue' },
-  { date: '12', day: 'Wed' },
-  { date: '13', day: 'Thu' },
-];
 
-export default function StatisticsChart({ kpis, performanceSeries, communicationsFeed, activeCampaigns, loading }) {
+export default function StatisticsChart({ loading: externalLoading }) {
+  const { campaignAnalytics, isLoading, fetchCampaignAnalytics } = useCampaignStore();
 
-  // Derive Alternative Analytics from communicationsFeed
-  const feed = Array.isArray(communicationsFeed) ? communicationsFeed : [];
-  
-  const platformCounts = feed.reduce((acc, item) => {
-    const platform = item.platform || 'System';
-    acc[platform] = (acc[platform] || 0) + 1;
-    return acc;
-  }, {});
+  useEffect(() => {
+    fetchCampaignAnalytics();
+  }, [fetchCampaignAnalytics]);
 
-  const statusCounts = feed.reduce((acc, item) => {
-    let status = (item.status || 'Update').toLowerCase();
-    if (status.includes('pending')) status = 'pending';
-    if (status.includes('deliver')) status = 'delivered';
-    if (status.includes('complete')) status = 'completed';
-    acc[status] = (acc[status] || 0) + 1;
-    return acc;
-  }, {});
+  const data = campaignAnalytics;
+  const loading = externalLoading || isLoading;
 
-  const actionTypes = feed.reduce((acc, item) => {
-    const type = item.type || 'message';
-    acc[type] = (acc[type] || 0) + 1;
-    return acc;
-  }, {});
-
-  // Derived metrics from Active Campaigns
-  const campaigns = Array.isArray(activeCampaigns) ? activeCampaigns : [];
-  const totalCampaignBudget = campaigns.reduce((acc, c) => acc + (c.budget || 0), 0);
-  const totalCampaignReach = campaigns.reduce((acc, c) => acc + (c.targetReach || c.projectedReach || 0), 0);
-  const costPerReach = totalCampaignReach > 0 ? (totalCampaignBudget / totalCampaignReach) : 0;
-
-  const formatShort = (value) => {
-    if (value == null) return '-';
-    const n = Number(value);
-    if (Number.isNaN(n)) return value;
-    if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-    if (Math.abs(n) >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
-    return n.toLocaleString();
-  };
+  const summary = data?.summary || {};
+  const budget = data?.budget || {};
+  const lifecycle = data?.lifecycle || {};
+  const goals = data?.goals || {};
+  const kpis = data?.kpis || {};
+  const content = data?.content || {};
 
   const formatCurrency = (value) => {
-    if (value == null) return '-';
+    if (value == null || value === 0) return '-';
     const n = Number(value);
     if (Number.isNaN(n)) return value;
+    if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+    if (Math.abs(n) >= 1_000) return `$${(n / 1_000).toFixed(1)}k`;
     return `$${n.toLocaleString()}`;
   };
 
+  const stageConfig = {
+    draft: { color: 'from-slate-400 to-slate-500', dot: 'bg-slate-400', glow: 'shadow-slate-400/20' },
+    ai_generated: { color: 'from-blue-400 to-cyan-400', dot: 'bg-blue-400', glow: 'shadow-blue-400/20' },
+    saved: { color: 'from-violet-400 to-purple-500', dot: 'bg-violet-400', glow: 'shadow-violet-400/20' },
+    completed: { color: 'from-emerald-400 to-teal-400', dot: 'bg-emerald-400', glow: 'shadow-emerald-400/20' },
+    cancelled: { color: 'from-rose-400 to-red-500', dot: 'bg-rose-400', glow: 'shadow-rose-400/20' }
+  };
+
+  const goalConfig = {
+    Awareness: { color: 'from-sky-400 to-blue-500', Icon: ScanEye },
+    Leads: { color: 'from-amber-400 to-orange-500', Icon: Magnet },
+    Sales: { color: 'from-emerald-400 to-green-500', Icon: Wallet },
+    Retention: { color: 'from-violet-400 to-purple-500', Icon: Repeat },
+    'Re-engagement': { color: 'from-pink-400 to-rose-500', Icon: Flame }
+  };
+
+  const kpiCards = [
+    { label: 'Total', value: summary.totalCampaigns ?? 0, color: 'text-white', icon: <LayoutGrid className="w-3.5 h-3.5" />, iconBg: 'bg-white/10 text-white' },
+    { label: 'Active', value: summary.activeCampaigns ?? 0, color: 'text-emerald-400', icon: <Radio className="w-3.5 h-3.5" />, iconBg: 'bg-emerald-500/15 text-emerald-400' },
+    { label: 'Completed', value: summary.completedCampaigns ?? 0, color: 'text-blue-400', icon: <Trophy className="w-3.5 h-3.5" />, iconBg: 'bg-blue-500/15 text-blue-400' },
+    { label: 'Published', value: summary.publishedCampaigns ?? 0, color: 'text-purple-400', icon: <Rocket className="w-3.5 h-3.5" />, iconBg: 'bg-purple-500/15 text-purple-400' },
+    { label: 'Budget', value: formatCurrency(budget.totalBudget), color: 'text-amber-300', icon: <Gem className="w-3.5 h-3.5" />, iconBg: 'bg-amber-500/15 text-amber-400' },
+  ];
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div className="w-full">
-          <h2 className="text-2xl font-bold bg-linear-to-r from-[#C1B6FD] to-[#745CB4] bg-clip-text text-transparent">
-            Campaign Performance
-          </h2>
-          <p className="text-sm text-gray-400 mt-2">Displays campaign performance based on influencer collaborations, audience size, and campaign activity.</p>
+    <div className="space-y-6">
 
-          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-            <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5">
-              <p className="text-xs text-gray-400">Engagement</p>
-              <p className="text-lg font-bold text-white">{kpis?.totalEngagement ?? '-'}</p>
+      {/* Header */}
+      <div className="relative">
+        <div className="absolute -top-2 -left-2 w-20 h-20 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center shadow-lg shadow-purple-500/20">
+              <LayoutGrid className="w-4 h-4 text-white" />
             </div>
-
-            <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5">
-              <p className="text-xs text-gray-400">Reach</p>
-              <p className="text-lg font-bold text-white">{formatShort(kpis?.totalReach)}</p>
-            </div>
-
-            <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5">
-              <p className="text-xs text-gray-400">Active</p>
-              <p className="text-lg font-bold text-white">{kpis?.activeCampaigns ?? 0}</p>
-            </div>
-
-          
-
-            <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5">
-              <p className="text-xs text-gray-400">Pending</p>
-              <p className="text-lg font-bold text-white">{kpis?.pendingCampaigns ?? 0}</p>
-            </div>
-
-            <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5">
-              <p className="text-xs text-gray-400">Avg ROI</p>
-              <p className="text-lg font-bold text-white">{kpis?.avgROI != null ? `${kpis.avgROI}%` : '-'}</p>
-            </div>
-
-            <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5">
-              <p className="text-xs text-gray-400">Spend</p>
-              <p className="text-lg font-bold text-white">{formatCurrency(kpis?.spendToDate)}</p>
-            </div>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-[#C1B6FD] via-[#a78bfa] to-[#745CB4] bg-clip-text text-transparent">
+              Campaign overview
+            </h2>
           </div>
+          <p className="text-sm text-gray-400/80 ml-11">Real-time insights across lifecycle, budget, goals & content.</p>
         </div>
       </div>
 
-   
+      {/* KPI Cards Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {kpiCards.map((card) => (
+          <div
+            key={card.label}
+            className="group relative bg-gradient-to-br from-white/[0.04] to-white/[0.01] backdrop-blur-sm rounded-2xl p-4 border border-white/[0.06] hover:border-purple-400/20 transition-all duration-300"
+          >
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative">
+              <div className={`w-7 h-7 rounded-lg ${card.iconBg} flex items-center justify-center mb-3`}>
+                {card.icon}
+              </div>
+              <p className={`text-xl font-bold ${card.color} tracking-tight`}>{card.value}</p>
+              <p className="text-[11px] text-gray-500 font-medium mt-0.5 uppercase tracking-wider">{card.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
 
-      {/* Main Container */}
-      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-xl hover:border-purple-400/30 transition-all duration-300 group min-h-[360px]">
+      {/* Main Analytics Panel */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-white/[0.03] via-white/[0.02] to-transparent backdrop-blur-xl border border-white/[0.07] rounded-3xl p-7 shadow-2xl shadow-black/20">
+        
+        {/* Decorative orbs */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/[0.04] rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-600/[0.03] rounded-full blur-3xl pointer-events-none" />
         
         {loading && (
-          <div className="text-xs text-gray-400 mb-2">Loading performance overview...</div>
+          <div className="absolute top-4 right-4 flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+            <span className="text-[11px] text-gray-500">Syncing...</span>
+          </div>
         )}
 
-        <div className="flex flex-col h-full animate-in fade-in duration-500">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-white">Activity & ROI Insights</h3>
-            <p className="text-xs text-gray-400 font-medium px-3 py-1 bg-white/5 rounded-full border border-white/5">
-              Activity trends based on current tasks
-            </p>
+        <div className="relative flex flex-col h-full">
+          <div className="flex items-center justify-between mb-7">
+            <div className="flex items-center gap-2.5">
+              <div className="w-1 h-5 rounded-full bg-gradient-to-b from-[#C1B6FD] to-[#745CB4]" />
+              <h3 className="text-lg font-semibold text-white/90 tracking-tight">Performance Breakdown</h3>
+            </div>
+            {budget.maxBudget > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-400/15">
+            
+                <span className="text-xs font-semibold text-amber-300">{formatCurrency(budget.maxBudget)} max</span>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-7">
             
-            {/* Left Side - Campaign ROI & Status distribution */}
-            <div className="space-y-6">
-              
-              {/* Micro-Stat Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5 hover:bg-white/[0.05] transition-colors hover:scale-105 transform">
-                  <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center mb-3">
-                    <DollarSign className="w-4 h-4" />
+            {/* Left — Lifecycle Stages */}
+            <div className="space-y-5">
+              <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/[0.05]">
+                <div className="flex items-center gap-2 mb-5">
+                  <div className="w-6 h-6 rounded-md bg-purple-500/15 flex items-center justify-center">
+                    <GitBranch className="w-3.5 h-3.5 text-purple-400" />
                   </div>
-                  <div className="text-2xl font-bold text-white mb-1">${totalCampaignBudget.toLocaleString()}</div>
-                  <div className="text-xs text-gray-400 font-medium">Allocated Budget</div>
+                  <h4 className="text-sm font-semibold text-gray-200 tracking-tight">Lifecycle Stages</h4>
                 </div>
-                
-                <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5 hover:bg-white/[0.05] transition-colors hover:scale-105 transform">
-                  <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-3">
-                    <TrendingUp className="w-4 h-4" />
-                  </div>
-                  <div className="text-2xl font-bold text-white mb-1">
-                    {costPerReach > 0 ? `$${costPerReach.toFixed(3)}` : '-'}
-                  </div>
-                  <div className="text-xs text-gray-400 font-medium">Est. Cost Per Reach</div>
-                </div>
-              </div>
-
-              {/* Status Distribution */}
-              <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5">
-                <h4 className="text-sm text-gray-300 font-semibold mb-4">Task Status</h4>
-                <div className="space-y-3">
-                  {Object.entries(statusCounts).length > 0 ? (
-                    Object.entries(statusCounts).map(([status, count]) => (
-                      <div key={status} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${
-                              status === 'completed' || status === 'delivered' ? 'bg-emerald-400' :
-                              status === 'pending' ? 'bg-yellow-400' : 'bg-blue-400'
-                            }`} />
-                            <span className="text-sm text-gray-300 capitalize">{status}</span>
-                        </div>
-                        <span className="text-sm font-bold text-white bg-white/10 px-2 py-0.5 rounded-md">{count}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-xs text-gray-500">No active tasks tracked</div>
-                  )}
-                </div>
-              </div>
-
-            </div>
-
-
-            {/* Right Side - Platform & Interactions */}
-            <div className="space-y-6 flex flex-col h-full">
-              
-              {/* Platform Distribution Bar */}
-              <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5 flex-1">
-                  <h4 className="text-sm text-gray-300 font-semibold mb-4">Platform Engagement Share</h4>
-                  <div className="space-y-4">
-                    {Object.entries(platformCounts).length > 0 ? (
-                      Object.entries(platformCounts).map(([platform, count], i, arr) => {
-                        const total = arr.reduce((sum, [, c]) => sum + c, 0);
-                        const percentage = Math.round((count / total) * 100);
-                        return (
-                          <div key={platform}>
-                            <div className="flex justify-between text-xs mb-1.5">
-                              <span className="text-gray-300 font-medium capitalize">{platform}</span>
-                              <span className="text-[#C1B6FD] font-bold">{percentage}%</span>
+                <div className="space-y-4">
+                  {Object.entries(lifecycle.byStage || {}).length > 0 ? (
+                    Object.entries(lifecycle.byStage).map(([stage, count]) => {
+                      const total = summary.totalCampaigns || 1;
+                      const pct = Math.round((count / total) * 100);
+                      const config = stageConfig[stage] || stageConfig.draft;
+                      return (
+                        <div key={stage} className="group/item">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2.5">
+                              <div className={`w-2.5 h-2.5 rounded-full ${config.dot} ring-2 ring-white/5`} />
+                              <span className="text-[13px] text-gray-300 font-medium capitalize">{stage.replace('_', ' ')}</span>
                             </div>
-                            <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] rounded-full"
-                                style={{ width: `${percentage}%` }}
-                              />
+                            <div className="flex items-center gap-2.5">
+                              <span className="text-xs font-bold text-gray-400">{pct}%</span>
+                              <span className="text-xs font-bold text-white bg-white/[0.08] px-2.5 py-1 rounded-lg min-w-[28px] text-center">{count}</span>
                             </div>
                           </div>
-                        )
-                      })
-                    ) : (
-                      <div className="text-xs text-gray-500 flex flex-col items-center justify-center py-4">
-                        <Activity className="w-6 h-6 text-gray-600 mb-2" />
-                        <span>No platform data. Engage to see insights.</span>
-                      </div>
-                    )}
-                  </div>
-              </div>
-
-              {/* Actions Chips */}
-              <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5">
-                <h4 className="text-sm text-gray-300 font-semibold mb-3">Activity Types</h4>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(actionTypes).length > 0 ? (
-                    Object.entries(actionTypes).map(([type, count]) => (
-                      <div key={type} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-br from-[#745CB4]/20 to-[#C1B6FD]/10 border border-[#745CB4]/30">
-                        <MessageSquare className="w-3.5 h-3.5 text-[#C1B6FD]" />
-                        <span className="text-xs font-semibold text-[#C1B6FD] capitalize">{type.replace('_', ' ')}</span>
-                        <span className="text-[10px] bg-black/30 px-1.5 rounded text-gray-300">{count}</span>
-                      </div>
-                    ))
+                          <div className="h-2 w-full bg-white/[0.04] rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full bg-gradient-to-r ${config.color} shadow-sm ${config.glow} transition-all duration-700 ease-out`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })
                   ) : (
-                      <span className="text-xs text-gray-500">No actions recorded.</span>
+                    <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                      <GitBranch className="w-8 h-8 mb-2 opacity-30" />
+                      <span className="text-xs">No campaigns yet</span>
+                    </div>
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* Right — Goals & Content */}
+            <div className="space-y-5 flex flex-col">
+              
+              {/* Goals */}
+              <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/[0.05] flex-1">
+                <div className="flex items-center gap-2 mb-5">
+                  <div className="w-6 h-6 rounded-md bg-amber-500/15 flex items-center justify-center">
+                    <Crosshair className="w-3.5 h-3.5 text-amber-400" />
+                  </div>
+                  <h4 className="text-sm font-semibold text-gray-200 tracking-tight">Campaign Goals</h4>
+                  {goals.topGoal && (
+                    <span className="ml-auto text-[10px] font-bold text-amber-300/80 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-400/15">
+                      Top: {goals.topGoal}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-3.5">
+                  {Object.entries(goals.byGoal || {}).length > 0 ? (
+                    Object.entries(goals.byGoal).map(([goal, count]) => {
+                      const total = summary.totalCampaigns || 1;
+                      const pct = Math.round((count / total) * 100);
+                      const config = goalConfig[goal] || { color: 'from-purple-400 to-violet-500', Icon: ScanEye };
+                      const GoalIcon = config.Icon;
+                      return (
+                        <div key={goal}>
+                          <div className="flex justify-between items-center mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <GoalIcon className="w-4 h-4 text-gray-400" />
+                              <span className="text-[13px] text-gray-300 font-medium">{goal}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-gray-400">{pct}%</span>
+                              <span className="text-[11px] font-semibold text-white/60 bg-white/[0.06] px-2 py-0.5 rounded-md">{count}</span>
+                            </div>
+                          </div>
+                          <div className="h-[7px] w-full bg-white/[0.04] rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full bg-gradient-to-r ${config.color} transition-all duration-700 ease-out`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                      <Crosshair className="w-8 h-8 mb-2 opacity-30" />
+                      <span className="text-xs">No campaigns created yet</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+        
 
             </div>
             

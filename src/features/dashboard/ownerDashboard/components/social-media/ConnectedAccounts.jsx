@@ -471,6 +471,7 @@ import { FaTiktok, FaYoutube } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useSocialMediaStore from '../../../../../stores/SocialMediaStore';
+import useAuthStore from '../../../../../stores/authStore';
 import socialMediaService from '../../../../../api/SocialMediaApi';
 import ConnectedAccountCard from './ConnectedAccountCard';
 import { normalizeAnalyticsPayload } from './connectedAccountsUtils';
@@ -505,6 +506,7 @@ function AccountsGridSkeleton() {
 function ConnectedAccounts() {
   const { accounts, getAccounts, disconnectAccount, isLoading, connectTikTokSimulated, error } =
     useSocialMediaStore();
+  const { token } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
   const [showConnectModal, setShowConnectModal] = useState(false);
@@ -647,15 +649,21 @@ function ConnectedAccounts() {
       setShowConnectModal(false);
 
       try {
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
+        const authToken = token || sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+        console.log('[YouTube Connection] Token retrieval:', {
+          fromStore: !!token,
+          fromSessionStorage: !!sessionStorage.getItem('accessToken'),
+          fromLocalStorage: !!localStorage.getItem('accessToken'),
+          finalToken: !!authToken
+        });
+        if (!authToken) {
           throw new Error('Access token not found. Please login again.');
         }
 
         if (oauthEndpoint === 'meta' || oauthEndpoint === 'youtube') {
           const endpoint = oauthEndpoint === 'meta' ? 'meta-url' : 'youtube-url';
           const response = await axios.get(`${BACKEND_ROOT_URL}/auth/${endpoint}`, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${authToken}` },
           });
           const oauthUrl = response?.data?.data?.url;
           if (!oauthUrl) {

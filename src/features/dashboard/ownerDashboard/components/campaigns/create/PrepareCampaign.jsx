@@ -4,6 +4,8 @@ import { ArrowLeft, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import useProfileStore from '../../../../../../stores/profileStore';
 import aiCampaignApi, { buildCampaignBriefPayload } from '../../../../../../api/aiCampaignApi';
+import { buildEstimationsFromStrategy } from '../../../../../../utils/normalizeAiEstimations';
+import { buildAiPreviewFromResponse } from '../../../../../../utils/normalizeAiCampaignView';
 import {
   PLATFORM_OPTIONS,
   formatPlatformsForDisplay,
@@ -348,6 +350,10 @@ function PrepareCampaign() {
   
       toast.success('AI campaign generated successfully!', { position: 'top-right', autoClose: 3000 });
   
+      const budgetAmount = Number(campaignDataForAi.budget_amount ?? campaignDataForAi.budget ?? 0);
+      const aiPreview = buildAiPreviewFromResponse(response, { budgetAmount });
+      aiPreview.estimations = buildEstimationsFromStrategy(aiPreview.strategy);
+
       navigate('/dashboard/owner/campaigns/generated', {
         state: {
           campaignData: campaignDataForAi,
@@ -357,26 +363,7 @@ function PrepareCampaign() {
           calendar: response.calendar,
           influencer_matches: response.influencer_matches || [],
           influencer_strategy_note: response.influencer_strategy_note || '',
-          aiPreview: {
-            strategy: response.strategy,
-            execution: {
-              contentCalendar: (response.calendar?.days || []).map((day) => ({
-                day: day.day,
-                date: day.date,
-                platform: day.channel || day.platform,
-                contentType: day.contentType || 'post',
-                task: Array.isArray(day.tasks) ? day.tasks[0] : day.task,
-                caption: day.caption || '',
-              })),
-              tactical_plan: response.strategy?.tactical_plan || null,
-            },
-            estimations: {
-              estimatedResults: { metrics: response.strategy?.kpis || [] },
-              ml_score: response.strategy?.ml_score,
-              ml_verdict: response.strategy?.ml_verdict,
-            },
-            generatedAt: new Date().toISOString(),
-          },
+          aiPreview,
         },
       });
   

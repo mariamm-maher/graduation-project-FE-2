@@ -9,49 +9,189 @@ const throwApiError = (error, fallback) => {
   throw new Error(message);
 };
 
+const normalizeContentCalendarPlatforms = (payload) => {
+  if (!payload || !payload.contentCalendar || !Array.isArray(payload.contentCalendar)) {
+    return payload;
+  }
+  return {
+    ...payload,
+    contentCalendar: payload.contentCalendar.map(item => ({
+      ...item,
+      platform: item.platform ? String(item.platform).toLowerCase() : 'instagram'
+    }))
+  };
+};
+
 const campaignService = {
+  // saveAndPublishCampaign: async (builtPayload) => {
+  //   try {
+  //     const response = await api.post('/campaigns/save-and-publish', {
+  //       ...builtPayload,
+  //       isPublished: true,
+  //     });
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error('Save and publish campaign error:', error);
+  //     throw error.response?.data?.message || 'Failed to save and publish campaign';
+  //   }
+  // },
+
+  // saveCampaign: async (builtPayload) => {
+  //   try {
+  //     const response = await api.post('/campaigns/save', builtPayload);
+  //     const response2 = await api.post('/campaigns/', builtPayload);
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error('Save campaign error:', error);
+  //     throwApiError(error, 'Failed to save campaign');
+  //   }
+  // },
+
+  // saveDraftCampaign: async (draftData) => {
+  //   try {
+  //     const response = await api.post('/campaigns/draft', draftData);
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error('Save draft campaign error:', error);
+  //     throwApiError(error, 'Failed to save campaign as draft');
+  //   }
+  // },
+
+  // generateCampaignAI: async (aiData) => {
+  //   try {
+  //     const response = await api.post('/campaigns/ai/generate', aiData);
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error('AI Generate campaign error:', error);
+  //     throwApiError(error, 'Failed to generate campaign with AI');
+  //   }
+  // },
   saveAndPublishCampaign: async (builtPayload) => {
     try {
-      const response = await api.post('/campaigns/save-and-publish', {
-        ...builtPayload,
-        isPublished: true,
-      });
+    const normalizedPayload = normalizeContentCalendarPlatforms(builtPayload);
+    const response = await api.post('/campaigns/save-and-publish', {
+    ...normalizedPayload,
+    isPublished: true,
+    });
+    
       return response.data;
     } catch (error) {
       console.error('Save and publish campaign error:', error);
-      throw error.response?.data?.message || 'Failed to save and publish campaign';
+    
+      throwApiError(
+        error,
+        'Failed to save and publish campaign'
+      );
     }
-  },
-
-  saveCampaign: async (builtPayload) => {
+    
+    },
+    
+    saveCampaign: async (builtPayload) => {
     try {
-      const response = await api.post('/campaigns/save', builtPayload);
+    // IMPORTANT:
+    // only ONE save request
+    // remove duplicate /campaigns/ request
+    
+      const normalizedPayload = normalizeContentCalendarPlatforms(builtPayload);
+      const response = await api.post(
+        '/campaigns/save',
+        normalizedPayload
+      );
+    
       return response.data;
     } catch (error) {
       console.error('Save campaign error:', error);
-      throwApiError(error, 'Failed to save campaign');
+    
+      throwApiError(
+        error,
+        'Failed to save campaign'
+      );
     }
-  },
-
-  saveDraftCampaign: async (draftData) => {
+    
+    },
+    
+    // NEW
+    // Save new AI version for existing campaign
+    saveAIVersion: async (
+    campaignId,
+    aiPayload,
+    options = {}
+    ) => {
     try {
-      const response = await api.post('/campaigns/draft', draftData);
+    const response = await api.post(
+    `/campaigns/${campaignId}/ai`,
+    {
+    ...aiPayload,
+
+          // optional flags
+          syncCalendar:
+            options.syncCalendar || false,
+        }
+      );
+
       return response.data;
     } catch (error) {
-      console.error('Save draft campaign error:', error);
-      throwApiError(error, 'Failed to save campaign as draft');
-    }
-  },
+      console.error('Save AI version error:', error);
 
-  generateCampaignAI: async (aiData) => {
+      throwApiError(
+        error,
+        'Failed to save AI version'
+      );
+    }
+
+    },
+    
+    // NEW
+    // Update current active AI version
+    updateAIVersion: async (
+    campaignId,
+    aiPayload,
+    options = {}
+    ) => {
     try {
-      const response = await api.post('/campaigns/ai/generate', aiData);
+    const response = await api.put(
+    `/campaigns/${campaignId}/ai`,
+    {
+    ...aiPayload,
+
+          syncCalendar:
+            options.syncCalendar || false,
+        }
+      );
+
       return response.data;
     } catch (error) {
-      console.error('AI Generate campaign error:', error);
-      throwApiError(error, 'Failed to generate campaign with AI');
+      console.error('Update AI version error:', error);
+
+      throwApiError(
+        error,
+        'Failed to update AI version'
+      );
     }
-  },
+
+    },
+    
+    saveDraftCampaign: async (draftData) => {
+    try {
+    const response = await api.post(
+    '/campaigns/draft',
+    draftData
+    );
+    
+      return response.data;
+    } catch (error) {
+      console.error(
+        'Save draft campaign error:',
+        error
+      );
+    
+      throwApiError(
+        error,
+        'Failed to save campaign as draft'
+      );
+    }
+    
+    },
 
   createCampaign: async (campaignData) => {
     try {

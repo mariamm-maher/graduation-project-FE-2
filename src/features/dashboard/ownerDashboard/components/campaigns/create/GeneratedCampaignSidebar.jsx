@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, TrendingUp, FileText, Rocket, Save, BookOpen, CheckCircle } from 'lucide-react';
+import { BarChart3, TrendingUp, FileText, CheckCircle } from 'lucide-react';
 import { normalizeKpiMetric, KPI_DISPLAY_LABELS } from './buildCampaignPayload';
 
 export default function GeneratedCampaignSidebar({
@@ -9,10 +9,7 @@ export default function GeneratedCampaignSidebar({
   campaignDates,
   campaignDuration,
   formatDate,
-  isLoading,
-  handleSaveAsDraft,
-  handleSave,
-  handleSaveAndPublish
+  isLoading
 }) {
   return (
     <div className="space-y-6">
@@ -74,10 +71,22 @@ export default function GeneratedCampaignSidebar({
                         {KPI_DISPLAY_LABELS[normalizeKpiMetric(metric.metric)] ?? metric.metric}
                       </span>
                     </div>
-                    <p className={`text-2xl font-bold ${c.text}`}>{metric.estimatedRange.mostLikely.toLocaleString()}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Range: {metric.estimatedRange.min.toLocaleString()} – {metric.estimatedRange.max.toLocaleString()}
-                    </p>
+                    {metric.isTextKpi ? (
+                      <p className={`text-sm leading-relaxed ${c.text}`}>{metric.displayValue}</p>
+                    ) : (
+                      <>
+                        <p className={`text-2xl font-bold ${c.text}`}>
+                          {typeof metric.displayValue === 'number'
+                            ? metric.displayValue.toLocaleString()
+                            : metric.displayValue}
+                        </p>
+                        {metric.min != null && metric.max != null && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Range: {metric.min.toLocaleString()} – {metric.max.toLocaleString()}
+                          </p>
+                        )}
+                      </>
+                    )}
                   </motion.div>
                 );
               })}
@@ -113,37 +122,6 @@ export default function GeneratedCampaignSidebar({
           ))}
         </div>
       </motion.div>
-
-      {/* Bottom Action Buttons */}
-      <div className="space-y-3">
-        <motion.button
-          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-          onClick={handleSaveAndPublish}
-          disabled={isLoading}
-          className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] rounded-xl text-white font-bold shadow-lg shadow-[#745CB4]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Rocket className="w-4 h-4" />
-          Save &amp; Publish to Marketplace
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-          onClick={handleSave}
-          disabled={isLoading}
-          className="w-full flex items-center justify-center gap-2 py-3 border border-[#C1B6FD]/40 rounded-xl text-[#C1B6FD] font-semibold hover:bg-[#745CB4]/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Save className="w-4 h-4" />
-          Save Campaign
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-          onClick={handleSaveAsDraft}
-          disabled={isLoading}
-          className="w-full flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-medium hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <BookOpen className="w-4 h-4" />
-          Save as Draft
-        </motion.button>
-      </div>
 
       {/* Info note */}
       <div className="flex items-start gap-3 p-4 bg-[#745CB4]/10 border border-[#C1B6FD]/20 rounded-xl text-sm text-gray-400">

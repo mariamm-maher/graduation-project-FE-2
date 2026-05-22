@@ -1,17 +1,29 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Target, DollarSign, Clock, Globe, PieChart, Megaphone, Calendar, ChevronUp, ChevronDown } from 'lucide-react';
+import { Sparkles, Target, DollarSign, Clock, Globe, PieChart, Megaphone, Calendar, ChevronUp, ChevronDown, Users, Layers, Zap } from 'lucide-react';
+
+const formatLabel = (value) =>
+  String(value || '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 
 export default function GeneratedCampaignStrategy({
   normalizedInput,
   strategy,
   execution,
   campaignDuration,
-  formatDate
+  formatDate,
+  influencerMatches = [],
+  influencerStrategyNote = '',
 }) {
   const [showAllCalendar, setShowAllCalendar] = useState(false);
   const calendarItems = execution?.contentCalendar || [];
+  const calendarMeta = execution?.calendar_meta || {};
   const visibleCalendar = showAllCalendar ? calendarItems : calendarItems.slice(0, 7);
+  const contentPillars = strategy?.content_pillars || [];
+  const campaignHooks = strategy?.campaign_hooks || [];
+  const kpis = Array.isArray(strategy?.kpis) ? strategy.kpis : [];
+  const hashtags = execution?.campaign_hashtags || [];
 
   return (
     <div className="lg:col-span-2 space-y-6">
@@ -28,9 +40,43 @@ export default function GeneratedCampaignStrategy({
           <div>
             <h2 className="text-2xl font-bold text-white mb-2">{normalizedInput.campaign_name || 'Generated Campaign'}</h2>
             <p className="text-gray-300 leading-relaxed">{strategy?.campaignSummary}</p>
+            {(strategy?.campaign_theme || strategy?.tone_of_voice) && (
+              <motion.div className="mt-4 flex flex-wrap gap-2">
+                {strategy.campaign_theme && (
+                  <span className="text-xs px-3 py-1 rounded-full bg-[#745CB4]/20 text-[#C1B6FD] border border-[#C1B6FD]/20">
+                    Theme: {strategy.campaign_theme}
+                  </span>
+                )}
+                {strategy.tone_of_voice && (
+                  <span className="text-xs px-3 py-1 rounded-full bg-white/5 text-gray-300 border border-white/10">
+                    Tone: {strategy.tone_of_voice}
+                  </span>
+                )}
+              </motion.div>
+            )}
           </div>
         </div>
       </motion.div>
+
+      {strategy?.core_message && strategy.core_message !== strategy?.campaignSummary && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
+          className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+        >
+          <h3 className="text-lg font-bold text-white mb-2">Core Message</h3>
+          <p className="text-gray-300 text-sm leading-relaxed italic">&ldquo;{strategy.core_message}&rdquo;</p>
+        </motion.div>
+      )}
+
+      {strategy?.positioning_statement && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}
+          className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+        >
+          <h3 className="text-lg font-bold text-white mb-2">Positioning</h3>
+          <p className="text-gray-300 text-sm leading-relaxed">{strategy.positioning_statement}</p>
+        </motion.div>
+      )}
 
       {/* Key Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -51,6 +97,66 @@ export default function GeneratedCampaignStrategy({
           </motion.div>
         ))}
       </div>
+
+      {contentPillars.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}
+          className="bg-white/5 backdrop-blur-xl border border-[#C1B6FD]/20 rounded-2xl p-6"
+        >
+          <div className="flex items-center gap-3 mb-5">
+            <div className="p-2 rounded-lg bg-purple-500/20"><Layers className="w-5 h-5 text-purple-300" /></div>
+            <h3 className="text-xl font-bold text-white">Content Pillars</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {contentPillars.map((pillar, i) => (
+              <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <p className="text-white font-semibold mb-1">
+                  {pillar.name || pillar.title || pillar.pillar || `Pillar ${i + 1}`}
+                </p>
+                <p className="text-sm text-gray-400">
+                  {pillar.description || pillar.theme || pillar.focus || ''}
+                </p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {campaignHooks.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.29 }}
+          className="bg-white/5 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-6"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-amber-500/20"><Zap className="w-5 h-5 text-amber-400" /></div>
+            <h3 className="text-xl font-bold text-white">Campaign Hooks</h3>
+          </div>
+          <ul className="space-y-2">
+            {campaignHooks.map((hook, i) => (
+              <li key={i} className="text-sm text-gray-300 pl-4 border-l-2 border-amber-500/40">
+                {hook}
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+      )}
+
+      {kpis.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.295 }}
+          className="bg-white/5 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6"
+        >
+          <h3 className="text-xl font-bold text-white mb-4">Target KPIs</h3>
+          <ul className="space-y-2">
+            {kpis.map((kpi, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
+                <Target className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <span>{typeof kpi === 'string' ? kpi : (kpi.target || kpi.label || JSON.stringify(kpi))}</span>
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+      )}
 
       {/* Platform Selection */}
       <motion.div
@@ -190,8 +296,21 @@ export default function GeneratedCampaignStrategy({
           <h3 className="text-xl font-bold text-white">Content Calendar</h3>
           <span className="ml-auto text-xs text-gray-400">{calendarItems.length} entries</span>
         </div>
+        {(calendarMeta.start_date || calendarMeta.total_days) && (
+          <p className="text-xs text-gray-400 mb-4">
+            {calendarMeta.start_date && <>Starts {formatDate(calendarMeta.start_date)}</>}
+            {calendarMeta.total_days != null && (
+              <span>{calendarMeta.start_date ? ' · ' : ''}{calendarMeta.total_days} day{calendarMeta.total_days === 1 ? '' : 's'} scheduled</span>
+            )}
+            {calendarMeta.isOverviewCalendar && (
+              <span className="ml-2 text-amber-400/80">(overview from tactical plan)</span>
+            )}
+          </p>
+        )}
         <div className="space-y-3">
-          {visibleCalendar.map((item, i) => (
+          {calendarItems.length === 0 ? (
+            <p className="text-sm text-gray-400 py-6 text-center">No calendar days returned from AI.</p>
+          ) : visibleCalendar.map((item, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.55 + i * 0.04 }}
@@ -205,12 +324,18 @@ export default function GeneratedCampaignStrategy({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center flex-wrap gap-2 mb-1.5">
-                  <span className="font-semibold text-white capitalize">{item.contentType}</span>
+                  <span className="font-semibold text-white capitalize">{formatLabel(item.contentType)}</span>
                   <span className="text-xs px-2.5 py-0.5 bg-[#745CB4]/20 text-[#C1B6FD] rounded-full border border-[#C1B6FD]/20">{item.platform}</span>
                   <span className="text-xs px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/20 capitalize">{item.status}</span>
+                  {item.isOverview && (
+                    <span className="text-xs px-2 py-0.5 bg-amber-500/15 text-amber-300 rounded-full">Overview</span>
+                  )}
                 </div>
-                <p className="text-sm text-gray-300 mb-1 line-clamp-1">{item.caption}</p>
-                <p className="text-xs text-gray-500">{formatDate(item.date)} · {item.task}</p>
+                <p className="text-sm text-gray-200 mb-1 leading-relaxed">{item.task || 'No task specified'}</p>
+                {item.caption && (
+                  <p className="text-sm text-gray-400 mb-1 line-clamp-2">{item.caption}</p>
+                )}
+                <p className="text-xs text-gray-500">{formatDate(item.date)}</p>
               </div>
             </motion.div>
           ))}
@@ -226,6 +351,41 @@ export default function GeneratedCampaignStrategy({
           </button>
         )}
       </motion.div>
+
+      {influencerMatches.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
+          className="bg-white/5 backdrop-blur-xl border border-[#C1B6FD]/20 rounded-2xl p-6"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-[#745CB4]/20"><Users className="w-5 h-5 text-[#C1B6FD]" /></div>
+            <h3 className="text-xl font-bold text-white">Recommended Influencers</h3>
+          </div>
+          {influencerStrategyNote && (
+            <p className="text-sm text-gray-400 mb-4">{influencerStrategyNote}</p>
+          )}
+          <div className="space-y-3">
+            {influencerMatches.map((match) => (
+              <div
+                key={match.influencer_id}
+                className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+              >
+                <div>
+                  <p className="text-white font-semibold">Influencer #{match.influencer_id}</p>
+                  <p className="text-sm text-gray-400 mt-1">{match.fit_reasoning}</p>
+                  <p className="text-xs text-[#C1B6FD] mt-2 capitalize">
+                    {formatLabel(match.suggested_collaboration_type)}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-2xl font-bold text-emerald-400">{Number(match.fit_score || 0).toFixed(1)}</p>
+                  <p className="text-xs text-gray-500">fit score</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

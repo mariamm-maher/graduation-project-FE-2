@@ -41,12 +41,12 @@ const extractKpis = (kpisFromAI = []) => {
 
 const VALID_CONTENT_TYPES = new Set(['video', 'carousel', 'story', 'reel', 'post', 'article']);
 const PLATFORM_CONTENT_TYPE_MAP = {
-  TikTok: 'reel',
-  Instagram: 'reel',
-  Facebook: 'post',
-  LinkedIn: 'article',
-  YouTube: 'video',
-  Twitter: 'post',
+  tiktok: 'reel',
+  instagram: 'reel',
+  facebook: 'post',
+  linkedin: 'article',
+  youtube: 'video',
+  twitter: 'post',
 };
 
 const extractContentCalendar = (calendarFromAI = {}) => {
@@ -56,7 +56,7 @@ const extractContentCalendar = (calendarFromAI = {}) => {
   return days
     .filter((item) => item && item.day && item.date)
     .map((item) => {
-      const platform = item.channel || item.platform || 'Instagram';
+      const platform = (item.channel || item.platform || 'instagram').toLowerCase();
       const rawType = item.contentType || PLATFORM_CONTENT_TYPE_MAP[platform] || 'post';
       const contentType = VALID_CONTENT_TYPES.has(rawType) ? rawType : 'post';
       const task = Array.isArray(item.tasks) ? item.tasks[0] : (item.task || '');

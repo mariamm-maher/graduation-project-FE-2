@@ -85,7 +85,10 @@ export function buildCampaignPayload(
       })
       .filter(Boolean),
 
-    contentCalendar: execution?.contentCalendar || [],
+    contentCalendar: (execution?.contentCalendar || []).map(item => ({
+      ...item,
+      platform: item.platform ? String(item.platform).toLowerCase() : 'instagram'
+    })),
 
     aiVersion: {
       versionNumber: 1,

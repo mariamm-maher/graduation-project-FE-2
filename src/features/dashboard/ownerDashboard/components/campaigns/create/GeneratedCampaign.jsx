@@ -7,6 +7,12 @@ import campaignService from '../../../../../../api/campaign';
 import useProfileStore from '../../../../../../stores/profileStore';
 import { buildSaveCampaignPayload } from '../../../../../../utils/buildSaveCampaignPayload';
 import aiCampaignApi from '../../../../../../api/aiCampaignApi';
+import { buildEstimationsFromStrategy } from '../../../../../../utils/normalizeAiEstimations';
+import {
+  normalizeAiCampaignView,
+  resolveAiCalendarFromState,
+  buildAiPreviewFromResponse,
+} from '../../../../../../utils/normalizeAiCampaignView';
 import GeneratedCampaignHeader from './GeneratedCampaignHeader';
 import GeneratedCampaignStrategy from './GeneratedCampaignStrategy';
 import GeneratedCampaignSidebar from './GeneratedCampaignSidebar';
@@ -30,30 +36,45 @@ function GeneratedCampaign() {
     influencer_strategy_note: influencerStrategyNoteFromState,
   } = location.state || {};
 
+  const resolvedCalendar = useMemo(
+    () => resolveAiCalendarFromState({ calendar: calendarFromState, aiPreview: aiPreviewFromState }),
+    [calendarFromState, aiPreviewFromState],
+  );
+
   const aiPreview = useMemo(() => {
-    if (aiPreviewFromState) return aiPreviewFromState;
-    if (!strategyFromState) return null;
+    const rawStrategy = aiPreviewFromState?.strategy || strategyFromState;
+    if (!rawStrategy) return null;
+
+    const budgetAmount = Number(
+      campaignData?.budget_amount ?? campaignData?.budget ?? 0,
+    );
+
+    const view = normalizeAiCampaignView({
+      strategy: rawStrategy,
+      calendar: resolvedCalendar,
+      influencer_matches: influencerMatchesFromState || aiPreviewFromState?.influencer_matches || [],
+      influencer_strategy_note:
+        influencerStrategyNoteFromState || aiPreviewFromState?.influencer_strategy_note || '',
+      budgetAmount,
+    });
+
     return {
-      strategy: strategyFromState,
-      execution: {
-        contentCalendar: (calendarFromState?.days || []).map((day) => ({
-          day: day.day,
-          date: day.date,
-          platform: day.channel || day.platform,
-          contentType: day.contentType || 'post',
-          task: Array.isArray(day.tasks) ? day.tasks[0] : day.task,
-          caption: day.caption || '',
-        })),
-        tactical_plan: strategyFromState?.tactical_plan || null,
-      },
-      estimations: {
-        estimatedResults: { metrics: strategyFromState?.kpis || [] },
-        ml_score: strategyFromState?.ml_score,
-        ml_verdict: strategyFromState?.ml_verdict,
-      },
-      generatedAt: new Date().toISOString(),
+      ...(aiPreviewFromState || {}),
+      strategy: view.strategy,
+      execution: view.execution,
+      estimations: buildEstimationsFromStrategy(view.strategy),
+      influencer_matches: view.influencer_matches,
+      influencer_strategy_note: view.influencer_strategy_note,
+      generatedAt: aiPreviewFromState?.generatedAt || new Date().toISOString(),
     };
-  }, [aiPreviewFromState, strategyFromState, calendarFromState]);
+  }, [
+    aiPreviewFromState,
+    strategyFromState,
+    resolvedCalendar,
+    influencerMatchesFromState,
+    influencerStrategyNoteFromState,
+    campaignData,
+  ]);
 
   const ownerDraft = useMemo(() => {
     const tone = ownerDraftFromState?.brand_tone
@@ -127,20 +148,38 @@ function GeneratedCampaign() {
 
   const aiResponse = useMemo(() => ({
     strategy: strategyFromState || strategy,
-    calendar: calendarFromState || { days: execution?.contentCalendar || [] },
-    influencer_matches: influencerMatchesFromState || [],
-    influencer_strategy_note: influencerStrategyNoteFromState || '',
-  }), [strategyFromState, strategy, calendarFromState, execution, influencerMatchesFromState, influencerStrategyNoteFromState]);
+    calendar: resolvedCalendar,
+    influencer_matches: influencerMatchesFromState || aiPreview?.influencer_matches || [],
+    influencer_strategy_note:
+      influencerStrategyNoteFromState || aiPreview?.influencer_strategy_note || '',
+  }), [
+    strategyFromState,
+    strategy,
+    resolvedCalendar,
+    influencerMatchesFromState,
+    influencerStrategyNoteFromState,
+    aiPreview,
+  ]);
 
   const campaignDuration = useMemo(() => {
+    const scheduledDays = execution?.calendar_meta?.total_days
+      || resolvedCalendar?.total_days
+      || execution?.contentCalendar?.length;
+    if (scheduledDays && Number(scheduledDays) > 0) {
+      return Number(scheduledDays);
+    }
     if (!campaignDates.startDate || !campaignDates.endDate) return 1;
     const start = new Date(campaignDates.startDate);
     const end = new Date(campaignDates.endDate);
-    return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
-  }, [campaignDates]);
+    return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1);
+  }, [campaignDates, execution, resolvedCalendar]);
 
-  const formatDate = (d) =>
-    new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const formatDate = (d) => {
+    if (!d) return '';
+    const parsed = new Date(d);
+    if (Number.isNaN(parsed.getTime())) return '';
+    return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
 
   const handleSaveCampaign = async (publishImmediately = false) => {
     setIsSaving(true);
@@ -163,6 +202,17 @@ function GeneratedCampaign() {
       const result = publishImmediately
         ? await campaignService.saveAndPublishCampaign(payload)
         : await campaignService.saveCampaign(payload);
+        const campaignId =result?.data?.campaign?.id ||result?.campaign?.id;
+        // TODO: Backend endpoint /campaigns/${campaignId}/ai not implemented yet
+        // if (campaignId && aiPreview) {
+        //   await campaignService.saveAIVersion(
+        //     campaignId,
+        //     aiPreview,
+        //     {
+        //       syncCalendar: true,
+        //     }
+        //   );
+        // }
 
       toast.success(
         publishImmediately
@@ -195,6 +245,10 @@ function GeneratedCampaign() {
         throw new Error('Invalid response from AI pipeline');
       }
       toast.success('Campaign regenerated!', { position: 'top-right', autoClose: 3000 });
+      const budgetAmount = Number(normalizedInput.budget_amount || 0);
+      const aiPreviewNext = buildAiPreviewFromResponse(response, { budgetAmount });
+      aiPreviewNext.estimations = buildEstimationsFromStrategy(aiPreviewNext.strategy);
+
       navigate('/dashboard/owner/campaigns/generated', {
         state: {
           campaignData,
@@ -203,21 +257,7 @@ function GeneratedCampaign() {
           calendar: response.calendar,
           influencer_matches: response.influencer_matches || [],
           influencer_strategy_note: response.influencer_strategy_note || '',
-          aiPreview: {
-            strategy: response.strategy,
-            execution: {
-              contentCalendar: (response.calendar?.days || []).map((day) => ({
-                day: day.day,
-                date: day.date,
-                platform: day.channel || day.platform,
-                contentType: day.contentType || 'post',
-                task: Array.isArray(day.tasks) ? day.tasks[0] : day.task,
-                caption: day.caption || '',
-              })),
-            },
-            estimations: { estimatedResults: { metrics: response.strategy?.kpis || [] } },
-            generatedAt: new Date().toISOString(),
-          },
+          aiPreview: aiPreviewNext,
         },
         replace: true,
       });
@@ -268,25 +308,6 @@ function GeneratedCampaign() {
         navigate={navigate}
       />
 
-      <div className="flex flex-wrap gap-3 justify-end">
-        <button
-          type="button"
-          onClick={() => handleSaveCampaign(false)}
-          disabled={isSaving}
-          className="px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white hover:bg-white/10 disabled:opacity-60"
-        >
-          {isSaving ? 'Saving...' : 'Save as Draft'}
-        </button>
-        <button
-          type="button"
-          onClick={() => handleSaveCampaign(true)}
-          disabled={isSaving}
-          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white disabled:opacity-60"
-        >
-          {isSaving ? 'Publishing...' : 'Save & Publish'}
-        </button>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <GeneratedCampaignStrategy
           normalizedInput={normalizedInput}
@@ -294,6 +315,8 @@ function GeneratedCampaign() {
           execution={execution}
           campaignDuration={campaignDuration}
           formatDate={formatDate}
+          influencerMatches={aiPreview?.influencer_matches || influencerMatchesFromState || []}
+          influencerStrategyNote={aiPreview?.influencer_strategy_note || influencerStrategyNoteFromState || ''}
         />
 
         <GeneratedCampaignSidebar
@@ -303,9 +326,6 @@ function GeneratedCampaign() {
           campaignDuration={campaignDuration}
           formatDate={formatDate}
           isLoading={isLoading}
-          handleSaveAsDraft={() => handleSaveCampaign(false)}
-          handleSave={() => handleSaveCampaign(false)}
-          handleSaveAndPublish={() => handleSaveCampaign(true)}
         />
       </div>
     </motion.div>

@@ -60,7 +60,7 @@ function ActiveCampaignCards() {
       )}
 
       {!loading && campaigns.length === 0 && (
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 text-sm text-gray-300">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-sm text-gray-300">
           No active campaigns available right now.
         </div>
       )}
@@ -85,7 +85,7 @@ function ActiveCampaignCards() {
           return (
             <div 
               key={campaign.id} 
-              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:border-purple-400/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 group"
+              className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-purple-400/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 group"
             >
               {/* Header */}
               <div className="flex items-start gap-3 mb-4">

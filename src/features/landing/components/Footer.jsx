@@ -25,25 +25,25 @@ const Footer = () => {
       { name: 'Communication', href: '#communication' },
     ],
     company: [
-      { name: 'About Us', href: '#about' },
-      { name: 'Careers', href: '#careers' },
-      { name: 'Blog', href: '#blog' },
-      { name: 'Press', href: '#press' },
-      { name: 'Partners', href: '#partners' },
+      { name: 'About Us', href: '/company#about' },
+      { name: 'Careers', href: '/company#careers' },
+      { name: 'Blog', href: '/company#blog' },
+      { name: 'Press', href: '/company#press' },
+      { name: 'Partners', href: '/company#partners' },
     ],
     resources: [
-      { name: 'Help Center', href: '#help' },
-      { name: 'Documentation', href: '#docs' },
-      { name: 'API Reference', href: '#api' },
-      { name: 'Community', href: '#community' },
-      { name: 'Tutorials', href: '#tutorials' },
+      { name: 'Help Center', href: '/resources#help' },
+      { name: 'Documentation', href: '/resources#docs' },
+      { name: 'API Reference', href: '/resources#api' },
+      { name: 'Community', href: '/resources#community' },
+      { name: 'Tutorials', href: '/resources#tutorials' },
     ],
     legal: [
-      { name: 'Privacy Policy', href: '#privacy' },
-      { name: 'Terms of Service', href: '#terms' },
-      { name: 'Cookie Policy', href: '#cookies' },
-      { name: 'GDPR', href: '#gdpr' },
-      { name: 'Licenses', href: '#licenses' },
+      { name: 'Privacy Policy', href: '/legal#privacy' },
+      { name: 'Terms of Service', href: '/legal#terms' },
+      { name: 'Cookie Policy', href: '/legal#cookies' },
+      { name: 'GDPR', href: '/legal#gdpr' },
+      { name: 'Licenses', href: '/legal#licenses' },
     ],
   }
 
@@ -251,66 +251,23 @@ const Footer = () => {
           </motion.div>
         </div>
 
-        {/* Newsletter Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="py-20 border-t border-white/5"
-        >
-          <div className="max-w-2xl mx-auto text-center">
-            <h3 className="text-2xl font-bold text-white mb-3">Stay Updated</h3>
-            <p className="text-gray-400 mb-6">
-              Subscribe to our newsletter for the latest features and marketing tips
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-5 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-[#C1B6FD]/50 transition-colors"
-              />
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 rounded-xl bg-gradient-to-b from-[#C1B6FD] to-[#D3CBFC] text-white font-semibold shadow-[0_0_20px_rgba(167,139,250,0.4)] hover:shadow-[0_0_30px_rgba(167,139,250,0.6)] transition-all duration-300 flex items-center justify-center gap-2"
-              >
-                <span>Subscribe</span>
-                <Send className="w-4 h-4" />
-              </motion.button>
-            </div>
-          </div>
-        </motion.div>
-
         {/* Bottom Bar */}
         <div className="py-8 border-t border-white/5">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <motion.p
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="text-gray-400 text-sm flex items-center gap-2"
-            >
-              © {currentYear} AdSphere. Made with 
-              <Heart className="w-4 h-4 text-red-500 fill-current animate-pulse" />
-              in San Francisco
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="flex gap-6 text-sm"
-            >
-              <a href="#privacy" className="text-gray-400 hover:text-[#745CB4] transition-colors">
+            <p className="text-gray-400 text-sm">
+              © {currentYear} AdSphere. All rights reserved.
+            </p>
+            <div className="flex gap-6 text-sm">
+              <a href="/legal#privacy" className="text-gray-400 hover:text-[#745CB4] transition-colors">
                 Privacy
               </a>
-              <a href="#terms" className="text-gray-400 hover:text-[#745CB4] transition-colors">
+              <a href="/legal#terms" className="text-gray-400 hover:text-[#745CB4] transition-colors">
                 Terms
               </a>
-              <a href="#cookies" className="text-gray-400 hover:text-[#745CB4] transition-colors">
+              <a href="/legal#cookies" className="text-gray-400 hover:text-[#745CB4] transition-colors">
                 Cookies
               </a>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

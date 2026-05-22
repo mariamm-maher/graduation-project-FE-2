@@ -1,4 +1,5 @@
-import { Ban, CheckCircle2, Clock3, Handshake, MessageSquare, XCircle } from 'lucide-react';
+import { Ban, CheckCircle2, Clock3, Handshake, MessageSquare, XCircle, DollarSign } from 'lucide-react';
+import { useState } from 'react';
 import InterestMessagesPane from './InterestMessagesPane';
 
 const STATUS_META = {
@@ -46,7 +47,7 @@ const STATUS_META = {
   },
 };
 
-function RequestCard({ item, type, onAccept, onReject, onCancel }) {
+function RequestCard({ item, type, onAccept, onReject, onCancel, respondToRequest }) {
   const status = String(item.status || 'pending').toLowerCase();
   const meta = STATUS_META[status] || STATUS_META.pending;
   const StatusIcon = meta.icon;
@@ -60,6 +61,34 @@ function RequestCard({ item, type, onAccept, onReject, onCancel }) {
   const waitingForOwner =
     type === 'incoming' && item.status === 'negotiating' && lastBy === 'influencer';
   const canCancel = type === 'outgoing' && (item.status === 'pending' || item.status === 'negotiating');
+
+  // Inline negotiation state
+  const [showNegotiate, setShowNegotiate] = useState(false);
+  const [negotiateBudget, setNegotiateBudget] = useState('');
+  const [negotiateMessage, setNegotiateMessage] = useState('');
+
+  const openNegotiate = () => {
+    setShowNegotiate(true);
+    setNegotiateBudget(item.counterPrice || item.proposedBudget || '');
+    setNegotiateMessage('');
+  };
+
+  const closeNegotiate = () => {
+    setShowNegotiate(false);
+    setNegotiateBudget('');
+    setNegotiateMessage('');
+  };
+
+  const submitNegotiate = async () => {
+    const budget = Number(negotiateBudget);
+    if (!budget || budget <= 0) return;
+    await respondToRequest(item.id, {
+      action: 'counter',
+      newBudget: budget,
+      message: negotiateMessage,
+    });
+    closeNegotiate();
+  };
 
   return (
     <div className={`bg-[#1A112C]/65 backdrop-blur-sm border border-[#745CB4]/25 rounded-lg p-3 mb-2.5 last:mb-0 border-l-4 ${meta.accent}`}>
@@ -133,6 +162,13 @@ function RequestCard({ item, type, onAccept, onReject, onCancel }) {
             </button>
             <button
               type="button"
+              className="px-3 py-1.5 rounded-md text-[11px] font-semibold bg-[#241A3A]/70 text-[#C1B6FD] border border-[#745CB4]/45 cursor-pointer"
+              onClick={openNegotiate}
+            >
+              <span className="inline-flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5" />Counter Offer</span>
+            </button>
+            <button
+              type="button"
               className="px-3 py-1.5 rounded-md text-[11px] font-semibold bg-rose-500/10 text-rose-300 border border-rose-500/25 cursor-pointer"
               onClick={() => onReject(item.id)}
             >
@@ -170,11 +206,57 @@ function RequestCard({ item, type, onAccept, onReject, onCancel }) {
           </button>
         ) : null}
       </div>
+
+      {/* Inline Negotiation Form */}
+      {showNegotiate && ownerCanRespondToCounter && (
+        <div className="mt-3 p-3 bg-[#241A3A]/65 border border-[#745CB4]/25 rounded-lg">
+          <div className="space-y-2">
+            <div>
+              <label className="block text-[10px] text-gray-400 mb-1">Proposed Budget</label>
+              <div className="relative">
+                <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
+                <input
+                  type="number"
+                  value={negotiateBudget}
+                  onChange={(e) => setNegotiateBudget(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-md pl-7 pr-2 py-1.5 text-white text-xs focus:outline-none focus:border-[#C1B6FD]/50"
+                  placeholder="Enter amount..."
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[10px] text-gray-400 mb-1">Message (optional)</label>
+              <textarea
+                value={negotiateMessage}
+                onChange={(e) => setNegotiateMessage(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-md px-2 py-1.5 text-white text-xs focus:outline-none focus:border-[#C1B6FD]/50"
+                placeholder="Add a note..."
+                rows={2}
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={submitNegotiate}
+                disabled={!negotiateBudget || Number(negotiateBudget) <= 0}
+                className="flex-1 px-2 py-1.5 rounded-md text-[11px] font-semibold bg-green-500/10 text-green-300 border border-green-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Send Counter
+              </button>
+              <button
+                onClick={closeNegotiate}
+                className="px-2 py-1.5 rounded-md text-[11px] font-semibold bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function RequestsColumn({ title, count, items, type, onAccept, onReject, onCancel }) {
+function RequestsColumn({ title, count, items, type, onAccept, onReject, onCancel, respondToRequest }) {
   return (
     <div className="bg-[#241A3A]/65 backdrop-blur-md border border-[#745CB4]/25 rounded-xl p-3.5">
       <div className="flex justify-between items-center mb-3">
@@ -193,6 +275,7 @@ function RequestsColumn({ title, count, items, type, onAccept, onReject, onCance
             onAccept={onAccept}
             onReject={onReject}
             onCancel={onCancel}
+            respondToRequest={respondToRequest}
           />
         ))
       ) : (
@@ -202,7 +285,7 @@ function RequestsColumn({ title, count, items, type, onAccept, onReject, onCance
   );
 }
 
-export default function RequestsPane({ outgoing, requestsLoading, requestsError, onAccept, onReject, onCancel }) {
+export default function RequestsPane({ outgoing, requestsLoading, requestsError, onAccept, onReject, onCancel, respondToRequest }) {
   return (
     <div className="space-y-4">
       {requestsError ? (
@@ -225,6 +308,7 @@ export default function RequestsPane({ outgoing, requestsLoading, requestsError,
                 onAccept={onAccept}
                 onReject={onReject}
                 onCancel={onCancel}
+                respondToRequest={respondToRequest}
               />
             ))
           ) : (

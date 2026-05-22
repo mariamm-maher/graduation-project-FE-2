@@ -136,7 +136,7 @@ function SingleCampaign() {
     saved ? removeCampaign(id) : saveCampaign({ ...campaign, id });
   };
 
-  const goBack = () => navigate('/dashboard/influencer/campaigns/overview');
+  const goBack = () => navigate('/dashboard/owner/campaigns/all');
 
   if (selectedCampaignLoading) {
     return (

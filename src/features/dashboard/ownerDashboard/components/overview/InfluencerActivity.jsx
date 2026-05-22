@@ -121,13 +121,13 @@ function InfluencerActivity({ feed = [], loading }) {
       
       <div className="space-y-3 max-h-[420px] overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-linear-to-b [&::-webkit-scrollbar-thumb]:from-[#C1B6FD] [&::-webkit-scrollbar-thumb]:to-[#745CB4] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:from-[#745CB4] [&::-webkit-scrollbar-thumb]:hover:to-[#C1B6FD]">
         {loading && (
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 text-xs text-gray-400">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-xs text-gray-400">
             Loading communication updates...
           </div>
         )}
 
         {!loading && safeFeed.length === 0 && (
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 text-sm text-gray-300">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-300">
             No communication activity yet.
           </div>
         )}
@@ -142,7 +142,7 @@ function InfluencerActivity({ feed = [], loading }) {
           return (
           <div 
             key={activity.id} 
-            className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:border-purple-400/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 group"
+            className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-purple-400/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 group"
           >
             <div className="flex items-start gap-3">
               <div className="relative">

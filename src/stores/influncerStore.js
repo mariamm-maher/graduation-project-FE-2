@@ -358,7 +358,9 @@ const useInfluncerStore = create((set) => ({
         receivedRequests: state.receivedRequests.map((r) => (r.id === id ? (updatedRequest && typeof updatedRequest === 'object' ? { ...r, ...updatedRequest } : { ...r,
           status: data?.action === 'accept' ? 'accepted' : data?.action === 'reject' ? 'rejected' : r.status,
           counterPrice: data?.newBudget ?? r.counterPrice,
-          responseMessage: data?.responseMessage ?? r.responseMessage
+          responseMessage: data?.responseMessage ?? r.responseMessage,
+          lastCounteredByRole: data?.action === 'counter' ? 'influencer' : r.lastCounteredByRole,
+          lastCounteredBy: data?.action === 'counter' ? 'influencer' : r.lastCounteredBy,
         }) : r)),
         respondingId: null
       }));

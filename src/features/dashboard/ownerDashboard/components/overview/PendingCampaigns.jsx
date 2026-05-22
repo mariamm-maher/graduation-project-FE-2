@@ -41,13 +41,13 @@ function PendingCampaigns({ campaigns = [], loading }) {
       
       <div className="space-y-3">
         {loading && (
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 text-xs text-gray-400">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-xs text-gray-400">
             Loading pending campaigns...
           </div>
         )}
 
         {!loading && campaigns.length === 0 && (
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 text-sm text-gray-300">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-300">
             No pending campaigns right now.
           </div>
         )}
@@ -56,7 +56,7 @@ function PendingCampaigns({ campaigns = [], loading }) {
           <div 
             key={campaign.id} 
             onClick={() => openCampaign(campaign)}
-            className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:border-purple-400/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 group cursor-pointer"
+            className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-purple-400/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 group cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-lg bg-linear-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">

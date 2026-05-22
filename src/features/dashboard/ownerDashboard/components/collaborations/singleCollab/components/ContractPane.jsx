@@ -74,14 +74,27 @@ function getDurationDays(startDate, endDate) {
   return `${diff} days`;
 }
 
-// Helper to get campaign and influencer names from new API structure
+// Helper to get campaign and influencer names from API structure
 function getContractDisplayData(contract) {
   const collab = contract?.collaboration || {};
-  // Try to get names from various possible locations in the data
+  
+  // Get campaign name from collaboration or contract
+  const campaignName = contract?.campaignName 
+    || collab?.campaign?.campaignName 
+    || collab?.campaign?.name 
+    || (collab?.campaignId ? `Campaign #${collab.campaignId}` : '');
+  
+  // Get influencer name from user object (firstName + lastName)
+  const influencerFirstName = collab?.influencer?.firstName || '';
+  const influencerLastName = collab?.influencer?.lastName || '';
+  const influencerFullName = (influencerFirstName + ' ' + influencerLastName).trim() 
+    || contract?.influencerName
+    || (collab?.influencerId ? `Influencer #${collab.influencerId}` : '');
+  
   return {
-    campaignName: contract?.campaignName || collab?.campaign?.name || `Campaign #${collab?.campaignId || contract?.collaborationId || ''}`,
-    influencerName: contract?.influencerName || collab?.influencer?.name || `Influencer #${collab?.influencerId || ''}`,
-    ownerName: contract?.ownerName || collab?.owner?.name || `Owner #${collab?.ownerId || ''}`,
+    campaignName: campaignName || 'Unknown Campaign',
+    influencerName: influencerFullName || 'Unknown Influencer',
+    ownerName: contract?.ownerName || collab?.owner?.name || '',
   };
 }
 
@@ -142,14 +155,7 @@ export default function ContractPane({
           <p className="text-sm text-[#9CA3AF] mt-1">Track, review, and create contracts in one place.</p>
         </div>
 
-        <button
-          type="button"
-          onClick={onOpenCreate}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[#C1B6FD]/35 bg-linear-to-r from-[#241A3A]/90 to-[#1A112C]/90 text-white font-semibold hover:border-[#C1B6FD]/60 transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          Create Contract
-        </button>
+      
       </div>
 
       <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">

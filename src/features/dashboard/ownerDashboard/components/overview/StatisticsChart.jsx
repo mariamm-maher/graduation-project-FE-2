@@ -81,7 +81,7 @@ export default function StatisticsChart({ loading: externalLoading }) {
         {kpiCards.map((card) => (
           <div
             key={card.label}
-            className="group relative bg-gradient-to-br from-white/[0.04] to-white/[0.01] backdrop-blur-sm rounded-2xl p-4 border border-white/[0.06] hover:border-purple-400/20 transition-all duration-300"
+            className="group relative bg-gradient-to-br from-white/[0.04] to-white/[0.01] rounded-2xl p-4 border border-white/[0.06] hover:border-purple-400/20 transition-all duration-300"
           >
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative">
@@ -96,7 +96,7 @@ export default function StatisticsChart({ loading: externalLoading }) {
       </div>
 
       {/* Main Analytics Panel */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-white/[0.03] via-white/[0.02] to-transparent backdrop-blur-xl border border-white/[0.07] rounded-3xl p-7 shadow-2xl shadow-black/20">
+      <div className="relative overflow-hidden bg-gradient-to-br from-white/[0.03] via-white/[0.02] to-transparent border border-white/[0.07] rounded-3xl p-7 shadow-2xl shadow-black/20">
         
         {/* Decorative orbs */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/[0.04] rounded-full blur-3xl pointer-events-none" />

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import useProfileStore from '../../../../../../stores/profileStore';
@@ -30,6 +31,17 @@ function PrepareCampaign() {
   const [locationQuery, setLocationQuery] = useState('');
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const locationOptions = ['Egypt', 'Saudi Arabia', 'UAE', 'GCC', 'MENA', 'Europe', 'USA', 'Worldwide'];
+
+  // Audience age range search-select state
+  const [ageRangeQuery, setAgeRangeQuery] = useState('');
+  const [isAgeRangeOpen, setIsAgeRangeOpen] = useState(false);
+  const ageRangeOptions = ['13-17', '18-24', '25-34', '35-44', '45-54', '55-64', '65+'];
+  const filteredAgeRanges = ageRangeOptions.filter((range) =>
+    range.toLowerCase().includes(ageRangeQuery.toLowerCase())
+  );
+
+  // Gender options
+  const genderOptions = ['Male', 'Female', 'All'];
   const filteredLocations = locationOptions.filter((loc) =>
     loc.toLowerCase().includes(locationQuery.toLowerCase())
   );
@@ -861,25 +873,79 @@ function PrepareCampaign() {
                     </div>
                   </div>
                 </div>
+                {/* Gender */}
                 <div>
                   <label className="block text-sm text-gray-300 mb-2">Audience Gender</label>
-                  <input
-                    type="text"
-                    value={ownerDraft.targetAudience?.gender || ''}
-                    onChange={(e) => updateAudience('gender', e.target.value)}
-                    placeholder="e.g. Female, Male, All"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
-                  />
+                  <div className="grid grid-cols-3 gap-3">
+                    {genderOptions.map((gender) => (
+                      <motion.button
+                        key={gender}
+                        type="button"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => updateAudience('gender', gender)}
+                        className={`p-3 rounded-lg border-2 transition-all duration-300 ${
+                          ownerDraft.targetAudience?.gender === gender
+                            ? 'border-[#C1B6FD] bg-[#C1B6FD]/10 text-white'
+                            : 'border-white/10 bg-white/5 text-gray-300 hover:border-white/20'
+                        }`}
+                      >
+                        {gender}
+                      </motion.button>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Age Range */}
                 <div>
-                  <label className="block text-sm text-gray-300 mb-2">Audience Age Range</label>
-                  <input
-                    type="text"
-                    value={ownerDraft.targetAudience?.ageRange || ''}
-                    onChange={(e) => updateAudience('ageRange', e.target.value)}
-                    placeholder="e.g. 18-34"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50"
-                  />
+                  <label className="block text-xs text-gray-400 mb-2">Audience Age Range</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={isAgeRangeOpen ? ageRangeQuery : (ownerDraft.targetAudience?.ageRange || '')}
+                      onChange={(e) => {
+                        setAgeRangeQuery(e.target.value);
+                        setIsAgeRangeOpen(true);
+                      }}
+                      onFocus={() => {
+                        setAgeRangeQuery('');
+                        setIsAgeRangeOpen(true);
+                      }}
+                      onBlur={() => setTimeout(() => {
+                        setIsAgeRangeOpen(false);
+                        setAgeRangeQuery('');
+                      }, 150)}
+                      placeholder="Search age ranges"
+                      className="w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/50 focus:ring-2 focus:ring-[#C1B6FD]/20 transition-all duration-300"
+                    />
+                    {isAgeRangeOpen && (
+                      <div className="absolute top-full mt-2 w-full z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+                        {filteredAgeRanges.length > 0 ? (
+                          filteredAgeRanges.map((range) => (
+                            <button
+                              key={range}
+                              type="button"
+                              onClick={() => {
+                                updateAudience('ageRange', range);
+                                setAgeRangeQuery('');
+                                setIsAgeRangeOpen(false);
+                              }}
+                              className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                            >
+                              <span className="flex items-center justify-between">
+                                {range}
+                                {ownerDraft.targetAudience?.ageRange === range && (
+                                  <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
+                                )}
+                              </span>
+                            </button>
+                          ))
+                        ) : (
+                          <p className="px-4 py-3 text-sm text-gray-400">No options found</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-300 mb-2">

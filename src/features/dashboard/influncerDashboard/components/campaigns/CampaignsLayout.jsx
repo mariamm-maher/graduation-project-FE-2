@@ -13,7 +13,6 @@ function CampaignsLayout() {
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<CampaignsOverview />} />
         <Route path="saved" element={<SavedCampaigns />} />
-    
         <Route path=":campaignId" element={<SingleCampaign />} />
       </Routes>
     </div>

@@ -15,6 +15,9 @@ import InfluencerOnboarding from './pages/influncerOnboarding.jsx';
 import ResetPassword from './features/auth/ResetPassword.jsx';
 import ProtectedRoute, { AuthorizedRoute } from './pages/protectRoute.jsx';
 import NotFound from './pages/NotFound.jsx';
+import CompanyPage from './pages/CompanyPage.jsx';
+import ResourcesPage from './pages/ResourcesPage.jsx';
+import LegalPage from './pages/LegalPage.jsx';
 import useAuthStore from './stores/authStore.js';
 import useNotificationsStore from './stores/NotificationsStore.js';
 import ScrollToTop from './components/ui/ScrollToTop.jsx';
@@ -58,6 +61,9 @@ function App() {
         <Route path="/auth/google/callback" element={<GoogleCallback />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/404" element={<NotFound />} />
+        <Route path="/company" element={<CompanyPage />} />
+        <Route path="/resources" element={<ResourcesPage />} />
+        <Route path="/legal" element={<LegalPage />} />
 
         <Route path="/dashboard/owner/*" element={
           <AuthorizedRoute allowedRoles={['OWNER']}>

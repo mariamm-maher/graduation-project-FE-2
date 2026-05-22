@@ -11,7 +11,7 @@ const TAB_ICONS = {
 
 export default function HubTabs({ tabs, activeTab, onTabChange }) {
   return (
-    <div className="flex flex-wrap gap-2.5 mb-6" role="tablist" aria-label="Collaboration views">
+    <div className="flex gap-2.5 mb-6" role="tablist" aria-label="Collaboration views">
       {tabs.map((tab) => (
         (() => {
           const Icon = TAB_ICONS[tab.id] || LayoutGrid;
@@ -22,7 +22,7 @@ export default function HubTabs({ tabs, activeTab, onTabChange }) {
               type="button"
               role="tab"
               aria-selected={activeTab === tab.id}
-              className={`group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-[18px] sm:text-[15px] font-semibold border cursor-pointer transition-all duration-200 ${
+              className={`group flex-1 inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-full text-[18px] sm:text-[15px] font-semibold border cursor-pointer transition-all duration-200 ${
                 activeTab === tab.id
                   ? 'text-white border-[#C1B6FD]/55 bg-linear-to-r from-[#241A3A]/85 to-[#1A112C]/85 backdrop-blur-md shadow-[0_8px_24px_rgba(116,92,180,0.35)]'
                   : 'text-[#C1B6FD] border-[#745CB4]/45 bg-[#1A112C]/40 backdrop-blur-sm hover:bg-[#241A3A]/55 hover:border-[#C1B6FD]/35'

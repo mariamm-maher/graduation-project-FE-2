@@ -33,7 +33,7 @@ const STATUS_FILTER_LABELS = {
 
 function StatCard({ Icon, label, value, color, bg }) {
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${bg} min-w-[120px]`}>
+    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${bg} flex-1 min-w-[120px]`}>
       <Icon className={`w-4 h-4 shrink-0 ${color}`} />
       <div>
         <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide leading-none mb-0.5">{label}</p>
@@ -147,6 +147,7 @@ export default function SingleCollabHub() {
   const handleAccept = async (id) => { await respondToRequest(id, { action: 'accept' }); };
   const handleReject = async (id) => { await respondToRequest(id, { action: 'reject' }); };
 
+
   const isLoading = isOwnerCollaborationsLoading;
 
   return (
@@ -165,22 +166,6 @@ export default function SingleCollabHub() {
           <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           Refresh
         </button>
-      </div>
-
-      {/* ── Stats Row ── */}
-      <div className="flex flex-wrap gap-2.5">
-        {STAT_CONFIG.map(s => (
-          <StatCard key={s.key} Icon={s.Icon} label={s.label} value={stats[s.key]} color={s.color} bg={s.bg} />
-        ))}
-        {pendingIncoming > 0 && (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-amber-500/10 border-amber-500/25 min-w-[120px]">
-            <Clock className="w-4 h-4 shrink-0 text-amber-400" />
-            <div>
-              <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide leading-none mb-0.5">Needs Action</p>
-              <p className="text-lg font-bold leading-none text-amber-400">{pendingIncoming} request{pendingIncoming > 1 ? 's' : ''}</p>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ── Errors ── */}
@@ -246,6 +231,22 @@ export default function SingleCollabHub() {
 
       {/* ── Tab panes ── */}
       <div className={activeTab === 'all' ? 'block' : 'hidden'}>
+        {/* ── Stats Row (only in All tab) ── */}
+        <div className="flex gap-2.5 mb-4">
+          {STAT_CONFIG.map(s => (
+            <StatCard key={s.key} Icon={s.Icon} label={s.label} value={stats[s.key]} color={s.color} bg={s.bg} />
+          ))}
+          {pendingIncoming > 0 && (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-amber-500/10 border-amber-500/25 flex-1 min-w-[120px]">
+              <Clock className="w-4 h-4 shrink-0 text-amber-400" />
+              <div>
+                <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide leading-none mb-0.5">Needs Action</p>
+                <p className="text-lg font-bold leading-none text-amber-400">{pendingIncoming} request{pendingIncoming > 1 ? 's' : ''}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
         <StatusFlow />
         {!isLoading && filteredCollaborations.length === 0 && collaborations.length > 0 && (
           <div className="text-center py-12 text-[#9CA3AF] text-sm">
@@ -280,6 +281,7 @@ export default function SingleCollabHub() {
           onAccept={handleAccept}
           onReject={handleReject}
           onCancel={cancelRequest}
+          respondToRequest={respondToRequest}
         />
       </div>
 

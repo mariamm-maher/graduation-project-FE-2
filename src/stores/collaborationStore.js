@@ -307,7 +307,9 @@ const useCollaborationStore = create((set) => ({
                     ...r,
                     status: data?.action === 'accept' ? 'accepted' : data?.action === 'reject' ? 'rejected' : 'negotiating',
                     counterPrice: data?.newBudget ?? r.counterPrice,
-                    responseMessage: data?.responseMessage ?? r.responseMessage
+                    responseMessage: data?.responseMessage ?? r.responseMessage,
+                    lastCounteredByRole: data?.action === 'counter' ? 'owner' : r.lastCounteredByRole,
+                    lastCounteredBy: data?.action === 'counter' ? 'owner' : r.lastCounteredBy,
                 }) : r)),
                 isSentRequestsLoading: false
             }));

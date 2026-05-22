@@ -1,73 +1,73 @@
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useRef } from 'react'
-import { Brain, LayoutGrid, BarChart3, Users, Calendar, Zap } from 'lucide-react'
-import aiContentImg from '../../../assets/01.png'
-import analyticsImg from '../../../assets/03.jpg'
-import marketImg from '../../../assets/02.jpg'
-import smartImg from '../../../assets/04.jpg'
+import { Sparkles, FolderKanban, BarChart3, Users, MessageSquare, FileSignature } from 'lucide-react'
+import aiGenerationImg from '../../../assets/01.png'
+import campaignManagementImg from '../../../assets/02.jpg'
+import influencerCollabImg from '../../../assets/04.jpg'
+import communicationHubImg from '../../../assets/03.jpg'
 
 const iconMap = {
-  brain: Brain,
-  'layout-grid': LayoutGrid,
+  sparkles: Sparkles,
+  'folder-kanban': FolderKanban,
   'bar-chart-3': BarChart3,
   users: Users,
-  calendar: Calendar,
-  zap: Zap,
+  'message-square': MessageSquare,
+  'file-signature': FileSignature,
 }
 
 const features = [
   {
     id: 1,
-    icon: 'brain',
-    title: 'AI-Powered Content Generation',
-    description: 'Our advanced AI analyzes your brand and creates engaging content that resonates with your audience.',
-    image: aiContentImg,
+    icon: 'sparkles',
+    title: 'AI-Powered Campaign Generation',
+    description: 'Generate complete marketing campaigns in seconds with AI-driven strategy, content calendar, and budget recommendations.',
+    image: aiGenerationImg,
     objectFit: 'object-contain',
     features: [
-      'Smart content suggestions based on trending topics',
-      'Brand voice consistency across all platforms',
-      'Automated hashtag and caption generation',
-      'Multi-language support for global reach'
+      'AI-generated campaign strategy and goals',
+      'Smart content calendar with posting schedule',
+      'Automated budget allocation across platforms',
+      'Platform recommendations based on target audience'
     ]
   },
   {
     id: 2,
-    icon: 'layout-grid',
-    title: 'Multi-Platform Management',
-    description: 'Manage all your social media accounts from one unified dashboard with seamless cross-platform posting.',
-    image: marketImg,
+    icon: 'folder-kanban',
+    title: 'Campaign Lifecycle Management',
+    description: 'Create, plan, and manage campaigns from draft to completion with structured workflows and milestone tracking.',
+    image: campaignManagementImg,
     objectFit: 'object-contain',
     features: [
-      'Unified inbox for all platform messages',
-      'Cross-platform analytics and reporting',
-      'Bulk scheduling and post recycling',
-      'Platform-specific content optimization'
+      'Campaign creation with goals, budget, and duration',
+      'Draft, publish, complete, and cancel workflows',
+      'Target audience and KPI configuration',
+      'Campaign status tracking and analytics'
     ]
   },
   {
     id: 3,
-    icon: 'bar-chart-3',
-    title: 'Advanced Analytics',
-    description: 'Get deep insights into your campaign performance with real-time analytics and predictive modeling.',
-    image: analyticsImg,
+    icon: 'users',
+    title: 'Influencer Discovery & Collaboration',
+    description: 'Find and work with influencers through a complete collaboration workflow from invitation to project completion.',
+    image: influencerCollabImg,
     features: [
-      'Real-time performance tracking',
-      'Competitor analysis and benchmarking',
-      'ROI calculation and forecasting',
-      'Custom report generation'
+      'Browse and discover influencer profiles',
+      'Send collaboration requests with negotiation',
+      'Contract creation and digital signing',
+      'Task assignment and deliverable tracking'
     ]
   },
   {
     id: 4,
-    icon: 'users',
-    title: 'Influencer Collaboration',
-    description: 'Connect with the right influencers and manage partnerships efficiently from discovery to payment.',
-    image: smartImg,
+    icon: 'message-square',
+    title: 'Real-Time Communication Hub',
+    description: 'Stay connected with built-in messaging, notifications, and collaboration tools for seamless teamwork.',
+    image: communicationHubImg,
     features: [
-      'Smart influencer matching algorithm',
-      'Contract and payment management',
-      'Performance tracking per influencer',
-      'Communication tools built-in'
+      'Real-time chat between owners and influencers',
+      'Instant notifications for updates and actions',
+      'Collaboration request management',
+      'In-app messaging with conversation history'
     ]
   }
 ]

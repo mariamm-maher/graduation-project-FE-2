@@ -1,13 +1,12 @@
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  ArrowLeft, 
+import {
+  ArrowLeft,
   Sparkles,
-  Calendar, 
-  Users, 
-  DollarSign, 
+  Users,
+  DollarSign,
   TrendingUp,
-  Target, 
+  Target,
   PieChart,
   BarChart3,
   Clock,
@@ -28,6 +27,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import useCampaignStore from '../../../../../../stores/campaignStore';
+import ContentCalendarMonthView from '../create/ContentCalendarMonthView';
 
 function SingleCampaign() {
   const { campaignId } = useParams();
@@ -364,54 +364,13 @@ function SingleCampaign() {
           )}
 
           {/* Dynamic Content Calendar Entries */}
-          <motion.div className="bg-white/5 backdrop-blur-xl border border-[#C1B6FD]/20 rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="p-2 rounded-lg bg-blue-500/20"><Calendar className="w-5 h-5 text-blue-400" /></div>
-              <h3 className="text-xl font-bold text-white">AI Content Calendar Production</h3>
-              <span className="ml-auto text-xs text-gray-400">{calendarItems.length} planned pieces</span>
-            </div>
-            
-            <div className="space-y-3">
-              {visibleCalendar.map((item, i) => (
-                <div
-                  key={item.id || i}
-                  className="flex gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:border-[#C1B6FD]/40 transition-all"
-                >
-                  <div className="shrink-0 w-14 h-14 rounded-xl bg-linear-to-br from-[#745CB4] to-[#C1B6FD] flex items-center justify-center shadow-md">
-                    <div className="text-center">
-                      <div className="text-[9px] text-white/70 font-medium leading-none">Day</div>
-                      <div className="text-lg font-bold text-white leading-snug">{item.day || i + 1}</div>
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center flex-wrap gap-2 mb-1.5">
-                      <span className="font-semibold text-white capitalize">{formatLabel(item.contentType)}</span>
-                      <span className="text-xs px-2.5 py-0.5 bg-[#745CB4]/20 text-[#C1B6FD] rounded-full border border-[#C1B6FD]/20">{formatLabel(item.platform)}</span>
-                      {getStatusBadge(item.status)}
-                    </div>
-                    <p className="text-sm text-gray-300 mb-1 line-clamp-2">{item.caption || 'Content blueprint is being compiled by data intelligence.'}</p>
-                    <p className="text-xs text-gray-500">{formatDate(item.date)} · {item.task || 'General Posting Schedule'}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {calendarItems.length > 7 && (
-              <button
-                onClick={() => setShowAllCalendar((prev) => !prev)}
-                className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white hover:border-[#C1B6FD]/30 transition-all text-sm font-medium"
-              >
-                {showAllCalendar ? (
-                  <><ChevronUp className="w-4 h-4" /> Show Less</>
-                ) : (
-                  <><ChevronDown className="w-4 h-4" /> View All {calendarItems.length} Days Plan</>
-                )}
-              </button>
-            )}
-            {!calendarItems.length && (
-              <p className="text-sm text-gray-400 italic text-center py-4 bg-white/5 rounded-xl">No manual content calendar variations added. Using cross-channel target distributions.</p>
-            )}
-          </motion.div>
+          <ContentCalendarMonthView
+            calendarItems={calendarItems}
+            calendarMeta={{}}
+            formatDate={formatDate}
+            showAllCalendar={showAllCalendar}
+            setShowAllCalendar={setShowAllCalendar}
+          />
         </div>
 
         {/* Right Sidebar */}

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Sparkles, Target, DollarSign, Clock, Globe, PieChart, Megaphone, Calendar, ChevronUp, ChevronDown, Users, Layers, Zap } from 'lucide-react';
+import { Sparkles, Target, DollarSign, Clock, Globe, PieChart, Megaphone, ChevronUp, ChevronDown, Users, Layers, Zap } from 'lucide-react';
 import useOwnerStore from '../../../../../../stores/ownerStore';
+import ContentCalendarMonthView from './ContentCalendarMonthView';
 
 const formatLabel = (value) =>
   String(value || '')
@@ -302,70 +303,13 @@ export default function GeneratedCampaignStrategy({
       )}
 
       {/* Content Calendar */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-        className="bg-white/5 backdrop-blur-xl border border-[#C1B6FD]/20 rounded-2xl p-6"
-      >
-        <div className="flex items-center gap-3 mb-5">
-          <div className="p-2 rounded-lg bg-blue-500/20"><Calendar className="w-5 h-5 text-blue-400" /></div>
-          <h3 className="text-xl font-bold text-white">Content Calendar</h3>
-          <span className="ml-auto text-xs text-gray-400">{calendarItems.length} entries</span>
-        </div>
-        {(calendarMeta.start_date || calendarMeta.total_days) && (
-          <p className="text-xs text-gray-400 mb-4">
-            {calendarMeta.start_date && <>Starts {formatDate(calendarMeta.start_date)}</>}
-            {calendarMeta.total_days != null && (
-              <span>{calendarMeta.start_date ? ' · ' : ''}{calendarMeta.total_days} day{calendarMeta.total_days === 1 ? '' : 's'} scheduled</span>
-            )}
-            {calendarMeta.isOverviewCalendar && (
-              <span className="ml-2 text-amber-400/80">(overview from tactical plan)</span>
-            )}
-          </p>
-        )}
-        <div className="space-y-3">
-          {calendarItems.length === 0 ? (
-            <p className="text-sm text-gray-400 py-6 text-center">No calendar days returned from AI.</p>
-          ) : visibleCalendar.map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.55 + i * 0.04 }}
-              className="flex gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:border-[#C1B6FD]/40 transition-all"
-            >
-              <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-[#745CB4] to-[#C1B6FD] flex items-center justify-center shadow-md">
-                <div className="text-center">
-                  <div className="text-[9px] text-white/70 font-medium leading-none">Day</div>
-                  <div className="text-lg font-bold text-white leading-snug">{item.day}</div>
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center flex-wrap gap-2 mb-1.5">
-                  <span className="font-semibold text-white capitalize">{formatLabel(item.contentType)}</span>
-                  <span className="text-xs px-2.5 py-0.5 bg-[#745CB4]/20 text-[#C1B6FD] rounded-full border border-[#C1B6FD]/20">{item.platform}</span>
-                  <span className="text-xs px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/20 capitalize">{item.status}</span>
-                  {item.isOverview && (
-                    <span className="text-xs px-2 py-0.5 bg-amber-500/15 text-amber-300 rounded-full">Overview</span>
-                  )}
-                </div>
-                <p className="text-sm text-gray-200 mb-1 leading-relaxed">{item.task || 'No task specified'}</p>
-                {item.caption && (
-                  <p className="text-sm text-gray-400 mb-1 line-clamp-2">{item.caption}</p>
-                )}
-                <p className="text-xs text-gray-500">{formatDate(item.date)}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-        {calendarItems.length > 7 && (
-          <button
-            onClick={() => setShowAllCalendar(v => !v)}
-            className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white hover:border-[#C1B6FD]/30 transition-all text-sm font-medium"
-          >
-            {showAllCalendar
-              ? <><ChevronUp className="w-4 h-4" /> Show Less</>
-              : <><ChevronDown className="w-4 h-4" /> Show All {calendarItems.length} Days</>}
-          </button>
-        )}
-      </motion.div>
+      <ContentCalendarMonthView
+        calendarItems={calendarItems}
+        calendarMeta={calendarMeta}
+        formatDate={formatDate}
+        showAllCalendar={showAllCalendar}
+        setShowAllCalendar={setShowAllCalendar}
+      />
 
       {influencerMatches.length > 0 && (
         <motion.div

@@ -1,5 +1,82 @@
 @import "tailwindcss";
 
+/* CSS Custom Properties (Design Tokens) */
+@theme {
+  /* Primary Colors */
+  --color-primary: #C1B6FD;
+  --color-primary-light: #D4CCFF;
+  --color-primary-dark: #745CB4;
+  --color-primary-foreground: #ffffff;
+
+  /* Secondary Colors */
+  --color-secondary: #745CB4;
+  --color-secondary-light: #8B6FD6;
+  --color-secondary-dark: #5A4A94;
+  --color-secondary-foreground: #ffffff;
+
+  /* Background Colors */
+  --color-background: #0f0f1a;
+  --color-background-light: #1a1a2e;
+  --color-background-card: #16162a;
+  --color-background-hover: rgba(255, 255, 255, 0.05);
+
+  /* Foreground Colors */
+  --color-foreground: #ffffff;
+  --color-foreground-muted: #a0a0b0;
+  --color-foreground-subtle: #6b6b7b;
+
+  /* Muted Colors */
+  --color-muted: rgba(255, 255, 255, 0.1);
+  --color-muted-light: rgba(255, 255, 255, 0.15);
+  --color-muted-dark: rgba(0, 0, 0, 0.3);
+
+  /* Accent Colors */
+  --color-accent: #C1B6FD;
+  --color-accent-light: #E0D8FF;
+  --color-accent-dark: #745CB4;
+
+  /* Border Colors */
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-light: rgba(255, 255, 255, 0.15);
+  --color-border-dark: rgba(255, 255, 255, 0.05);
+
+  /* Card Colors */
+  --color-card: rgba(255, 255, 255, 0.05);
+  --color-card-hover: rgba(255, 255, 255, 0.08);
+  --color-card-active: rgba(255, 255, 255, 0.12);
+
+  /* Destructive Colors */
+  --color-destructive: #ef4444;
+  --color-destructive-light: #f87171;
+  --color-destructive-dark: #dc2626;
+  --color-destructive-foreground: #ffffff;
+
+  /* Success Colors */
+  --color-success: #10b981;
+  --color-success-light: #34d399;
+  --color-success-dark: #059669;
+  --color-success-foreground: #ffffff;
+
+  /* Warning Colors */
+  --color-warning: #f59e0b;
+  --color-warning-light: #fbbf24;
+  --color-warning-dark: #d97706;
+  --color-warning-foreground: #ffffff;
+
+  /* Info Colors */
+  --color-info: #3b82f6;
+  --color-info-light: #60a5fa;
+  --color-info-dark: #2563eb;
+  --color-info-foreground: #ffffff;
+
+  /* Gradient Colors */
+  --gradient-primary: linear-gradient(135deg, #745CB4 0%, #C1B6FD 100%);
+  --gradient-secondary: linear-gradient(135deg, #C1B6FD 0%, #745CB4 100%);
+  --gradient-accent: linear-gradient(135deg, #C1B6FD 0%, #E0D8FF 100%);
+  --gradient-card: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+}
+
 * {
   box-sizing: border-box;
 }

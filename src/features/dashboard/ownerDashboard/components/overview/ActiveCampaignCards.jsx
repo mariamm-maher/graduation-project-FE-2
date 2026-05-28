@@ -1,58 +1,64 @@
-import { TrendingUp, Users, MessageCircle, Target, BarChart3, Clock, CheckCircle, Zap, DollarSign, AlertTriangle } from 'lucide-react';
+import { Target, Clock, CheckCircle, DollarSign, Calendar, FileText, Layers } from 'lucide-react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useCampaignStore from '../../../../../stores/campaignStore';
 
-function formatCompact(value = 0) {
-  if (value >= 1_000_000) {
-    return `${(value / 1_000_000).toFixed(1)}M`;
-  }
-  if (value >= 1_000) {
-    return `${(value / 1_000).toFixed(1)}K`;
-  }
-  return `${value}`;
-}
+const PLATFORM_COLORS = {
+  instagram: 'bg-pink-500/20 text-pink-400 border-pink-500/30',
+  tiktok:    'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+  youtube:   'bg-red-500/20 text-red-400 border-red-500/30',
+  twitter:   'bg-sky-500/20 text-sky-400 border-sky-500/30',
+  facebook:  'bg-blue-500/20 text-blue-400 border-blue-500/30',
+};
+
+const STATUS_COLORS = {
+  posted:    'bg-green-500/20 text-green-400',
+  scheduled: 'bg-amber-500/20 text-amber-400',
+  failed:    'bg-red-500/20 text-red-400',
+};
 
 function resolveCampaignId(campaign = {}) {
   return campaign?.id || campaign?.campaignId || campaign?._id || null;
 }
 
+function formatDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 function ActiveCampaignCards() {
   const navigate = useNavigate();
-  const { 
-    activeCampaigns: campaignsRaw, 
-    activeTrackingTools, 
-    isLoading: loading, 
-    fetchActiveCampaignsWithTracking 
+  const {
+    activeCampaigns: campaignsRaw,
+    activeTrackingTools,
+    isLoading: loading,
+    fetchActiveCampaignsWithTracking,
+    fetchActiveCampaigns,
   } = useCampaignStore();
-  
+
   const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
   const runningCount = activeTrackingTools?.totalActiveCampaigns ?? campaigns.length;
 
-  // Fetch campaigns on mount - same as ActiveCampaigns
   useEffect(() => {
-    fetchActiveCampaignsWithTracking({ page: 1, limit: 6 });
-  }, [fetchActiveCampaignsWithTracking]);
+    const load = async () => {
+      const res = await fetchActiveCampaignsWithTracking({ page: 1, limit: 6 });
+      const list = Array.isArray(res?.data) ? res.data : [];
+      if (!res?.success || list.length === 0) {
+        await fetchActiveCampaigns({ page: 1, limit: 6 });
+      }
+    };
+    load();
+  }, [fetchActiveCampaignsWithTracking, fetchActiveCampaigns]);
 
-  const openCampaign = (campaign) => {
-    const campaignId = resolveCampaignId(campaign);
-    if (!campaignId) return;
-    navigate(`/dashboard/owner/campaigns/${campaignId}`);
-  };
-
-  // Helper to get tracking data from campaign
-  const getTracking = (campaign) => campaign.tracking || {};
+  const todayStr = new Date().toISOString().split('T')[0];
 
   return (
     <div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <h2 className="text-xl sm:text-2xl font-bold">Active Campaigns</h2>
-        <div className="flex items-center gap-2">
-          <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-medium">
-            {runningCount} Running
-          </span>
-       
-        </div>
+        <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-medium">
+          {runningCount} Running
+        </span>
       </div>
 
       {loading && (
@@ -61,229 +67,146 @@ function ActiveCampaignCards() {
 
       {!loading && campaigns.length === 0 && (
         <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-sm text-gray-300">
-          No active campaigns available right now.
+          No active campaigns right now.
         </div>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
         {campaigns.map((campaign) => {
-          const tracking = getTracking(campaign);
-          const kpisData = tracking.kpis || {};
-          const contentData = tracking.content || {};
-          const budgetData = tracking.budget || {};
-          const predictions = tracking.predictions || {};
-          const performance = tracking.performance || {};
+          const dur     = campaign.tracking?.duration || {};
+          const content = campaign.tracking?.content  || {};
+          const kpis    = Array.isArray(campaign.kpis) ? campaign.kpis : [];
+          const calendar = Array.isArray(campaign.contentCalendar) ? campaign.contentCalendar : [];
 
-          // Determine status colors
-          const kpiAchievement = kpisData.overallAchievement || 0;
-          const kpiColor = kpiAchievement >= 80 ? 'text-green-400' : kpiAchievement >= 60 ? 'text-amber-400' : 'text-red-400';
-          const kpiBg = kpiAchievement >= 80 ? 'bg-green-500/20' : kpiAchievement >= 60 ? 'bg-amber-500/20' : 'bg-red-500/20';
+          const progress   = dur.progressPercent ?? 0;
+          const elapsed    = dur.elapsedDurationDays ?? 0;
+          const remaining  = dur.remainingDurationDays ?? 0;
+          const totalDays  = dur.totalDurationDays ?? 0;
 
-          const burnRate = budgetData.burnRate || 0;
-          const budgetColor = burnRate > 100 ? 'text-red-400' : burnRate > 80 ? 'text-amber-400' : 'text-green-400';
+          const posted    = content.postedContentCount ?? 0;
+          const scheduled = content.scheduledContentCount ?? 0;
+          const failed    = content.failedContentCount ?? 0;
+          const total     = content.totalItems ?? 0;
+
+          // Today's calendar items
+          const todayItems = calendar.filter(item => {
+            if (!item.date) return false;
+            return item.date.split('T')[0] === todayStr;
+          });
 
           return (
-            <div 
-              key={campaign.id} 
-              className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-purple-400/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 group"
+            <div
+              key={campaign.id}
+              className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-[#C1B6FD]/30 transition-all duration-300 flex flex-col gap-4"
             >
-              {/* Header */}
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-14 h-14 rounded-xl bg-linear-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center text-2xl shadow-lg">
-                  <Target className="w-7 h-7 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <button
-                    type="button"
-                    onClick={() => openCampaign(campaign)}
-                    disabled={!resolveCampaignId(campaign)}
-                    className="w-full font-bold text-white mb-1 truncate block group-hover:text-[#C1B6FD] transition-colors hover:underline disabled:opacity-70 disabled:cursor-not-allowed text-left"
-                    title={campaign.name || campaign.campaignName}
-                  >
-                    {campaign.name || campaign.campaignName}
-                  </button>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs text-gray-400">{campaign.brand || campaign.campaign_goal}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                      campaign.status === 'active'
-                        ? 'bg-green-500/20 text-green-400 animate-pulse' 
-                        : 'bg-yellow-500/20 text-yellow-400'
-                    }`}>
-                      {campaign.status}
-                    </span>
-                    {/* KPI Achievement Badge */}
-                    {kpiAchievement > 0 && (
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${kpiBg} ${kpiColor}`}>
-                        {kpiAchievement}% KPI
-                      </span>
-                    )}
-                  </div>
+              {/* ── Campaign Name & Goal ── */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => { const id = resolveCampaignId(campaign); if (id) navigate(`/dashboard/owner/campaigns/${id}`); }}
+                  className="font-bold text-white text-base truncate block hover:text-[#C1B6FD] transition-colors text-left w-full"
+                  title={campaign.campaignName}
+                >
+                  {campaign.campaignName}
+                </button>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <span className="text-xs text-gray-400 capitalize">{campaign.campaign_goal || '—'}</span>
+                  <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-[11px] font-semibold animate-pulse">● Active</span>
                 </div>
               </div>
 
-              {/* Enhanced Metrics Grid */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                {/* Engagement Metric */}
-                <div className="bg-white/5 rounded-lg p-3 border border-white/5">
-                  <div className="flex items-center gap-1 text-[#C1B6FD] mb-1">
-                    <TrendingUp className="w-3.5 h-3.5" />
-                    <span className="text-xs text-gray-400">Engagement</span>
-                  </div>
-                  <span className="text-lg font-bold text-white">
-                    {performance.totalLikes !== undefined 
-                      ? formatCompact(performance.totalLikes)
-                      : (campaign.engagement ?? 0).toLocaleString()
-                    }
-                  </span>
-                  {performance.engagementRate !== undefined && (
-                    <p className="text-xs text-gray-500 mt-0.5">{performance.engagementRate}% rate</p>
-                  )}
+              {/* ── Campaign Dates & Budget ── */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-white/5 rounded-lg p-2.5 border border-white/5">
+                  <p className="text-gray-500 flex items-center gap-1 mb-1"><Calendar className="w-3 h-3" /> Start</p>
+                  <p className="text-white font-semibold">{formatDate(campaign.startDate)}</p>
                 </div>
-
-                {/* Reach Metric */}
-                <div className="bg-white/5 rounded-lg p-3 border border-white/5">
-                  <div className="flex items-center gap-1 text-[#C1B6FD] mb-1">
-                    <BarChart3 className="w-3.5 h-3.5" />
-                    <span className="text-xs text-gray-400">Reach</span>
-                  </div>
-                  <span className="text-lg font-bold text-white">
-                    {performance.totalReach !== undefined
-                      ? formatCompact(performance.totalReach)
-                      : formatCompact(campaign.reach ?? 0)
-                    }
-                  </span>
-                  {performance.postsWithData > 0 && (
-                    <p className="text-xs text-gray-500 mt-0.5">{performance.postsWithData} posts</p>
-                  )}
+                <div className="bg-white/5 rounded-lg p-2.5 border border-white/5">
+                  <p className="text-gray-500 flex items-center gap-1 mb-1"><Calendar className="w-3 h-3" /> End</p>
+                  <p className="text-white font-semibold">{formatDate(campaign.endDate)}</p>
                 </div>
-
-                {/* Content Progress */}
-                <div className="bg-white/5 rounded-lg p-3 border border-white/5">
-                  <div className="flex items-center gap-1 text-[#C1B6FD] mb-1">
-                    <CheckCircle className="w-3.5 h-3.5" />
-                    <span className="text-xs text-gray-400">Content</span>
-                  </div>
-                  <span className={`text-lg font-bold ${contentData.completionRate >= 90 ? 'text-green-400' : contentData.completionRate >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
-                    {contentData.completionRate ?? campaign.progress ?? 0}%
-                  </span>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {contentData.posted ?? 0}/{contentData.total ?? campaign.progress ?? 0} posted
+                <div className="bg-white/5 rounded-lg p-2.5 border border-white/5">
+                  <p className="text-gray-500 flex items-center gap-1 mb-1"><DollarSign className="w-3 h-3" /> Budget</p>
+                  <p className="text-white font-semibold">
+                    {campaign.budget_currency || '$'}{Number(campaign.budget_amount || 0).toLocaleString()}
                   </p>
                 </div>
-
-                {/* Budget Burn */}
-                <div className="bg-white/5 rounded-lg p-3 border border-white/5">
-                  <div className="flex items-center gap-1 text-[#C1B6FD] mb-1">
-                    <DollarSign className="w-3.5 h-3.5" />
-                    <span className="text-xs text-gray-400">Budget</span>
-                  </div>
-                  <span className={`text-lg font-bold ${budgetColor}`}>
-                    {burnRate > 0 ? `${burnRate.toFixed(0)}%` : 'N/A'}
-                  </span>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {budgetData.status || 'On Track'}
-                  </p>
+                <div className="bg-white/5 rounded-lg p-2.5 border border-white/5">
+                  <p className="text-gray-500 flex items-center gap-1 mb-1"><Clock className="w-3 h-3" /> Remaining</p>
+                  <p className={`font-semibold ${remaining <= 3 ? 'text-amber-400' : 'text-white'}`}>{remaining}d left</p>
                 </div>
               </div>
 
-              {/* Campaign Progress Bar */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between text-xs mb-2">
-                  <span className="text-gray-400">Campaign Progress</span>
-                  <span className="text-white font-semibold">{tracking.timeline?.elapsedDays || 0} / {tracking.timeline?.totalDuration || campaign.daysLeft || 0} days</span>
+              {/* ── Timeline Progress ── */}
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1.5">
+                  <span className="text-gray-400">Day {elapsed} of {totalDays}</span>
+                  <span className="text-white font-semibold">{progress}%</span>
                 </div>
                 <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-linear-to-r from-[#745CB4] to-[#C1B6FD] rounded-full transition-all duration-500"
-                    style={{ width: `${campaign.progress ?? tracking.timeline?.progress ?? 0}%` }}
-                  ></div>
+                    style={{ width: `${progress}%` }}
+                  />
                 </div>
               </div>
 
-              {/* Predictions Section */}
-              {predictions.daysToCompletion !== undefined && (
-                <div className="mb-4 p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Zap className="w-4 h-4 text-purple-400" />
-                    <span className="text-xs font-semibold text-purple-400">AI Prediction</span>
+              {/* ── Content Calendar Summary ── */}
+              {total > 0 && (
+                <div>
+                  <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
+                    <FileText className="w-3 h-3" /> Content Calendar
+                  </p>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className="flex items-center gap-1 text-green-400"><CheckCircle className="w-3 h-3" /> {posted} posted</span>
+                    <span className="flex items-center gap-1 text-amber-400"><Clock className="w-3 h-3" /> {scheduled} scheduled</span>
+                    {failed > 0 && <span className="text-red-400">{failed} failed</span>}
+                    <span className="text-gray-500 ml-auto">{total} total</span>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-400">Est. Completion:</span>
-                    <span className="text-white font-semibold">{predictions.predictedEndDate || 'Calculating...'}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm mt-1">
-                    <span className="text-gray-400">Days Remaining:</span>
-                    <span className={`font-semibold ${predictions.daysToCompletion < 0 ? 'text-amber-400' : 'text-green-400'}`}>
-                      {predictions.daysToCompletion < 0 
-                        ? `${Math.abs(predictions.daysToCompletion)} days over` 
-                        : `${predictions.daysToCompletion} days left`
-                      }
-                    </span>
-                  </div>
-                  {predictions.daysToCompletion < 0 && (
-                    <p className="text-xs text-amber-400 mt-2 flex items-center gap-1">
-                      <AlertTriangle className="w-3 h-3" />
-                      Campaign may exceed planned end date
-                    </p>
-                  )}
                 </div>
               )}
 
-              {/* KPI Comparison Summary */}
-              {kpisData.comparison && kpisData.comparison.length > 0 && (
-                <div className="mb-4 p-3 bg-white/5 rounded-lg border border-white/10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Target className="w-4 h-4 text-[#C1B6FD]" />
-                    <span className="text-xs font-semibold text-gray-300">Top KPIs</span>
-                  </div>
-                  <div className="space-y-1">
-                    {kpisData.comparison.slice(0, 3).map((kpi, idx) => (
-                      <div key={idx} className="flex items-center justify-between text-xs">
-                        <span className="text-gray-400">{kpi.metric}</span>
-                        <span className={kpi.achievement >= 100 ? 'text-green-400' : kpi.achievement >= 50 ? 'text-amber-400' : 'text-red-400'}>
-                          {kpi.achievement.toFixed(0)}%
+              {/* ── Today's Schedule ── */}
+              <div>
+                <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
+                  <Calendar className="w-3 h-3 text-[#C1B6FD]" />
+                  <span className="font-semibold text-[#C1B6FD]">Today</span>
+                  <span className="text-gray-500">— {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                </p>
+                {todayItems.length === 0 ? (
+                  <p className="text-xs text-gray-500 italic">Nothing scheduled for today</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {todayItems.map((item) => (
+                      <div key={item.id} className="flex items-center gap-2 text-xs bg-white/5 rounded-lg px-2.5 py-1.5 border border-white/5">
+                        <span className={`px-1.5 py-0.5 rounded border text-[10px] font-semibold capitalize ${PLATFORM_COLORS[item.platform?.toLowerCase()] || 'bg-white/10 text-gray-400 border-white/20'}`}>
+                          {item.platform || '—'}
+                        </span>
+                        <span className="text-gray-300 flex-1 truncate capitalize">{item.contentType || item.task || '—'}</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold capitalize ${STATUS_COLORS[item.status] || 'bg-white/10 text-gray-400'}`}>
+                          {item.status || '—'}
                         </span>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {/* Team & Time Info */}
-              <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-[#C1B6FD]" />
-                  <span className="text-sm text-gray-300">{campaign.leadInfluencer || 'No lead assigned'}</span>
-                  <span className="bg-[#745CB4]/30 rounded-full px-2 py-0.5 text-xs font-semibold text-white">
-                    +{campaign.influencersCount ?? 0}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-xs text-gray-400">{campaign.daysLeft ?? tracking.timeline?.remainingDays ?? 0} days left</span>
-                </div>
-              </div>
-
-              {/* Budget Display */}
-              <div className="mb-4 text-xs text-gray-400">
-                Budget: <span className="text-[#C1B6FD] font-semibold">${(campaign.budget ?? campaign.totalBudget ?? 0).toLocaleString()}</span>
-                {budgetData.spent !== undefined && (
-                  <span className="text-gray-500 ml-1">(${budgetData.spent.toLocaleString()} spent)</span>
                 )}
               </div>
 
-              {/* Footer */}
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">{campaign.id}</span>
-                <div className="flex gap-2">
-                  <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white">
-                    <MessageCircle className="w-4 h-4" />
-                  </button>
-                  <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white">
-                    <BarChart3 className="w-4 h-4" />
-                  </button>
+              {/* ── KPI Targets ── */}
+              {kpis.length > 0 && (
+                <div>
+                  <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
+                    <Layers className="w-3 h-3" /> KPI Targets
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {kpis.map((kpi) => (
+                      <span key={kpi.id} className="px-2 py-0.5 bg-[#745CB4]/20 border border-[#745CB4]/30 text-[#C1B6FD] rounded text-[11px] capitalize">
+                        {kpi.metric}{kpi.targetValue ? `: ${Number(kpi.targetValue).toLocaleString()}` : ''}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           );
         })}

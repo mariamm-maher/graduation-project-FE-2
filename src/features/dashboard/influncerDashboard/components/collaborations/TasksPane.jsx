@@ -164,14 +164,46 @@ export default function TasksPane() {
     ));
   };
 
-  const handleDragEnd = (event) => {
-    const { active } = event;
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
     setActiveTask(null);
+
     const prevStatus = dragOriginalStatus.current;
     dragOriginalStatus.current = null;
-    if (prevStatus) {
+
+    if (!over) {
+      if (prevStatus) {
+        setTasks((prev) => prev.map((t) =>
+          t.id === active.id ? { ...t, status: prevStatus } : t
+        ));
+      }
+      return;
+    }
+
+    const droppedTask = tasks.find((t) => t.id === active.id);
+    if (!droppedTask || prevStatus === droppedTask.status) return;
+
+    const nextStatus = droppedTask.status;
+
+    if (prevStatus === 'todo' && nextStatus === 'in_progress') {
+      try {
+        const res = await collaborationTasksService.startTask(droppedTask.id);
+        const updated = res?.data?.task || res?.task;
+        if (updated) updateLocalTask(droppedTask.id, normalizeTask(updated));
+      } catch (err) {
+        setError(typeof err === 'string' ? err : 'Failed to start task');
+        setTasks((prev) => prev.map((t) =>
+          t.id === droppedTask.id ? { ...t, status: prevStatus } : t
+        ));
+      }
+    } else if (prevStatus === 'in_progress' && nextStatus === 'review') {
       setTasks((prev) => prev.map((t) =>
-        t.id === active.id ? { ...t, status: prevStatus } : t
+        t.id === droppedTask.id ? { ...t, status: prevStatus } : t
+      ));
+      setSubmitModal(droppedTask.id);
+    } else {
+      setTasks((prev) => prev.map((t) =>
+        t.id === droppedTask.id ? { ...t, status: prevStatus } : t
       ));
     }
   };

@@ -12,10 +12,6 @@ function InfluencersHistory() {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     status: [],
-    minPerformance: 0,
-    maxPerformance: 5,
-    minROI: 0,
-    maxROI: 500,
     year: 'all',
   });
 
@@ -53,10 +49,6 @@ function InfluencersHistory() {
       const endYear = endDateSource ? String(new Date(endDateSource).getFullYear()) : 'N/A';
 
       const status = collab?.status || 'completed';
-      const performanceValue = Number(collab?.performance ?? collab?.rating ?? 0);
-      const roiValue = Number(collab?.roi ?? collab?.returnOnInvestment ?? 0);
-      const engagementValue = Number(collab?.engagementRate ?? collab?.engagement ?? 0);
-      const revenueValue = Number(collab?.revenue ?? collab?.totalRevenue ?? collab?.earnedAmount ?? 0);
 
       return {
         id: collab?.collaborationId ?? collab?.id ?? index + 1,
@@ -64,44 +56,29 @@ function InfluencersHistory() {
         influencerName,
         influencerAvatar,
         influencerImage: influencer?.profileImage || null,
-        niche: influencer?.categories?.[0] || collab?.niche || 'General',
-        campaignName: collab?.campaign?.title || 'General Collaboration',
+        email: influencer?.email || null,
+        platform: influencer?.primaryPlatform || null,
+        followersCount: influencer?.followersCount ?? null,
+        campaignName: collab?.campaign?.title || '—',
+        campaignId: collab?.campaign?.id || null,
         startDate: formatDate(startDateSource),
         endDate: formatDate(endDateSource),
+        completedAt: formatDate(collab?.completedAt),
         endYear,
         status,
-        performance: performanceValue ? performanceValue.toFixed(1) : '0.0',
-        roi: `${roiValue.toFixed(1)}%`,
-        engagement: `${engagementValue.toFixed(1)}%`,
-        revenue: revenueValue.toLocaleString()
       };
     });
   }, [pastInfluencers]);
 
-  // Filter logic
   const filteredCollaborations = useMemo(() => {
     return pastCollaborations.filter((collab) => {
-      // Search filter
-      const matchesSearch = searchQuery === '' || 
+      const matchesSearch = searchQuery === '' ||
         collab.influencerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         collab.campaignName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        collab.niche.toLowerCase().includes(searchQuery.toLowerCase());
-
-      // Status filter
+        (collab.platform || '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = filters.status.length === 0 || filters.status.includes(collab.status);
-
-      // Performance filter
-      const performance = parseFloat(collab.performance);
-      const matchesPerformance = performance >= filters.minPerformance && performance <= filters.maxPerformance;
-
-      // ROI filter
-      const roi = parseFloat(collab.roi.replace(/[^0-9.-]+/g, ''));
-      const matchesROI = roi >= filters.minROI && roi <= filters.maxROI;
-
-      // Year filter — endYear is pre-parsed as a string from the ISO date
       const matchesYear = filters.year === 'all' || collab.endYear === filters.year;
-
-      return matchesSearch && matchesStatus && matchesPerformance && matchesROI && matchesYear;
+      return matchesSearch && matchesStatus && matchesYear;
     });
   }, [pastCollaborations, searchQuery, filters]);
 
@@ -119,28 +96,12 @@ function InfluencersHistory() {
   };
 
   const clearFilters = () => {
-    setFilters({
-      status: [],
-      minPerformance: 0,
-      maxPerformance: 5,
-      minROI: 0,
-      maxROI: 500,
-      year: 'all',
-    });
+    setFilters({ status: [], year: 'all' });
     setSearchQuery('');
   };
 
-  const hasActiveFilters = filters.status.length > 0 || 
-    filters.minPerformance > 0 || 
-    filters.maxPerformance < 5 ||
-    filters.minROI > 0 ||
-    filters.maxROI < 500 ||
-    filters.year !== 'all' ||
-    searchQuery !== '';
-
-  const activeFiltersCount = filters.status.length + 
-    (filters.year !== 'all' ? 1 : 0) + 
-    (searchQuery ? 1 : 0);
+  const hasActiveFilters = filters.status.length > 0 || filters.year !== 'all' || searchQuery !== '';
+  const activeFiltersCount = filters.status.length + (filters.year !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0);
 
   const handleViewDetails = (collaboration) => {
     console.log('View details for:', collaboration);
@@ -156,12 +117,12 @@ function InfluencersHistory() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Past Collaborations</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Previous Collaborators</h1>
         <p className="text-gray-400 text-sm sm:text-base">Review completed partnerships and performance history</p>
       </div>
 
       {/* Stats Cards */}
-      <HistoryStats collaborations={pastCollaborations} />
+      {/* <HistoryStats collaborations={pastCollaborations} /> */}
 
       {/* Search & Filter */}
       <HistorySearchBar
@@ -236,7 +197,7 @@ function InfluencersHistory() {
         </div>
 
         {/* Filters Panel */}
-        <AnimatePresence>
+        {/* <AnimatePresence>
           {showFilters && (
             <div className="order-1 lg:order-2">
               <HistoryFiltersPanel
@@ -248,7 +209,7 @@ function InfluencersHistory() {
               />
             </div>
           )}
-        </AnimatePresence>
+        </AnimatePresence> */}
       </div>
     </div>
   );

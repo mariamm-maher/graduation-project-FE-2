@@ -151,7 +151,7 @@ export default function SingleCollabHub() {
   const isLoading = isOwnerCollaborationsLoading;
 
   return (
-    <div className="space-y-5 font-sans text-white">
+    <div className="space-y-4 font-sans text-white">
       {/* ── Page Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -231,25 +231,27 @@ export default function SingleCollabHub() {
 
       {/* ── Tab panes ── */}
       <div className={activeTab === 'all' ? 'block' : 'hidden'}>
-        {/* ── Stats Row (only in All tab) ── */}
-        <div className="flex gap-2.5 mb-4">
-          {STAT_CONFIG.map(s => (
-            <StatCard key={s.key} Icon={s.Icon} label={s.label} value={stats[s.key]} color={s.color} bg={s.bg} />
-          ))}
-          {pendingIncoming > 0 && (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-amber-500/10 border-amber-500/25 flex-1 min-w-[120px]">
-              <Clock className="w-4 h-4 shrink-0 text-amber-400" />
-              <div>
-                <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide leading-none mb-0.5">Needs Action</p>
-                <p className="text-lg font-bold leading-none text-amber-400">{pendingIncoming} request{pendingIncoming > 1 ? 's' : ''}</p>
+        {/* ── Stats Row (only in All tab, only when collaborations exist) ── */}
+        {!isLoading && collaborations.length > 0 && (
+          <div className="flex gap-2.5 mb-3">
+            {STAT_CONFIG.map(s => (
+              <StatCard key={s.key} Icon={s.Icon} label={s.label} value={stats[s.key]} color={s.color} bg={s.bg} />
+            ))}
+            {pendingIncoming > 0 && (
+              <div className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-amber-500/10 border-amber-500/25 flex-1 min-w-[120px]">
+                <Clock className="w-4 h-4 shrink-0 text-amber-400" />
+                <div>
+                  <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide leading-none mb-0.5">Needs Action</p>
+                  <p className="text-lg font-bold leading-none text-amber-400">{pendingIncoming} request{pendingIncoming > 1 ? 's' : ''}</p>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
-        <StatusFlow />
+        {/* StatusFlow moved to footer */}
         {!isLoading && filteredCollaborations.length === 0 && collaborations.length > 0 && (
-          <div className="text-center py-12 text-[#9CA3AF] text-sm">
+          <div className="text-center py-8 text-[#9CA3AF] text-sm">
             No collaborations match your search or filter.{' '}
             <button
               onClick={() => { setSearchQuery(''); setStatusFilter('all'); }}
@@ -260,12 +262,18 @@ export default function SingleCollabHub() {
           </div>
         )}
         {!isLoading && collaborations.length === 0 && (
-          <div className="text-center py-16 text-[#9CA3AF] text-sm">
-            <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            No collaborations yet. Send a request to an influencer to get started.
+          <div className="flex flex-col items-center justify-center py-12 text-[#9CA3AF] text-sm">
+            <div className="w-16 h-16 bg-[#745CB4]/10 rounded-full flex items-center justify-center mb-4">
+              <Users className="w-8 h-8 opacity-40" />
+            </div>
+            <p className="font-medium text-white mb-1">No collaborations yet</p>
+            <p className="text-xs">Send a request to an influencer to get started</p>
           </div>
         )}
         <AllLanesPane laneData={laneData} rawCollabs={ownerCollaborations || []} />
+
+        {/* Collaboration Lifecycle - Only on Overview tab */}
+        <StatusFlow />
       </div>
 
       <div className={activeTab === 'contracts' ? 'block' : 'hidden'}>

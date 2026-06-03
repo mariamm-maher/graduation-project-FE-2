@@ -33,7 +33,7 @@ const STATUS_FILTER_LABELS = {
 
 function StatCard({ Icon, label, value, color, bg }) {
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${bg} flex-1 min-w-[120px]`}>
+    <div className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${bg} flex-1 min-w-[120px]`}>
       <Icon className={`w-4 h-4 shrink-0 ${color}`} />
       <div>
         <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide leading-none mb-0.5">{label}</p>
@@ -151,17 +151,17 @@ export default function SingleCollabHub() {
   const isLoading = isOwnerCollaborationsLoading;
 
   return (
-    <div className="space-y-4 font-sans text-white">
+    <div className="space-y-6 font-sans text-white">
       {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Collaboration Hub</h1>
-          <p className="text-sm text-[#9CA3AF] mt-0.5">Manage all your active, pending and past collaborations</p>
+          <p className="text-sm text-[#9CA3AF] mt-1">Manage all your active, pending and past collaborations</p>
         </div>
         <button
           onClick={handleRefresh}
           disabled={isRefreshing || isLoading}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-[#241A3A]/70 border border-[#745CB4]/35 text-[#C1B6FD] hover:border-[#C1B6FD]/50 hover:bg-[#241A3A] transition-all disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#241A3A]/50 border border-[#745CB4]/20 text-[#C1B6FD] hover:border-[#C1B6FD]/40 hover:bg-[#241A3A]/70 transition-all disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           Refresh
@@ -176,50 +176,14 @@ export default function SingleCollabHub() {
         </div>
       )}
 
-      {/* ── Tabs ── */}
-      <HubTabs tabs={tabsWithBadges} activeTab={activeTab} onTabChange={setActiveTab} />
-
-      {/* ── "All" tab controls: search + status filter ── */}
-      {activeTab === 'all' && (
-        <div className="flex flex-col sm:flex-row gap-2.5">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9CA3AF]" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search campaign or influencer..."
-              className="w-full pl-9 pr-9 py-2.5 text-sm border border-[#745CB4]/25 rounded-xl bg-[#1A112C]/70 text-white placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#C1B6FD]/45 transition-colors"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-white">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-
-          {/* Status filter pills */}
-          <div className="flex flex-wrap gap-1.5">
-            {['all', ...LANES].map(s => (
-              <button
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
-                  statusFilter === s
-                    ? 'bg-[#745CB4] border-[#C1B6FD]/50 text-white'
-                    : 'bg-[#1A112C]/50 border-[#745CB4]/25 text-[#9CA3AF] hover:border-[#745CB4]/50 hover:text-white'
-                }`}
-              >
-                {STATUS_FILTER_LABELS[s]}
-                {s !== 'all' && laneData[s]?.length > 0 && (
-                  <span className="ml-1.5 opacity-70">{laneData[s].length}</span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* ── Navigation Tabs (SaaS-style) ── */}
+      <HubTabs 
+        tabs={tabsWithBadges} 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+      />
 
       {/* ── Loading indicator ── */}
       {isLoading && (
@@ -233,12 +197,12 @@ export default function SingleCollabHub() {
       <div className={activeTab === 'all' ? 'block' : 'hidden'}>
         {/* ── Stats Row (only in All tab, only when collaborations exist) ── */}
         {!isLoading && collaborations.length > 0 && (
-          <div className="flex gap-2.5 mb-3">
+          <div className="flex gap-3 mb-4">
             {STAT_CONFIG.map(s => (
               <StatCard key={s.key} Icon={s.Icon} label={s.label} value={stats[s.key]} color={s.color} bg={s.bg} />
             ))}
             {pendingIncoming > 0 && (
-              <div className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-amber-500/10 border-amber-500/25 flex-1 min-w-[120px]">
+              <div className="flex items-center gap-3 px-4 py-3 rounded-lg border bg-amber-500/10 border-amber-500/20 flex-1 min-w-[120px]">
                 <Clock className="w-4 h-4 shrink-0 text-amber-400" />
                 <div>
                   <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide leading-none mb-0.5">Needs Action</p>
@@ -248,6 +212,26 @@ export default function SingleCollabHub() {
             )}
           </div>
         )}
+
+        {/* ── Status Filters (only on Overview tab) ── */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {['all', ...LANES].map(s => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-2 rounded-md text-xs font-medium border transition-all ${
+                statusFilter === s
+                  ? 'bg-[#745CB4]/80 border-[#745CB4]/40 text-white'
+                  : 'bg-[#1A112C]/30 border-[#745CB4]/15 text-[#9CA3AF] hover:border-[#745CB4]/30 hover:text-white'
+              }`}
+            >
+              {STATUS_FILTER_LABELS[s]}
+              {s !== 'all' && laneData[s]?.length > 0 && (
+                <span className="ml-1.5 opacity-70">{laneData[s].length}</span>
+              )}
+            </button>
+          ))}
+        </div>
 
         {/* StatusFlow moved to footer */}
         {!isLoading && filteredCollaborations.length === 0 && collaborations.length > 0 && (

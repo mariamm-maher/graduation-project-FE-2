@@ -1,4 +1,4 @@
-import { Search, Filter, Calendar, CheckCircle, FileText, AlertCircle, MoreVertical, Clock, ChevronLeft, ChevronRight, DollarSign, Target, TrendingUp } from 'lucide-react';
+import { Search, Filter, Calendar, CheckCircle, FileText, AlertCircle, MoreVertical, Clock, ChevronLeft, ChevronRight, DollarSign, Target, TrendingUp, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useCampaignStore from '../../../../../../stores/campaignStore';
@@ -143,10 +143,38 @@ function ActiveCampaigns() {
             const schedPct   = totalContent > 0 ? Math.round((scheduled / totalContent) * 100) : 0;
             const failedPct  = totalContent > 0 ? Math.round((failed    / totalContent) * 100) : 0;
 
+            const endDate = campaign.endDate ? new Date(campaign.endDate) : null;
+            const daysUntilEnd = endDate ? Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24)) : null;
+            const isExpiringSoon = daysUntilEnd !== null && daysUntilEnd <= 3 && daysUntilEnd >= 0;
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            const calendar = Array.isArray(campaign.contentCalendar) ? campaign.contentCalendar : [];
+            const todayItems = calendar.filter(item => item.date && item.date.split('T')[0] === todayStr);
+
+            const collaborators = campaign.tracking?.collaborators?.list || [];
+            const COLLAB_STATUS_CLS = {
+              pending_contract_sign: 'bg-amber-500/20 text-amber-400',
+              live:                  'bg-blue-500/20 text-blue-400',
+              in_progress:           'bg-[#745CB4]/20 text-[#C1B6FD]',
+              completed:             'bg-green-500/20 text-green-400',
+              cancelled:             'bg-red-500/20 text-red-400',
+            };
+            const PLATFORM_CLS = {
+              instagram: 'bg-pink-500/20 text-pink-400 border-pink-500/30',
+              tiktok:    'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+              youtube:   'bg-red-500/20 text-red-400 border-red-500/30',
+              twitter:   'bg-sky-500/20 text-sky-400 border-sky-500/30',
+              facebook:  'bg-blue-500/20 text-blue-400 border-blue-500/30',
+            };
+
             return (
               <div
                 key={campaign.id || campaign._id}
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-[#C1B6FD]/30 transition-all duration-300"
+                className={`bg-white/5 backdrop-blur-md border rounded-2xl p-6 transition-all duration-300 ${
+                  isExpiringSoon
+                    ? 'border-amber-500/40 hover:border-amber-500/60'
+                    : 'border-white/10 hover:border-[#C1B6FD]/30'
+                }`}
               >
                 {/* ── Header ── */}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
@@ -161,6 +189,12 @@ function ActiveCampaigns() {
                       <span className="px-2.5 py-0.5 bg-green-500/20 text-green-400 rounded-full text-[11px] font-bold whitespace-nowrap animate-pulse">
                         ● Active
                       </span>
+                      {isExpiringSoon && (
+                        <span className="px-2.5 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-[11px] font-bold whitespace-nowrap flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          {daysUntilEnd === 0 ? 'Ends Today' : `Ends in ${daysUntilEnd}d`}
+                        </span>
+                      )}
                     </div>
                     <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
                       <span className="flex items-center gap-1">
@@ -258,111 +292,56 @@ function ActiveCampaigns() {
                   </div>
                 )}
 
-                {/* ── Smart Tracking: Predictions & Alerts ── */}
-                {campaign.tracking?.predictions && (
-                  <div className={`mb-4 p-3 rounded-xl border ${campaign.tracking.predictions.onTrack ? 'bg-green-500/5 border-green-500/20' : 'bg-amber-500/5 border-amber-500/20'}`}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`w-2 h-2 rounded-full ${campaign.tracking.predictions.onTrack ? 'bg-green-400 animate-pulse' : 'bg-amber-400'}`} />
-                      <span className={`text-xs font-semibold ${campaign.tracking.predictions.onTrack ? 'text-green-400' : 'text-amber-400'}`}>
-                        {campaign.tracking.predictions.onTrack ? 'On Track' : 'Attention Needed'}
-                      </span>
+                {/* ── Today's Schedule ── */}
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-[#C1B6FD] flex items-center gap-1.5 mb-2">
+                    <Calendar className="w-3.5 h-3.5" />
+                    Today — {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                  </p>
+                  {todayItems.length === 0 ? (
+                    <p className="text-[11px] text-gray-500 italic">Nothing scheduled for today</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {todayItems.map(item => (
+                        <div key={item.id} className="flex items-center gap-2 text-xs bg-white/5 rounded-lg px-2.5 py-1.5 border border-white/5">
+                          <span className={`px-1.5 py-0.5 rounded border text-[10px] font-semibold capitalize ${PLATFORM_CLS[item.platform?.toLowerCase()] || 'bg-white/10 text-gray-400 border-white/20'}`}>
+                            {item.platform || '—'}
+                          </span>
+                          <span className="text-gray-300 flex-1 truncate capitalize">{item.contentType || item.task || '—'}</span>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold capitalize ${
+                            item.status === 'posted' ? 'bg-green-500/20 text-green-400' :
+                            item.status === 'scheduled' ? 'bg-amber-500/20 text-amber-400' :
+                            item.status === 'failed' ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-gray-400'
+                          }`}>{item.status || '—'}</span>
+                        </div>
+                      ))}
                     </div>
-                    <p className="text-xs text-gray-400">
-                      Predicted completion: <span className="text-white font-medium">{campaign.tracking.predictions.predictedCompletionDate || 'N/A'}</span>
-                      {campaign.tracking.trend?.velocity > 0 && (
-                        <span className="ml-2 text-[#C1B6FD]">({campaign.tracking.trend.velocity.toFixed(1)} posts/day)</span>
-                      )}
-                    </p>
-                  </div>
-                )}
+                  )}
+                </div>
 
-                {/* ── Smart Tracking: KPI Achievement ── */}
-                {campaign.tracking?.kpis?.comparison && campaign.tracking.kpis.comparison.length > 0 && (
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-gray-400 flex items-center gap-1">
-                        <TrendingUp className="w-3.5 h-3.5 text-[#C1B6FD]" /> KPI Progress
-                      </span>
-                      <span className="text-xs text-white font-semibold">
-                        {campaign.tracking.kpis.overallAchievement || 0}% Overall
-                      </span>
-                    </div>
-                    <div className="space-y-2">
-                      {campaign.tracking.kpis.comparison.map((kpiItem) => (
-                        <div key={kpiItem.metric} className="flex items-center gap-3">
-                          <span className="text-[11px] text-gray-400 w-20 truncate capitalize">{kpiItem.metric.replace('_', ' ')}</span>
-                          <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${
-                                kpiItem.achievement >= 100 ? 'bg-green-400' :
-                                kpiItem.achievement >= 75 ? 'bg-blue-400' :
-                                kpiItem.achievement >= 50 ? 'bg-amber-400' : 'bg-red-400'
-                              }`}
-                              style={{ width: `${Math.min(100, kpiItem.achievement)}%` }}
-                            />
-                          </div>
-                          <span className="text-[11px] font-medium w-12 text-right">
-                            <span className={
-                              kpiItem.achievement >= 100 ? 'text-green-400' :
-                              kpiItem.achievement >= 75 ? 'text-blue-400' :
-                              kpiItem.achievement >= 50 ? 'text-amber-400' : 'text-red-400'
-                            }>
-                              {kpiItem.achievement}%
-                            </span>
+                {/* ── Collaborators ── */}
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 mb-2">
+                    <Users className="w-3.5 h-3.5 text-[#C1B6FD]" />
+                    Collaborators ({collaborators.length})
+                  </p>
+                  {collaborators.length === 0 ? (
+                    <p className="text-[11px] text-gray-500 italic">No collaborations yet</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {collaborators.map(c => (
+                        <div key={c.id} className="flex items-center justify-between text-xs bg-white/5 rounded-lg px-2.5 py-1.5 border border-white/5">
+                          <span className="text-white font-medium">
+                            {c.influencer ? `${c.influencer.firstName} ${c.influencer.lastName}` : `#${c.id}`}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${COLLAB_STATUS_CLS[c.status] || 'bg-white/10 text-gray-400'}`}>
+                            {c.status?.replace(/_/g, ' ')}
                           </span>
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
-
-                {/* ── Smart Tracking: Performance Metrics ── */}
-                {campaign.tracking?.performance && campaign.tracking.performance.postsWithData > 0 && (
-                  <div className="grid grid-cols-4 gap-2 mb-4">
-                    <div className="bg-white/5 rounded-lg p-2 text-center">
-                      <p className="text-[10px] text-gray-400">Likes</p>
-                      <p className="text-sm font-bold text-white">{(campaign.tracking.performance.likes || 0).toLocaleString()}</p>
-                    </div>
-                    <div className="bg-white/5 rounded-lg p-2 text-center">
-                      <p className="text-[10px] text-gray-400">Comments</p>
-                      <p className="text-sm font-bold text-white">{(campaign.tracking.performance.comments || 0).toLocaleString()}</p>
-                    </div>
-                    <div className="bg-white/5 rounded-lg p-2 text-center">
-                      <p className="text-[10px] text-gray-400">Shares</p>
-                      <p className="text-sm font-bold text-white">{(campaign.tracking.performance.shares || 0).toLocaleString()}</p>
-                    </div>
-                    <div className="bg-white/5 rounded-lg p-2 text-center">
-                      <p className="text-[10px] text-gray-400">Eng. Rate</p>
-                      <p className="text-sm font-bold text-[#C1B6FD]">{campaign.tracking.performance.engagementRate}%</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* ── Smart Tracking: Budget Burn ── */}
-                {campaign.tracking?.budget && campaign.tracking.budget.total > 0 && (
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-1.5 text-xs">
-                      <span className="text-gray-400 flex items-center gap-1">
-                        <DollarSign className="w-3.5 h-3.5" /> Budget Burn
-                      </span>
-                      <span className="text-white font-medium">
-                        {campaign.budget_currency} {campaign.tracking.budget.estimatedUsed?.toLocaleString()} / {campaign.tracking.budget.total?.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${
-                          campaign.tracking.budget.burnRate > 90 ? 'bg-red-400' :
-                          campaign.tracking.budget.burnRate > 75 ? 'bg-amber-400' : 'bg-green-400'
-                        }`}
-                        style={{ width: `${Math.min(100, campaign.tracking.budget.burnRate)}%` }}
-                      />
-                    </div>
-                    <p className="text-[10px] text-gray-500 mt-1">
-                      {campaign.tracking.budget.remaining?.toLocaleString()} {campaign.budget_currency} remaining • {campaign.tracking.budget.dailyBurnRate?.toLocaleString()}/day
-                    </p>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 {/* ── KPI metric tags ── */}
                 {(kpi.metrics || []).length > 0 && (

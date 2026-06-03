@@ -1,14 +1,12 @@
 import { Search, CheckCircle, Download, FileText, Calendar, DollarSign, ChevronLeft, ChevronRight, AlertCircle, TrendingUp, Target, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import useCampaignStore from '../../../../../../stores/campaignStore';
-import campaignService from '../../../../../../api/campaign';
 
 const LIMIT = 10;
 
 function CompletedCampaigns() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [exportLoading, setExportLoading] = useState({});
 
   const { completedCampaigns: campaignsRaw, completedPagination, isLoading, error, fetchCampaigns } = useCampaignStore();
   const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
@@ -19,31 +17,42 @@ function CompletedCampaigns() {
     fetchCampaigns({ page, limit: LIMIT, lifecycleStage: 'completed' });
   }, [page, fetchCampaigns]);
 
-  // Handle single campaign PDF export
-  const handleExportReport = async (campaignId, e) => {
-    e?.stopPropagation();
-    setExportLoading(prev => ({ ...prev, [campaignId]: true }));
-    
-    try {
-      await campaignService.generateCampaignReport(campaignId);
-    } catch (error) {
-      alert('Failed to generate report: ' + error.message);
-    } finally {
-      setExportLoading(prev => ({ ...prev, [campaignId]: false }));
-    }
+  const printReport = (campaignList) => {
+    const rows = campaignList.map(c => `
+      <div style="border:1px solid #ccc;border-radius:8px;padding:16px;margin-bottom:16px;page-break-inside:avoid">
+        <h2 style="margin:0 0 8px;font-size:16px">${c.campaignName || c.name}</h2>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <tr><td style="color:#666;width:140px">Goal</td><td>${c.campaign_goal || c.goalType || '—'}</td></tr>
+          <tr><td style="color:#666">Budget</td><td>${c.budget_currency || '$'}${Number(c.budget_amount || c.totalBudget || 0).toLocaleString()}</td></tr>
+          <tr><td style="color:#666">Start Date</td><td>${c.startDate ? new Date(c.startDate).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—'}</td></tr>
+          <tr><td style="color:#666">End Date</td><td>${c.endDate ? new Date(c.endDate).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—'}</td></tr>
+          <tr><td style="color:#666">Duration</td><td>${c.startDate && c.endDate ? Math.ceil(Math.abs(new Date(c.endDate)-new Date(c.startDate))/(1000*60*60*24)) : '—'} days</td></tr>
+          <tr><td style="color:#666">Status</td><td>${c.lifecycleStage === 'completed' ? 'Manually Completed' : 'Date Expired'}</td></tr>
+        </table>
+      </div>
+    `).join('');
+
+    const win = window.open('', '_blank');
+    win.document.write(`
+      <!DOCTYPE html><html><head><title>Campaign Report</title>
+      <style>body{font-family:sans-serif;padding:24px;max-width:800px;margin:auto}h1{font-size:20px;margin-bottom:16px}@media print{button{display:none}}</style>
+      </head><body>
+      <h1>Completed Campaigns Report — ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</h1>
+      ${rows}
+      <script>window.onload=function(){window.print();}</script>
+      </body></html>
+    `);
+    win.document.close();
   };
 
-  // Handle bulk export all campaigns
-  const handleExportAll = async () => {
-    setExportLoading(prev => ({ ...prev, all: true }));
-    
-    try {
-      await campaignService.generateBulkReport();
-    } catch (error) {
-      alert('Failed to generate bulk report: ' + error.message);
-    } finally {
-      setExportLoading(prev => ({ ...prev, all: false }));
-    }
+  const handleExportReport = (campaignId, e) => {
+    e?.stopPropagation();
+    const campaign = completedCampaigns.find(c => c.id === campaignId);
+    if (campaign) printReport([campaign]);
+  };
+
+  const handleExportAll = () => {
+    if (completedCampaigns.length > 0) printReport(completedCampaigns);
   };
 
   // Client-side search filter only
@@ -94,20 +103,11 @@ function CompletedCampaigns() {
         </div>
         <button 
           onClick={handleExportAll}
-          disabled={exportLoading.all || isLoading}
-          className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-green-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isLoading}
+          className="w-full sm:w-auto px-6 py-3 bg-linear-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-green-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {exportLoading.all ? (
-            <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <Download className="w-5 h-5" />
-              Export All Reports
-            </>
-          )}
+          <Download className="w-5 h-5" />
+          Export All Reports
         </button>
       </div>
 
@@ -215,7 +215,12 @@ function CompletedCampaigns() {
                         </div>
                         <div>
                           <p className="font-semibold text-white">{campaign.campaignName || campaign.name}</p>
-                          <p className="text-xs text-gray-400 capitalize">{campaign.goalType?.replace('_', ' ')}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-xs text-gray-400 capitalize">{campaign.goalType?.replace('_', ' ')}</p>
+                            {campaign.lifecycleStage !== 'completed' && campaign.endDate && (
+                              <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-[10px] font-semibold">Date Expired</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -277,20 +282,10 @@ function CompletedCampaigns() {
                         {/* Export Button */}
                         <button
                           onClick={(e) => handleExportReport(campaign.id, e)}
-                          disabled={exportLoading[campaign.id]}
-                          className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-medium transition-all inline-flex items-center justify-center gap-2 disabled:opacity-50"
+                          className="px-4 py-2 bg-linear-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-medium transition-all inline-flex items-center justify-center gap-2"
                         >
-                          {exportLoading[campaign.id] ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                              Generating...
-                            </>
-                          ) : (
-                            <>
-                              <Download className="w-4 h-4" />
-                              Export PDF
-                            </>
-                          )}
+                          <Download className="w-4 h-4" />
+                          Export PDF
                         </button>
                       </div>
                     </td>
@@ -310,7 +305,12 @@ function CompletedCampaigns() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-white mb-1">{campaign.campaignName || campaign.name}</h3>
-                    <p className="text-xs text-gray-400 capitalize">{campaign.goalType?.replace('_', ' ')}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-gray-400 capitalize">{campaign.goalType?.replace('_', ' ')}</p>
+                      {campaign.lifecycleStage !== 'completed' && campaign.endDate && (
+                        <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-[10px] font-semibold">Date Expired</span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -371,20 +371,10 @@ function CompletedCampaigns() {
                 
                 <button
                   onClick={(e) => handleExportReport(campaign.id, e)}
-                  disabled={exportLoading[campaign.id]}
-                  className="w-full px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
+                  className="w-full px-4 py-2.5 bg-linear-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2 mt-2"
                 >
-                  {exportLoading[campaign.id] ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-4 h-4" />
-                      Export PDF Report
-                    </>
-                  )}
+                  <Download className="w-4 h-4" />
+                  Export PDF Report
                 </button>
               </div>
             ))}

@@ -21,14 +21,13 @@ function ActiveInfluencers() {
   const activeCollaborations = useMemo(() => {
     return (activeInfluencers || []).map((collab, index) => {
       // Backend shape from getActiveInfluencers:
-      // { collaborationId, status, startDate, endDate,
+      // { collaborationId, status, startDate, endDate, progress, taskSummary,
+      //   tasks: [{ id, title, status, dueDate, completed }],
       //   influencer: { id, firstName, lastName, email, profileImage, primaryPlatform, followersCount },
       //   campaign: { id, title } }
       const influencer = collab?.influencer || {};
       const influencerName = `${influencer.firstName || ''} ${influencer.lastName || ''}`.trim() || 'Unknown Influencer';
       const avatarName = influencerName.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
-
-      const status = collab?.status || 'pending';
 
       return {
         id: collab?.collaborationId ?? collab?.id ?? index + 1,
@@ -36,17 +35,17 @@ function ActiveInfluencers() {
         influencerName,
         influencerAvatar: avatarName || 'NA',
         influencerImage: influencer?.profileImage || null,
+        email: influencer?.email || null,
         campaignId: collab?.campaign?.id ?? null,
-        campaignName: collab?.campaign?.title || 'General Collaboration',
-        platform: (influencer?.primaryPlatform || 'instagram').toLowerCase(),
-        followersCount: influencer?.followersCount ?? 0,
-        status,
+        campaignName: collab?.campaign?.title || '—',
+        platform: (influencer?.primaryPlatform || '').toLowerCase(),
+        followersCount: influencer?.followersCount ?? null,
+        status: collab?.status || 'live',
         progress: Number(collab?.progress ?? 0),
-        currentTasks: [],
-        deadline: collab?.endDate || collab?.startDate || new Date().toISOString(),
-        budget: collab?.proposedBudget != null ? `$${Number(collab.proposedBudget).toLocaleString()}` : '$0',
-        unreadMessages: Number(collab?.unreadMessages || 0),
-        lastActivity: collab?.updatedAt || 'N/A'
+        tasks: Array.isArray(collab?.tasks) ? collab.tasks : [],
+        taskSummary: collab?.taskSummary || { total: 0, completed: 0 },
+        startDate: collab?.startDate || null,
+        endDate: collab?.endDate || null,
       };
     });
   }, [activeInfluencers]);
@@ -71,7 +70,7 @@ function ActiveInfluencers() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Active Collaborations</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Active Collaborators</h1>
           <p className="text-gray-400 text-sm sm:text-base">Track progress, manage tasks, and communicate with your influencers</p>
         </div>
       </div>

@@ -66,7 +66,7 @@ function InfluencersOverview() {
           </div>
           
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-200 group-hover:text-[#C1B6FD] transition-colors">Past</span>
+            <span className="text-sm font-medium text-gray-200 group-hover:text-[#C1B6FD] transition-colors">Previous</span>
           </div>
           
           <div className="flex items-center gap-2 border-l border-white/10 pl-3 ml-1">

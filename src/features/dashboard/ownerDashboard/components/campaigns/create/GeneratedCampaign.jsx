@@ -181,55 +181,55 @@ function GeneratedCampaign() {
     return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const handleSaveCampaign = async (publishImmediately = false) => {
+  const buildPayload = (isPublished) => {
+    const formCampaignData = {
+      ...campaignData,
+      startDate: campaignDates.startDate,
+      endDate: campaignDates.endDate,
+    };
+    return buildSaveCampaignPayload({ campaignData: formCampaignData, ownerDraft, aiResponse, isPublished });
+  };
+
+  const handleSaveAsDraft = async () => {
     setIsSaving(true);
     try {
-      const formCampaignData = {
-        ...campaignData,
-        startDate: campaignDates.startDate,
-        endDate: campaignDates.endDate,
-      };
-
-      const payload = buildSaveCampaignPayload({
-        campaignData: formCampaignData,
-        ownerDraft,
-        aiResponse,
-        isPublished: publishImmediately,
-      });
-
-      console.log('📦 Save payload:', JSON.stringify(payload, null, 2));
-
-      const result = publishImmediately
-        ? await campaignService.saveAndPublishCampaign(payload)
-        : await campaignService.saveCampaign(payload);
-        const campaignId =result?.data?.campaign?.id ||result?.campaign?.id;
-        // TODO: Backend endpoint /campaigns/${campaignId}/ai not implemented yet
-        // if (campaignId && aiPreview) {
-        //   await campaignService.saveAIVersion(
-        //     campaignId,
-        //     aiPreview,
-        //     {
-        //       syncCalendar: true,
-        //     }
-        //   );
-        // }
-
-      toast.success(
-        publishImmediately
-          ? 'Campaign saved and published! Posts are being scheduled.'
-          : 'Campaign saved successfully.',
-        { position: 'top-right', autoClose: 3000 }
-      );
-
+      const result = await campaignService.saveDraftCampaign(buildPayload(false));
+      toast.success('Campaign saved as draft.', { position: 'top-right', autoClose: 3000 });
       navigate('/dashboard/owner/campaigns', {
         state: { savedCampaignId: result?.data?.campaign?.id || result?.campaign?.id },
       });
     } catch (error) {
-      console.error('Save error:', error);
-      toast.error(error?.message || 'Failed to save campaign', {
-        position: 'top-right',
-        autoClose: 4000,
+      toast.error(error?.message || 'Failed to save draft', { position: 'top-right', autoClose: 4000 });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const result = await campaignService.saveCampaign(buildPayload(false));
+      toast.success('Campaign saved successfully.', { position: 'top-right', autoClose: 3000 });
+      navigate('/dashboard/owner/campaigns', {
+        state: { savedCampaignId: result?.data?.campaign?.id || result?.campaign?.id },
       });
+    } catch (error) {
+      toast.error(error?.message || 'Failed to save campaign', { position: 'top-right', autoClose: 4000 });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveAndPublish = async () => {
+    setIsSaving(true);
+    try {
+      const result = await campaignService.saveAndPublishCampaign(buildPayload(true));
+      toast.success('Campaign saved and published!', { position: 'top-right', autoClose: 3000 });
+      navigate('/dashboard/owner/campaigns', {
+        state: { savedCampaignId: result?.data?.campaign?.id || result?.campaign?.id },
+      });
+    } catch (error) {
+      toast.error(error?.message || 'Failed to publish campaign', { position: 'top-right', autoClose: 4000 });
     } finally {
       setIsSaving(false);
     }
@@ -302,9 +302,9 @@ function GeneratedCampaign() {
         generatedAt={generatedAt}
         formatDate={formatDate}
         isLoading={isLoading}
-        handleSaveAsDraft={() => handleSaveCampaign(false)}
-        handleSave={() => handleSaveCampaign(false)}
-        handleSaveAndPublish={() => handleSaveCampaign(true)}
+        handleSaveAsDraft={handleSaveAsDraft}
+        handleSave={handleSave}
+        handleSaveAndPublish={handleSaveAndPublish}
         navigate={navigate}
       />
 

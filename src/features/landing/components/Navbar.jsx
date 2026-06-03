@@ -59,7 +59,7 @@ function Navbar() {
               >
                 <img 
                   src={logoGif} 
-                  alt="AdSphere Logo" 
+                  alt="CampaignCraft Logo" 
                   className="w-full h-full object-cover"
                 />
               </motion.div>
@@ -76,7 +76,7 @@ function Navbar() {
               />
             </div>
             <span className="text-2xl font-bold bg-gradient-to-b from-[#D3CBFC] via-purple-200 to-indigo-300 bg-clip-text text-transparent">
-              AdSphere
+              CampaignCraft
             </span>
           </motion.div>
 

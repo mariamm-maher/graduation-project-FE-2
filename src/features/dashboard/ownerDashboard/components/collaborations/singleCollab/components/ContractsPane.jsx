@@ -69,7 +69,7 @@ export default function ContractsPane() {
       setSelectedContract((prev) => {
         if (!prev) return prev;
         if (String(prev._id || prev.id) !== String(contractId)) return prev;
-        return { ...prev, ...(result.data || {}), status: result?.data?.status || 'active' };
+        return { ...prev, ...(result.data || {}) };
       });
       return;
     }
@@ -89,6 +89,8 @@ export default function ContractsPane() {
           onFilterChange={setFilterStatus}
           onOpenCreate={() => setView('create')}
           onOpenDetails={openDetails}
+          onSignOwner={handleSignOwner}
+          isSigning={isLoading}
         />
       ) : null}
 

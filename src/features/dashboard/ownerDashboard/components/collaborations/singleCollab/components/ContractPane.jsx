@@ -1,8 +1,7 @@
-import { Calendar, Eye, FileText, Plus, Search, PenTool, CheckCircle, XCircle, FileCheck, Package, DollarSign, CheckCircle2 } from 'lucide-react';
+import { Calendar, Eye, FileText, Search, CheckCircle, XCircle, FileCheck, Package, CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
 
 function StatusBadge({ status, ownerSigned, influencerSigned }) {
-  // New API statuses: draft, partially_signed, signed, active, completed, terminated
   const baseStyle = 'px-2.5 py-1 rounded-full text-xs font-semibold border';
   
   const styleMap = {
@@ -17,7 +16,6 @@ function StatusBadge({ status, ownerSigned, influencerSigned }) {
   const safeStatus = String(status || 'draft').toLowerCase();
   const style = styleMap[safeStatus] || styleMap.draft;
   
-  // Show signing status indicator
   const getSigningIndicator = () => {
     if (ownerSigned && influencerSigned) return <CheckCircle className="w-3 h-3 text-green-400" />;
     if (ownerSigned || influencerSigned) return <FileCheck className="w-3 h-3 text-amber-400" />;
@@ -36,7 +34,6 @@ function formatDate(dateValue) {
   if (!dateValue) return '—';
   const parsed = new Date(dateValue);
   if (Number.isNaN(parsed.getTime())) return '—';
-
   return parsed.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -69,50 +66,63 @@ function getDurationDays(startDate, endDate) {
   const start = new Date(startDate);
   const end = new Date(endDate);
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '—';
-
   const diff = Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24));
   return `${diff} days`;
 }
 
-// Helper to get campaign and influencer names from API structure
+function ownerCanSignContract(contract) {
+  return !contract?.ownerSigned;
+}
+
+function isPartiallySignedContract(contract) {
+  const status = String(contract?.status || '').toLowerCase();
+  if (status === 'partially_signed' || status === 'sent') return true;
+
+  const ownerSigned = !!contract?.ownerSigned;
+  const influencerSigned = !!contract?.influencerSigned;
+  if (ownerSigned !== influencerSigned) return true;
+
+  const collabStatus = String(contract?.collaboration?.status || '').toLowerCase();
+  if (collabStatus === 'waiting_contract_sign' || collabStatus === 'pending_contract_sign') {
+    return true;
+  }
+
+  return false;
+}
+
 function getContractDisplayData(contract) {
   const collab = contract?.collaboration || {};
   
-  // Get campaign name from collaboration or contract
   const campaignName = contract?.campaignName 
     || collab?.campaign?.campaignName 
     || collab?.campaign?.name 
-    || (collab?.campaignId ? `Campaign #${collab.campaignId}` : '');
+    || (collab?.campaignId ? `Campaign #${collab.campaignId}` : '') 
+    || 'Unknown Campaign';
   
-  // Get influencer name from user object (firstName + lastName)
-  const influencerFirstName = collab?.influencer?.firstName || '';
-  const influencerLastName = collab?.influencer?.lastName || '';
-  const influencerFullName = (influencerFirstName + ' ' + influencerLastName).trim() 
-    || contract?.influencerName
-    || (collab?.influencerId ? `Influencer #${collab.influencerId}` : '');
-  
-  return {
-    campaignName: campaignName || 'Unknown Campaign',
-    influencerName: influencerFullName || 'Unknown Influencer',
-    ownerName: contract?.ownerName || collab?.owner?.name || '',
-  };
+  const influencerFullName = [
+    collab?.influencer?.firstName,
+    collab?.influencer?.lastName
+  ].filter(Boolean).join(' ') || contract?.influencerName || 'Unknown Influencer';
+
+  return { campaignName, influencerName: influencerFullName };
 }
 
 export default function ContractPane({
-  contracts,
+  contracts = [],
   isLoading,
   searchQuery,
   filterStatus,
   onSearchChange,
   onFilterChange,
-  onOpenCreate,
   onOpenDetails,
+  onSignOwner,
+  isSigning = false,   // global signing state from parent
 }) {
-  const q = searchQuery.trim().toLowerCase();
-
-  // Dropdown states for Filter Status
+  const [signingContractId, setSigningContractId] = useState(null);
   const [statusQuery, setStatusQuery] = useState('');
   const [isStatusOpen, setIsStatusOpen] = useState(false);
+
+  const q = searchQuery.trim().toLowerCase();
 
   const statusOptions = [
     { value: 'all', label: 'All Status' },
@@ -128,7 +138,7 @@ export default function ContractPane({
     s.label.toLowerCase().includes(statusQuery.trim().toLowerCase())
   );
 
-  const filteredContracts = (contracts || []).filter((contract) => {
+  const filteredContracts = contracts.filter((contract) => {
     const displayData = getContractDisplayData(contract);
     const campaign = String(displayData.campaignName || '').toLowerCase();
     const influencer = String(displayData.influencerName || '').toLowerCase();
@@ -136,13 +146,29 @@ export default function ContractPane({
     const agreedPrice = String(contract?.agreedPrice || '');
 
     const matchesSearch = !q || campaign.includes(q) || influencer.includes(q) || agreedPrice.includes(q);
-    const matchesStatus = filterStatus === 'all' || contractStatus === filterStatus;
+    const matchesStatus =
+      filterStatus === 'all'
+        || (filterStatus === 'partially_signed' ? isPartiallySignedContract(contract) : contractStatus === filterStatus);
 
     return matchesSearch && matchesStatus;
   });
 
-  const totalValue = (contracts || []).reduce((sum, contract) => sum + (Number(contract?.agreedPrice) || 0), 0);
-  const totalDeliverables = (contracts || []).reduce((sum, contract) => sum + countDeliverables(contract?.deliverables), 0);
+  const totalValue = contracts.reduce((sum, c) => sum + (Number(c?.agreedPrice) || 0), 0);
+  const totalDeliverables = contracts.reduce((sum, c) => sum + countDeliverables(c?.deliverables), 0);
+
+  // Signing Handler (متسق مع ContractDetails)
+  const handleSignOwner = async (contractId) => {
+    if (!contractId || signingContractId) return;
+
+    setSigningContractId(contractId);
+    try {
+      await onSignOwner(contractId);
+    } catch (error) {
+      console.error("Signing failed:", error);
+    } finally {
+      setSigningContractId(null);
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -154,10 +180,9 @@ export default function ContractPane({
           </h3>
           <p className="text-sm text-[#9CA3AF] mt-1">Track, review, and create contracts in one place.</p>
         </div>
-
-      
       </div>
 
+      {/* Stats Cards */}
       <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
         <div className="rounded-xl border border-[#745CB4]/25 bg-[#1A112C]/65 backdrop-blur-sm p-4">
           <p className="text-xs text-[#9CA3AF] mb-1">Total Contracts</p>
@@ -172,7 +197,7 @@ export default function ContractPane({
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 backdrop-blur-sm p-4">
           <p className="text-xs text-[#9CA3AF] mb-1">Partially Signed</p>
           <p className="text-2xl font-bold text-amber-300">
-            {contracts.filter((c) => c?.status === 'partially_signed').length}
+            {contracts.filter(isPartiallySignedContract).length}
           </p>
         </div>
         <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 backdrop-blur-sm p-4">
@@ -185,6 +210,7 @@ export default function ContractPane({
         </div>
       </div>
 
+      {/* Search & Filter */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
@@ -197,37 +223,32 @@ export default function ContractPane({
           />
         </div>
 
-        <div className="relative">
+        <div className="relative w-full sm:w-64">
           <input
             type="text"
             value={isStatusOpen ? statusQuery : (statusOptions.find(s => s.value === filterStatus)?.label || '')}
-            onChange={(e) => {
-              setStatusQuery(e.target.value);
-              setIsStatusOpen(true);
-            }}
+            onChange={(e) => { setStatusQuery(e.target.value); setIsStatusOpen(true); }}
             onFocus={() => { setStatusQuery(''); setIsStatusOpen(true); }}
-            onBlur={() => setTimeout(() => { setIsStatusOpen(false); setStatusQuery(''); }, 150)}
+            onBlur={() => setTimeout(() => { setIsStatusOpen(false); setStatusQuery(''); }, 200)}
             placeholder="Filter by status"
             className="w-full rounded-xl border border-[#745CB4]/25 bg-[#1A112C]/65 backdrop-blur-sm px-4 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#C1B6FD]/45"
           />
+
           {isStatusOpen && (
-            <div className="absolute top-full mt-2 right-0 w-full min-w-[160px] z-20 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
+            <div className="absolute top-full mt-2 right-0 w-full min-w-[160px] z-30 bg-[#10121f] border border-white/10 rounded-lg max-h-56 overflow-y-auto shadow-xl">
               {filteredStatuses.map((option) => (
                 <button
                   key={option.value}
-                  type="button"
                   onClick={() => {
                     onFilterChange(option.value);
                     setStatusQuery('');
                     setIsStatusOpen(false);
                   }}
-                  className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150"
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors"
                 >
                   <span className="flex items-center justify-between">
                     {option.label}
-                    {filterStatus === option.value && (
-                      <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />
-                    )}
+                    {filterStatus === option.value && <CheckCircle2 className="w-4 h-4 text-[#C1B6FD]" />}
                   </span>
                 </button>
               ))}
@@ -236,9 +257,9 @@ export default function ContractPane({
         </div>
       </div>
 
-      {isLoading ? <p className="text-sm text-[#9CA3AF]">Loading contracts...</p> : null}
-
-      {filteredContracts.length === 0 ? (
+      {isLoading ? (
+        <p className="text-sm text-[#9CA3AF]">Loading contracts...</p>
+      ) : filteredContracts.length === 0 ? (
         <div className="rounded-xl border border-[#745CB4]/25 bg-[#1A112C]/60 backdrop-blur-sm p-8 text-center">
           <FileText className="mx-auto mb-3 w-9 h-9 text-[#9CA3AF]" />
           <h4 className="text-lg font-semibold text-white">No contracts found</h4>
@@ -246,6 +267,7 @@ export default function ContractPane({
         </div>
       ) : (
         <div className="rounded-xl border border-[#745CB4]/25 bg-[#1A112C]/55 backdrop-blur-sm overflow-hidden">
+          {/* Desktop Table */}
           <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -255,23 +277,25 @@ export default function ContractPane({
                   <th className="text-left py-3.5 px-4 text-xs font-semibold text-[#9CA3AF]">Agreed Price</th>
                   <th className="text-left py-3.5 px-4 text-xs font-semibold text-[#9CA3AF]">Deliverables</th>
                   <th className="text-left py-3.5 px-4 text-xs font-semibold text-[#9CA3AF]">Duration</th>
-                  <th className="text-left py-3.5 px-4 text-xs font-semibold text-[#9CA3AF]">Status</th>
-                  <th className="text-right py-3.5 px-4 text-xs font-semibold text-[#9CA3AF]">Actions</th>
+                  <th className="text-left py-3.5 px-2 text-xs font-semibold text-[#9CA3AF]">Status</th>
+                  <th className="text-center py-3.5 px-4 text-xs font-semibold text-[#9CA3AF]">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredContracts.map((contract, index) => {
+                {filteredContracts.map((contract) => {
+                  const contractId = contract.id || contract._id;
                   const displayData = getContractDisplayData(contract);
+                  const isThisSigning = signingContractId === contractId || isSigning;
+                  const ownerCanSign = ownerCanSignContract(contract);
+
                   return (
                     <tr
-                      key={contract?.id || contract?._id || index}
-                      className={`border-b border-[#745CB4]/15 hover:bg-[#241A3A]/30 transition-colors cursor-pointer ${
-                        index === filteredContracts.length - 1 ? 'border-b-0' : ''
-                      }`}
+                      key={contractId}
+                      className="border-b border-[#745CB4]/15 hover:bg-[#241A3A]/30 transition-colors cursor-pointer"
                       onClick={() => onOpenDetails(contract)}
                     >
                       <td className="py-3.5 px-4 text-sm text-white font-mono">
-                        #{String(contract?.id || '').toString().padStart(3, '0')}
+                        #{String(contractId).padStart(3, '0')}
                       </td>
                       <td className="py-3.5 px-4">
                         <div className="text-sm text-white font-medium truncate max-w-[180px]">{displayData.campaignName}</div>
@@ -292,24 +316,40 @@ export default function ContractPane({
                           <Calendar className="w-3.5 h-3.5" />
                           {getDurationDays(contract?.startDate, contract?.endDate)}
                         </div>
-                        <p className="text-[11px] mt-0.5">{formatDate(contract?.startDate)} - {formatDate(contract?.endDate)}</p>
+                        <p className="text-[11px] mt-0.5">
+                          {formatDate(contract?.startDate)} - {formatDate(contract?.endDate)}
+                        </p>
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-2">
                         <StatusBadge 
                           status={contract?.status} 
                           ownerSigned={contract?.ownerSigned}
                           influencerSigned={contract?.influencerSigned}
                         />
                       </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); onOpenDetails(contract); }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#745CB4]/30 text-[#C1B6FD] hover:border-[#C1B6FD]/40 hover:text-white transition-all"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          View
-                        </button>
+                      <td className="py-3.5 px-4 text-center">
+                        <div className="flex items-center justify-center gap-2" onClick={e => e.stopPropagation()}>
+                          {ownerCanSign && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSignOwner(contractId);
+                              }}
+                              disabled={isThisSigning}
+                              className="pointer-events-auto px-5 py-2 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] rounded-lg text-white text-sm font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                              {isThisSigning ? 'Signing...' : 'Sign as Owner'}
+                            </button>
+                          )}
+
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onOpenDetails(contract); }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#745CB4]/30 text-[#C1B6FD] hover:border-[#C1B6FD]/40 hover:text-white transition-all"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            View
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -318,18 +358,23 @@ export default function ContractPane({
             </table>
           </div>
 
+          {/* Mobile View */}
           <div className="lg:hidden divide-y divide-[#745CB4]/20">
-            {filteredContracts.map((contract, index) => {
+            {filteredContracts.map((contract) => {
+              const contractId = contract.id || contract._id;
               const displayData = getContractDisplayData(contract);
+              const isThisSigning = signingContractId === contractId || isSigning;
+              const ownerCanSign = ownerCanSignContract(contract);
+
               return (
                 <div 
-                  key={contract?.id || contract?._id || index} 
-                  className="p-4 space-y-3 cursor-pointer hover:bg-[#241A3A]/30 transition-colors"
+                  key={contractId}
+                  className="p-4 space-y-3 hover:bg-[#241A3A]/30 transition-colors"
                   onClick={() => onOpenDetails(contract)}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="text-xs text-[#9CA3AF] font-mono mb-1">#{String(contract?.id || '').toString().padStart(3, '0')}</p>
+                      <p className="text-xs text-[#9CA3AF] font-mono mb-1">#{String(contractId).padStart(3, '0')}</p>
                       <h4 className="text-sm font-semibold text-white">{displayData.campaignName}</h4>
                       <p className="text-xs text-[#C1B6FD]">{displayData.influencerName}</p>
                     </div>
@@ -342,31 +387,33 @@ export default function ContractPane({
 
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <p className="text-[#9CA3AF]">Agreed Price</p>
+                      <p className="text-[#9CA3AF]">Price</p>
                       <p className="text-white font-semibold">{formatCurrency(contract?.agreedPrice)}</p>
                     </div>
                     <div>
                       <p className="text-[#9CA3AF]">Deliverables</p>
                       <p className="text-white font-semibold">{countDeliverables(contract?.deliverables)}</p>
                     </div>
-                    <div>
-                      <p className="text-[#9CA3AF]">Duration</p>
-                      <p className="text-white font-semibold">{getDurationDays(contract?.startDate, contract?.endDate)}</p>
-                    </div>
-                    <div>
-                      <p className="text-[#9CA3AF]">Dates</p>
-                      <p className="text-white font-semibold">{formatDate(contract?.startDate)}</p>
-                    </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onOpenDetails(contract); }}
-                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[#745CB4]/30 text-[#C1B6FD] hover:border-[#C1B6FD]/40 hover:text-white transition-all"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    View Contract
-                  </button>
+                  <div className="flex gap-2 pt-2" onClick={e => e.stopPropagation()}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onOpenDetails(contract); }}
+                      className="flex-1 py-2.5 rounded-lg border border-[#745CB4]/30 text-[#C1B6FD] hover:border-[#C1B6FD]/40"
+                    >
+                      View Contract
+                    </button>
+
+                    {ownerCanSign && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleSignOwner(contractId); }}
+                        disabled={isThisSigning}
+                        className="pointer-events-auto flex-1 py-2.5 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] rounded-lg text-white font-semibold disabled:opacity-60"
+                      >
+                        {isThisSigning ? 'Signing...' : 'Sign as Owner'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}

@@ -12,16 +12,11 @@ export default function ContractDetails({ contract, onBack, onSignOwner, isSigni
 
   const amount = Number(contract.agreedPrice || contract.agreedBudget || contract.amount || 0);
   const status = contract.status || 'draft';
-  const ownerCanSign = contract.ownerSigned === false;
+  const ownerCanSign = !contract.ownerSigned;
   const deliverables = Array.isArray(contract.deliverables) ? contract.deliverables : [];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Contract Details</h1>
-          <p className="text-sm text-gray-400">Collaboration #{contract.collaborationId || '—'}</p>
-        </div>
         <button
           type="button"
           onClick={onBack}
@@ -29,6 +24,11 @@ export default function ContractDetails({ contract, onBack, onSignOwner, isSigni
         >
           ← Back to Contracts
         </button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Contract Details</h1>
+          {/* <p className="text-sm text-gray-400">Collaboration #{contract.collaborationId || '—'}</p> */}
+        </div>
       </div>
 
       <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 space-y-5">

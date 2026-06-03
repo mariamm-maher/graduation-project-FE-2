@@ -173,8 +173,8 @@ function Header() {
             transition={{ duration: 0.5 }}
             className="text-2xl sm:text-3xl font-bold"
           >
-            <span className="text-[#C1B6FD]">Ad</span>
-            <span className="text-white">Sphere</span>
+            <span className="text-[#C1B6FD]">Campaign</span>
+            <span className="text-white">Craft</span>
           </Motion.h1>
           
           {/* Enhanced Search Bar */}

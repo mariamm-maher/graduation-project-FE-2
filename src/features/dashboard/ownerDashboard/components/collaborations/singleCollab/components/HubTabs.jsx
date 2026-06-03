@@ -1,4 +1,4 @@
-import { BarChart3, ClipboardList, FileSignature, LayoutGrid, MessageCircleMore, SquareCheckBig } from 'lucide-react';
+import { BarChart3, ClipboardList, FileSignature, LayoutGrid, MessageCircleMore, Search, SquareCheckBig, X } from 'lucide-react';
 
 const TAB_ICONS = {
   all: LayoutGrid,
@@ -9,41 +9,59 @@ const TAB_ICONS = {
   tasks: SquareCheckBig,
 };
 
-export default function HubTabs({ tabs, activeTab, onTabChange }) {
+export default function HubTabs({ tabs, activeTab, onTabChange, searchQuery, setSearchQuery }) {
   return (
-    <div className="flex gap-2.5 mb-6" role="tablist" aria-label="Collaboration views">
-      {tabs.map((tab) => (
-        (() => {
-          const Icon = TAB_ICONS[tab.id] || LayoutGrid;
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 mb-6" role="tablist" aria-label="Collaboration views">
+      <div className="flex flex-wrap items-center gap-4">
+        {tabs.map((tab, index) => (
+          (() => {
+            const Icon = TAB_ICONS[tab.id] || LayoutGrid;
+            const isLast = index === tabs.length - 1;
 
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              className={`group flex-1 inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-full text-[18px] sm:text-[15px] font-semibold border cursor-pointer transition-all duration-200 ${
-                activeTab === tab.id
-                  ? 'text-white border-[#C1B6FD]/55 bg-linear-to-r from-[#241A3A]/85 to-[#1A112C]/85 backdrop-blur-md shadow-[0_8px_24px_rgba(116,92,180,0.35)]'
-                  : 'text-[#C1B6FD] border-[#745CB4]/45 bg-[#1A112C]/40 backdrop-blur-sm hover:bg-[#241A3A]/55 hover:border-[#C1B6FD]/35'
-              }`}
-              onClick={() => onTabChange(tab.id)}
-            >
-              <Icon
-                className={`h-4 w-4 sm:h-[17px] sm:w-[17px] transition-transform duration-200 ${
-                  activeTab === tab.id ? 'scale-105' : 'opacity-90 group-hover:opacity-100'
-                }`}
-              />
-              <span>{tab.label}</span>
-              {tab.badge && (
-                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold bg-amber-500 text-white leading-none">
-                  {tab.badge}
-                </span>
-              )}
-            </button>
-          );
-        })()
-      ))}
+            return (
+              <div key={tab.id} className="flex items-center">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  className={`group inline-flex items-center gap-2 px-3 py-3 text-base font-medium cursor-pointer transition-all duration-200 ${
+                    activeTab === tab.id
+                      ? 'text-white border-b-2 border-[#C1B6FD] shadow-[0_2px_8px_rgba(193,182,253,0.4)]'
+                      : 'text-[#9CA3AF] hover:text-white'
+                  }`}
+                  onClick={() => onTabChange(tab.id)}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span>{tab.label}</span>
+                  {tab.badge && (
+                    <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full text-[11px] font-bold bg-amber-500 text-white leading-none">
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+                {!isLast && <span className="text-[#745CB4]/30 mx-2 text-lg">|</span>}
+              </div>
+            );
+          })()
+        ))}
+      </div>
+
+      {/* Search Bar in Navigation */}
+      <div className="relative w-full sm:w-64 md:w-80">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search..."
+          className="w-full pl-10 pr-10 py-3 text-sm border border-[#745CB4]/15 rounded-lg bg-[#1A112C]/50 text-white placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#C1B6FD]/30 transition-colors"
+        />
+        {searchQuery && (
+          <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }

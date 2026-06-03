@@ -1,5 +1,5 @@
 export const TABS = [
-  { id: 'all', label: 'All' },
+  { id: 'all', label: 'Overview' },
   { id: 'contracts', label: 'Contracts' },
   { id: 'requests', label: 'Requests' },
   { id: 'analytics', label: 'Analytics' },

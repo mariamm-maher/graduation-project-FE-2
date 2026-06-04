@@ -45,6 +45,17 @@ function extractActivePagination(response = {}, campaigns = [], page = 1, limit 
   };
 }
 
+function extractCampaignDetail(response = {}) {
+  const payload = response?.data ?? response ?? {};
+
+  return (
+    payload?.campaign ||
+    payload?.data?.campaign ||
+    payload?.data ||
+    payload
+  );
+}
+
 const useCampaignStore = create((set) => ({
   // State
   campaigns: [],           // all-campaigns list (AllCampaigns)
@@ -335,17 +346,20 @@ const useCampaignStore = create((set) => ({
 
   // Fetch Campaign by ID
   fetchCampaignById: async (id) => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, currentCampaign: null });
     try {
       const response = await campaignService.getCampaignById(id);
+      console.log('Campaign Detail API Response:', response);
       
-      if (response.success) {
+      if (response.status === 'success' || response.success || response.status === 200) {
+        const campaign = extractCampaignDetail(response);
+        console.log('Normalized Campaign Detail:', campaign);
         set({ 
-          currentCampaign: response.data,
+          currentCampaign: campaign,
           isLoading: false,
           error: null 
         });
-        return { success: true, data: response.data };
+        return { success: true, data: campaign };
       }
       
       throw new Error(response.message || 'Failed to fetch campaign');

@@ -100,6 +100,20 @@ function AllCampaigns() {
       .replace(/\b\w/g, (letter) => letter.toUpperCase());
   };
 
+  const handleOpenCampaign = (campaign) => {
+    const campaignId = campaign.id || campaign.campaign_id || campaign.draft_id;
+    const campaignStatus = String(campaign.lifecycleStage || campaign.status || '').toLowerCase();
+
+    if (!campaignId) return;
+
+    if (campaignStatus === 'draft') {
+      navigate(`/dashboard/owner/campaigns/draft/${campaignId}/edit`);
+      return;
+    }
+
+    navigate(`/dashboard/owner/campaigns/${campaignId}`);
+  };
+
   // Client-side filter for search, goal, and status as a safety net
   const filteredCampaigns = campaigns.filter(campaign => {
     const campaignStatus = String(campaign.lifecycleStage || campaign.status || '').toLowerCase();
@@ -266,18 +280,11 @@ function AllCampaigns() {
                   <tr 
                     key={campaign.id}
                     className="hover:bg-[#C1B6FD]/5 transition-colors group/row cursor-pointer"
-                    onClick={() => {
-                      // For drafts, navigate to edit page
-                      if (String(campaign.lifecycleStage).toLowerCase() === 'draft') {
-                        navigate(`/dashboard/owner/campaigns/draft/${campaign.id}/edit`);
-                      } else {
-                        navigate(`/dashboard/owner/campaigns/${campaign.id}`);
-                      }
-                    }}
+                    onClick={() => handleOpenCampaign(campaign)}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
-                        navigate(`/dashboard/owner/campaigns/${campaign.id}`);
+                        handleOpenCampaign(campaign);
                       }
                     }}
                     role="button"

@@ -44,7 +44,13 @@ function SingleCampaign() {
   }, [campaignId, fetchCampaignById]);
 
   // Derive normalized campaign object from store response
-  const campaign = currentCampaign?.data?.campaign || currentCampaign?.campaign || currentCampaign;
+  const campaign = currentCampaign?.data?.campaign || currentCampaign?.campaign || currentCampaign?.data || currentCampaign;
+
+  useEffect(() => {
+    console.log('SingleCampaign route campaignId:', campaignId);
+    console.log('SingleCampaign currentCampaign from store:', currentCampaign);
+    console.log('SingleCampaign derived campaign:', campaign);
+  }, [campaignId, currentCampaign, campaign]);
 
   const formatDate = (value) => {
     if (!value) return '—';
@@ -88,7 +94,7 @@ function SingleCampaign() {
   };
 
   // Loading state
-  if (isLoading && !campaign) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C1B6FD]" />
@@ -98,7 +104,7 @@ function SingleCampaign() {
   }
 
   // Campaign not found fallback
-  if (!campaign || String(campaign.id) !== String(campaignId)) {
+  if (!campaign) {
     return (
       <div className="space-y-6 lg:space-y-8">
         <motion.div

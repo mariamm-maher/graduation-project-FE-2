@@ -98,7 +98,7 @@ function EditDraftCampaign() {
       const result = await campaignService.loadCampaignDraft(draftId);
       console.log('Draft API Response:', result);
       
-      const draft = result?.draft || result;
+      const draft = result?.data || result?.draft || result;
 
       if (!draft) {
         toast.error('Draft not found');
@@ -472,42 +472,45 @@ function EditDraftCampaign() {
   };
 
   // Tactical Plan Card
-  const TacticalCard = ({ platform, data }) => (
+  const TacticalCard = ({ platform, data }) => {
+    const platformKey = platform.toLowerCase();
+
+    return (
     <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
       <div className="bg-gradient-to-r from-[#745CB4]/20 to-transparent px-5 py-3 border-b border-white/10">
         <h4 className="text-base font-bold text-white flex items-center gap-2">
-          {platform === 'instagram' && <span className="text-pink-400">📷</span>}
-          {platform === 'facebook' && <span className="text-blue-400">📘</span>}
-          {platform === 'tiktok' && <span className="text-cyan-400">🎵</span>}
-          {platform === 'twitter' && <span className="text-sky-400">🐦</span>}
-          {platform === 'youtube' && <span className="text-red-400">📺</span>}
-          {platform === 'linkedin' && <span className="text-blue-600">💼</span>}
+          {platformKey === 'instagram' && <span className="text-pink-400">📷</span>}
+          {platformKey === 'facebook' && <span className="text-blue-400">📘</span>}
+          {platformKey === 'tiktok' && <span className="text-cyan-400">🎵</span>}
+          {platformKey === 'twitter' && <span className="text-sky-400">🐦</span>}
+          {platformKey === 'youtube' && <span className="text-red-400">📺</span>}
+          {platformKey === 'linkedin' && <span className="text-blue-600">💼</span>}
           {platform.charAt(0).toUpperCase() + platform.slice(1)}
         </h4>
       </div>
       <div className="p-4 sm:p-5 space-y-3">
-        {data.posting_frequency && (
+        {(data.posting_frequency || data.frequency) && (
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-400">Posting Frequency</span>
-            <span className="text-xs sm:text-sm font-medium text-white">{data.posting_frequency}</span>
+            <span className="text-xs sm:text-sm font-medium text-white">{data.posting_frequency || data.frequency}</span>
           </div>
         )}
-        {data.optimal_time && (
+        {(data.optimal_time || data.optimal_posting_time) && (
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-400">Optimal Time</span>
-            <span className="text-xs sm:text-sm font-medium text-white">{data.optimal_time}</span>
+            <span className="text-xs sm:text-sm font-medium text-white">{data.optimal_time || data.optimal_posting_time}</span>
           </div>
         )}
-        {data.format && (
+        {(data.format || data.format_recommendation) && (
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-400">Format</span>
-            <span className="text-xs sm:text-sm font-medium text-white">{data.format}</span>
+            <span className="text-xs sm:text-sm font-medium text-white">{data.format || data.format_recommendation}</span>
           </div>
         )}
-        {data.variants && Array.isArray(data.variants) && (
+        {((data.variants && Array.isArray(data.variants)) || (data.posts && Array.isArray(data.posts))) && (
           <div className="mt-4 space-y-3">
             <div className="text-xs font-medium text-[#C1B6FD] uppercase tracking-wide">Content Variants</div>
-            {data.variants.map((variant, idx) => (
+            {(data.variants || data.posts).map((variant, idx) => (
               <div key={idx} className="bg-white/5 rounded-lg p-3 border border-white/5">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="px-2 py-0.5 bg-[#745CB4]/30 text-[#C1B6FD] rounded text-xs font-medium">
@@ -536,7 +539,8 @@ function EditDraftCampaign() {
         )}
       </div>
     </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen ">
@@ -870,10 +874,43 @@ function EditDraftCampaign() {
                                   <span className="text-xs sm:text-sm text-white">{data.posting_frequency}</span>
                                 </div>
                               )}
-                              {data.best_time && (
+                              {(data.best_time || data.optimal_posting_time) && (
                                 <div className="flex items-center justify-between">
                                   <span className="text-xs text-gray-400">Best Time</span>
-                                  <span className="text-xs sm:text-sm text-white">{data.best_time}</span>
+                                  <span className="text-xs sm:text-sm text-white">{data.best_time || data.optimal_posting_time}</span>
+                                </div>
+                              )}
+                              {data.format_recommendation && (
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-gray-400">Format</span>
+                                  <span className="text-xs sm:text-sm text-white">{data.format_recommendation}</span>
+                                </div>
+                              )}
+                              {data.posts && Array.isArray(data.posts) && (
+                                <div className="space-y-3 pt-2 border-t border-white/10">
+                                  <div className="text-xs font-medium text-[#C1B6FD] uppercase tracking-wide">Posts</div>
+                                  {data.posts.map((post, idx) => (
+                                    <div key={idx} className="bg-white/5 rounded-lg p-3 border border-white/5">
+                                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                                        <span className="px-2 py-0.5 bg-[#745CB4]/30 text-[#C1B6FD] rounded text-xs font-medium">
+                                          {post.variant || post.type || `Post ${idx + 1}`}
+                                        </span>
+                                        {post.virality_score && (
+                                          <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded text-xs">
+                                            Score: {post.virality_score}%
+                                          </span>
+                                        )}
+                                      </div>
+                                      {post.caption && <p className="text-xs sm:text-sm text-gray-300 mb-2 italic">"{post.caption}"</p>}
+                                      {post.cta && (
+                                        <span className="inline-block px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded text-xs">
+                                          CTA: {post.cta}
+                                        </span>
+                                      )}
+                                      {post.visual_direction && <p className="text-xs text-gray-400 mt-2">🎨 {post.visual_direction}</p>}
+                                      {post.reasoning && <p className="text-xs text-gray-400 mt-2">Why: {post.reasoning}</p>}
+                                    </div>
+                                  ))}
                                 </div>
                               )}
                             </div>
@@ -915,7 +952,7 @@ function EditDraftCampaign() {
                     <div className="flex flex-wrap gap-2">
                       {currentOutput.campaign_hashtag_set.map((tag, idx) => (
                         <span key={idx} className="px-3 py-1.5 bg-gradient-to-r from-[#745CB4]/20 to-[#745CB4]/10 border border-[#745CB4]/30 rounded-lg text-xs sm:text-sm font-medium text-[#C1B6FD]">
-                          #{tag}
+                          {String(tag).startsWith('#') ? tag : `#${tag}`}
                         </span>
                       ))}
                     </div>

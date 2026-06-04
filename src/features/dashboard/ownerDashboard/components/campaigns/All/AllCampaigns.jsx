@@ -100,13 +100,16 @@ function AllCampaigns() {
       .replace(/\b\w/g, (letter) => letter.toUpperCase());
   };
 
-  // Client-side filter for search and goal only (lifecycleStage is handled server-side)
+  // Client-side filter for search, goal, and status as a safety net
   const filteredCampaigns = campaigns.filter(campaign => {
+    const campaignStatus = String(campaign.lifecycleStage || campaign.status || '').toLowerCase();
+    const selectedStatus = String(filterStatus || 'all').toLowerCase();
     const matchesSearch = !searchQuery || 
       (campaign.campaignName || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = selectedStatus === 'all' || campaignStatus === selectedStatus;
     const matchesGoal = filterGoal === 'all' || 
       (campaign.campaign_goal || '').toLowerCase() === filterGoal.toLowerCase();
-    return matchesSearch && matchesGoal;
+    return matchesSearch && matchesStatus && matchesGoal;
   });
 
   return (

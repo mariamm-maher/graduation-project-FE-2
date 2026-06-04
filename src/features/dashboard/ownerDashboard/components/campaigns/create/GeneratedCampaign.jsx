@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Sparkles } from 'lucide-react';
 import campaignService from '../../../../../../api/campaign';
 import useProfileStore from '../../../../../../stores/profileStore';
+import useCampaignDraftStore from '../../../../../../stores/campaignDraftStore';
 import { buildSaveCampaignPayload } from '../../../../../../utils/buildSaveCampaignPayload';
 import aiCampaignApi from '../../../../../../api/aiCampaignApi';
 import { buildEstimationsFromStrategy } from '../../../../../../utils/normalizeAiEstimations';
@@ -13,6 +14,8 @@ import {
   resolveAiCalendarFromState,
   buildAiPreviewFromResponse,
 } from '../../../../../../utils/normalizeAiCampaignView';
+import { VersionSelector, NavigationGuardDialog } from '../draft/components';
+import { useCampaignNavigationGuard } from '../draft/hooks';
 import GeneratedCampaignHeader from './GeneratedCampaignHeader';
 import GeneratedCampaignStrategy from './GeneratedCampaignStrategy';
 import GeneratedCampaignSidebar from './GeneratedCampaignSidebar';
@@ -21,6 +24,33 @@ function GeneratedCampaign() {
   const navigate = useNavigate();
   const location = useLocation();
   const ownerProfile = useProfileStore((s) => s.ownerProfile);
+
+  // Draft store integration
+  const draftVersions = useCampaignDraftStore((state) => state.versions);
+  const draftCurrentIndex = useCampaignDraftStore((state) => state.currentVersionIndex);
+  const addVersion = useCampaignDraftStore((state) => state.addVersion);
+  const setCurrentVersion = useCampaignDraftStore((state) => state.setCurrentVersion);
+  const clearAll = useCampaignDraftStore((state) => state.clearAll);
+  const setDraftSaved = useCampaignDraftStore((state) => state.setDraftSaved);
+  const draftId = useCampaignDraftStore((state) => state.draftId);
+
+  // Navigation guard
+  const {
+    showDialog,
+    isSaving: isSavingGuard,
+    confirmNavigation,
+    handleSaveAsDraft: handleSaveDraftAndProceed,
+    handleLeaveWithoutSaving,
+    handleStay,
+  } = useCampaignNavigationGuard();
+
+  // Guarded navigation helper
+  const guardedNavigate = (path) => {
+    if (confirmNavigation(path)) {
+      navigate(path);
+    }
+  };
+
   const [isEditing, setIsEditing] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -193,12 +223,40 @@ function GeneratedCampaign() {
   const handleSaveAsDraft = async () => {
     setIsSaving(true);
     try {
-      const result = await campaignService.saveDraftCampaign(buildPayload(false));
+      // Build the draft payload with inputs and versions
+      const basePayload = buildPayload(false);
+      const draftPayload = {
+        ...basePayload,
+        inputs: {
+          campaign_name: campaignData?.campaignName || '',
+          goal: campaignData?.campaign_goal || '',
+          budget: Number(campaignData?.budget || 0),
+          duration_weeks: Number(campaignData?.durationWeeks || 4),
+          start_date: campaignData?.startDate || null,
+          end_date: campaignData?.endDate || null,
+        },
+        current_output: draftVersions[draftCurrentIndex] || null,
+        version_history: draftVersions.map((v, idx) => ({
+          versionNumber: idx + 1,
+          generatedAt: v.generatedAt || new Date().toISOString(),
+          output: v,
+        })),
+      };
+
+      let result;
+      if (draftId) {
+        // Update existing draft
+        result = await campaignService.updateCampaignDraft(draftId, draftPayload);
+      } else {
+        // Create new draft with versions
+        result = await campaignService.saveDraftCampaign(draftPayload);
+      }
+
       toast.success('Campaign saved as draft.', { position: 'top-right', autoClose: 3000 });
-      navigate('/dashboard/owner/campaigns', {
-        state: { savedCampaignId: result?.data?.campaign?.id || result?.campaign?.id },
-      });
+      clearAll(); // Clear draft store after successful save
+      navigate('/dashboard/owner/campaigns/all?status=draft');
     } catch (error) {
+      console.error('Save draft error:', error);
       toast.error(error?.message || 'Failed to save draft', { position: 'top-right', autoClose: 4000 });
     } finally {
       setIsSaving(false);
@@ -210,6 +268,7 @@ function GeneratedCampaign() {
     try {
       const result = await campaignService.saveCampaign(buildPayload(false));
       toast.success('Campaign saved successfully.', { position: 'top-right', autoClose: 3000 });
+      clearAll(); // Clear draft store after successful save
       navigate('/dashboard/owner/campaigns', {
         state: { savedCampaignId: result?.data?.campaign?.id || result?.campaign?.id },
       });
@@ -225,6 +284,7 @@ function GeneratedCampaign() {
     try {
       const result = await campaignService.saveAndPublishCampaign(buildPayload(true));
       toast.success('Campaign saved and published!', { position: 'top-right', autoClose: 3000 });
+      clearAll(); // Clear draft store after successful save
       navigate('/dashboard/owner/campaigns', {
         state: { savedCampaignId: result?.data?.campaign?.id || result?.campaign?.id },
       });
@@ -233,6 +293,24 @@ function GeneratedCampaign() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Store initial version on first load
+  useEffect(() => {
+    if (aiPreview && strategyFromState && draftVersions.length === 0) {
+      const initialOutput = {
+        strategy: strategyFromState,
+        calendar: calendarFromState,
+        influencer_matches: influencerMatchesFromState || [],
+        influencer_strategy_note: influencerStrategyNoteFromState || '',
+        ai_preview: aiPreviewFromState,
+      };
+      addVersion(initialOutput);
+    }
+  }, []);
+
+  const handleVersionChange = (index) => {
+    setCurrentVersion(index);
   };
 
   const handleRegenerate = async () => {
@@ -249,6 +327,17 @@ function GeneratedCampaign() {
       const aiPreviewNext = buildAiPreviewFromResponse(response, { budgetAmount });
       aiPreviewNext.estimations = buildEstimationsFromStrategy(aiPreviewNext.strategy);
 
+      // Add as new version instead of replacing
+      const newOutput = {
+        strategy: response.strategy,
+        calendar: response.calendar,
+        influencer_matches: response.influencer_matches || [],
+        influencer_strategy_note: response.influencer_strategy_note || '',
+        ai_preview: aiPreviewNext,
+      };
+      addVersion(newOutput);
+
+      // Navigate with new state
       navigate('/dashboard/owner/campaigns/generated', {
         state: {
           campaignData,
@@ -298,6 +387,24 @@ function GeneratedCampaign() {
       transition={{ duration: 0.4 }}
       className="w-full space-y-6"
     >
+      {/* Navigation Guard Dialog */}
+      <NavigationGuardDialog
+        isOpen={showDialog}
+        isSaving={isSavingGuard}
+        onSaveAsDraft={handleSaveDraftAndProceed}
+        onLeaveWithoutSaving={handleLeaveWithoutSaving}
+        onStay={handleStay}
+      />
+
+      {/* Version Selector - shown when multiple versions exist */}
+      {draftVersions.length > 1 && (
+        <VersionSelector
+          versions={draftVersions}
+          currentVersionIndex={draftCurrentIndex}
+          onVersionChange={handleVersionChange}
+        />
+      )}
+
       <GeneratedCampaignHeader
         generatedAt={generatedAt}
         formatDate={formatDate}
@@ -305,7 +412,7 @@ function GeneratedCampaign() {
         handleSaveAsDraft={handleSaveAsDraft}
         handleSave={handleSave}
         handleSaveAndPublish={handleSaveAndPublish}
-        navigate={navigate}
+        navigate={guardedNavigate}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

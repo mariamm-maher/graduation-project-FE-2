@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, CheckCircle2, FileEdit } from 'lucide-react';
 import { toast } from 'react-toastify';
 import useProfileStore from '../../../../../../stores/profileStore';
+import useCampaignDraftStore from '../../../../../../stores/campaignDraftStore';
+import campaignService from '../../../../../../api/campaign';
 import aiCampaignApi, { buildCampaignBriefPayload } from '../../../../../../api/aiCampaignApi';
 import { buildEstimationsFromStrategy } from '../../../../../../utils/normalizeAiEstimations';
 import { buildAiPreviewFromResponse } from '../../../../../../utils/normalizeAiCampaignView';
@@ -12,15 +14,52 @@ import {
   formatPlatformsForDisplay,
   normalizePlatformList,
 } from '../../../../../../utils/platformUtils';
+import { ResumeDraftBanner } from '../draft/components';
 
 function PrepareCampaign() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { campaignData } = location.state || {};
-
+  const { campaignData: locationCampaignData } = location.state || {};
 
   const fetchOwnerProfile = useProfileStore((s) => s.fetchOwnerProfile);
   const ownerProfile = useProfileStore((s) => s.ownerProfile);
+
+  // Draft store integration
+  const draftInputs = useCampaignDraftStore((state) => state.inputs);
+  const draftVersions = useCampaignDraftStore((state) => state.versions);
+  const isDraft = useCampaignDraftStore((state) => state.isDraft);
+  const clearAll = useCampaignDraftStore((state) => state.clearAll);
+  const rehydrateDraft = useCampaignDraftStore((state) => state.rehydrateDraft);
+  const addVersion = useCampaignDraftStore((state) => state.addVersion);
+  const currentVersionIndex = useCampaignDraftStore((state) => state.currentVersionIndex);
+  
+  // Build campaignData from location state or draft inputs
+  const campaignData = useMemo(() => {
+    // If we have location state data, use it (coming from campaign creation flow)
+    if (locationCampaignData?.campaignName) {
+      return locationCampaignData;
+    }
+    
+    // If we have draft inputs, map them to campaignData format
+    if (draftInputs?.campaign_name || draftInputs?.name) {
+      return {
+        campaignName: draftInputs.campaign_name || draftInputs.name || '',
+        campaign_goal: draftInputs.goal || '',
+        campaignGoal: draftInputs.goal || '',
+        budget: draftInputs.budget || 0,
+        budget_amount: draftInputs.budget || 0,
+        durationWeeks: draftInputs.duration_weeks || Math.ceil((draftInputs.duration_days || 0) / 7),
+        duration_weeks: draftInputs.duration_weeks || Math.ceil((draftInputs.duration_days || 0) / 7),
+        startDate: draftInputs.start_date || null,
+        endDate: draftInputs.end_date || null,
+      };
+    }
+    
+    return locationCampaignData || {};
+  }, [locationCampaignData, draftInputs]);
+
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+  const [isLoadingDraft, setIsLoadingDraft] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [ownerEdits, setOwnerEdits] = useState({});
@@ -49,6 +88,79 @@ function PrepareCampaign() {
   useEffect(() => {
     fetchOwnerProfile();
   }, [fetchOwnerProfile]);
+
+  // Check for draft from navigation state or sessionStorage on mount
+  useEffect(() => {
+    const { draftId: navDraftId, resumeDraft } = location.state || {};
+    
+    // If navigated with draftId from All Campaigns (drafts list)
+    if (navDraftId && resumeDraft) {
+      // Store in sessionStorage and load the draft
+      sessionStorage.setItem('campaign_draft_id', navDraftId);
+      loadDraftById(navDraftId);
+      return;
+    }
+    
+    // Otherwise check for existing draft in sessionStorage
+    const savedDraftId = sessionStorage.getItem('campaign_draft_id');
+    if (savedDraftId && !isDraft && draftVersions.length === 0) {
+      setShowResumeBanner(true);
+    }
+  }, [isDraft, draftVersions.length, location.state]);
+  
+  // Helper function to load draft by ID
+  const loadDraftById = async (draftIdToLoad) => {
+    if (!draftIdToLoad) return;
+    
+    setIsLoadingDraft(true);
+    try {
+      const result = await campaignService.loadCampaignDraft(draftIdToLoad);
+      const draftData = result?.draft || result;
+      
+      if (draftData) {
+        // Map backend format to store format
+        const backendInputs = draftData.inputs || {};
+        const storeData = {
+          inputs: {
+            name: backendInputs.campaign_name || backendInputs.name || '',
+            goal: backendInputs.goal || '',
+            budget: backendInputs.budget || 0,
+            duration_days: backendInputs.duration_weeks ? backendInputs.duration_weeks * 7 : (backendInputs.duration_days || 0),
+            extra_notes: backendInputs.extra_notes || '',
+            // Keep original fields for reference
+            campaign_name: backendInputs.campaign_name || '',
+            start_date: backendInputs.start_date || null,
+            end_date: backendInputs.end_date || null,
+          },
+          versions: draftData.version_history || [],
+          currentVersionIndex: 0,
+          draftId: draftIdToLoad,
+        };
+        rehydrateDraft(storeData);
+        toast.success('Draft loaded successfully');
+        setShowResumeBanner(false);
+      }
+    } catch (error) {
+      console.error('Failed to load draft:', error);
+      toast.error('Failed to load draft. Starting fresh.');
+      sessionStorage.removeItem('campaign_draft_id');
+    } finally {
+      setIsLoadingDraft(false);
+    }
+  };
+
+  const handleResumeDraft = async () => {
+    const savedDraftId = sessionStorage.getItem('campaign_draft_id');
+    if (!savedDraftId) return;
+    await loadDraftById(savedDraftId);
+    setShowResumeBanner(false);
+  };
+
+  const handleStartFresh = () => {
+    clearAll();
+    setShowResumeBanner(false);
+    toast.info('Started fresh campaign');
+  };
 
   const ownerBase = useMemo(
     () => ({
@@ -403,6 +515,15 @@ function PrepareCampaign() {
 
   return (
     <div className="space-y-6">
+      {/* Resume Draft Banner */}
+      {showResumeBanner && (
+        <ResumeDraftBanner
+          onResume={handleResumeDraft}
+          onStartFresh={handleStartFresh}
+          isLoading={isLoadingDraft}
+        />
+      )}
+
       <div className="rounded-2xl border border-white/10 bg-[#1e1632]/55 backdrop-blur-md px-6 py-6 shadow-xl">
         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Prepare Campaign with Profile Context</h1>
         <p className="text-gray-300 text-sm">
@@ -1019,6 +1140,52 @@ function PrepareCampaign() {
                   {buildAiDescription()}
                 </div>
               </div>
+              
+              {/* Show current version if draft has generated content */}
+              {draftVersions.length > 0 && currentVersionIndex >= 0 && (
+                <div className="mt-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-amber-300 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Previously Generated Version Available
+                    </h3>
+                    <span className="text-xs text-amber-400/80">
+                      Version {currentVersionIndex + 1} of {draftVersions.length}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-4">
+                    You have a previously generated version of this campaign. You can proceed with this version or regenerate.
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // Navigate to GeneratedCampaign with the current version
+                        const currentVersion = draftVersions[currentVersionIndex];
+                        navigate('/dashboard/owner/campaigns/generated', {
+                          state: {
+                            campaignData,
+                            ownerDraft: ownerDraft,
+                            aiResponse: currentVersion?.output || currentVersion,
+                            strategy: currentVersion?.output?.strategy || currentVersion?.strategy,
+                          },
+                        });
+                      }}
+                      className="px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 rounded-lg text-amber-300 text-sm font-medium transition-colors"
+                    >
+                      Use This Version
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleGenerate}
+                      disabled={isSubmitting}
+                      className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg text-gray-300 text-sm font-medium transition-colors disabled:opacity-50"
+                    >
+                      {isSubmitting ? 'Generating...' : 'Regenerate New Version'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -8,8 +8,10 @@ import PrepareCampaign from './create/PrepareCampaign';
 import GeneratedCampaign from './create/GeneratedCampaign';
 import CompletedCampaigns from './completed/CompletedCampaigns';
 import DraftCampaigns from './draft/DraftCampaigns';
+import EditDraftCampaign from './draft/EditDraftCampaign';
 import CampaignAnalytics from './analytics/CampaignAnalytics';
 import SingleCampaign from './Single/SingleCampaign';
+
 
 function CampaignsLayout() {
   return (
@@ -25,6 +27,7 @@ function CampaignsLayout() {
         <Route path="prepar" element={<Navigate to="/dashboard/owner/campaigns/prepare" replace />} />
         <Route path="completed" element={<CompletedCampaigns />} />
         <Route path="draft" element={<DraftCampaigns />} />
+        <Route path="draft/:draftId/edit" element={<EditDraftCampaign />} />
         <Route path="analytics" element={<CampaignAnalytics />} />
         <Route path="generated" element={<GeneratedCampaign />} />
         <Route path=":campaignId" element={<SingleCampaign />} />

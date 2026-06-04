@@ -166,7 +166,7 @@ function DraftCampaigns() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 
-                        onClick={() => navigate(`/dashboard/owner/campaigns/create?draft=${draft.id}`)}
+                        onClick={() => navigate(`/dashboard/owner/campaigns/draft/${draft.id}/edit`)}
                         className="text-lg font-bold text-white cursor-pointer hover:text-amber-400 transition-colors truncate"
                       >
                         {draft.campaignName || draft.name || 'Untitled Campaign'}
@@ -215,7 +215,7 @@ function DraftCampaigns() {
                   {/* Right Section - Actions */}
                   <div className="flex items-center gap-2">
                     <button 
-                      onClick={() => navigate(`/dashboard/owner/campaigns/create?draft=${draft.id}`)}
+                      onClick={() => navigate(`/dashboard/owner/campaigns/draft/${draft.id}/edit`)}
                       className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap"
                     >
                       <Edit className="w-4 h-4" />

@@ -132,6 +132,16 @@ function CampaignsOverview() {
                 </div>
               </Link>
 
+              <Link to="/dashboard/owner/campaigns/all?status=draft" className="group bg-white/5 border border-white/10 hover:border-amber-400/30 rounded-xl p-4 flex items-center gap-4 transition-all hover:bg-white/10 hover:shadow-lg hover:shadow-amber-500/5">
+                <div className="w-10 h-10 rounded-lg bg-white/5 group-hover:bg-amber-500/20 border border-white/10 group-hover:border-amber-500/30 flex items-center justify-center transition-all">
+                  <FileEdit className="w-5 h-5 text-gray-400 group-hover:text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white group-hover:text-amber-400 transition-colors">Drafts</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">Continue editing and publish</p>
+                </div>
+              </Link>
+
               <Link to="/dashboard/owner/campaigns/completed" className="group bg-white/5 border border-white/10 hover:border-blue-400/30 rounded-xl p-4 flex items-center gap-4 transition-all hover:bg-white/10 hover:shadow-lg hover:shadow-blue-500/5">
                 <div className="w-10 h-10 rounded-lg bg-white/5 group-hover:bg-blue-500/20 border border-white/10 group-hover:border-blue-500/30 flex items-center justify-center transition-all">
                   <CheckCircle className="w-5 h-5 text-gray-400 group-hover:text-blue-400" />

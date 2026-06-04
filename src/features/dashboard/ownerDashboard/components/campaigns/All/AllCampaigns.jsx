@@ -1,29 +1,66 @@
 import { Search, Grid3x3, Target, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import useCampaignStore from '../../../../../../stores/campaignStore';
 
 const LIMIT = 10;
 
 function AllCampaigns() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialStatus = queryParams.get('status') || 'all';
+  
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterStatus, setFilterStatus] = useState(initialStatus);
   const [filterGoal, setFilterGoal] = useState('all');
   const [page, setPage] = useState(1);
-  const navigate = useNavigate();
   
-  const { campaigns: campaignsRaw, pagination, isLoading, error, fetchCampaigns } = useCampaignStore();
+  const { 
+    campaigns: allCampaignsRaw, 
+    draftCampaigns: draftCampaignsRaw,
+    completedCampaigns: completedCampaignsRaw,
+    pagination, 
+    draftPagination,
+    completedPagination,
+    isLoading, 
+    error, 
+    fetchCampaigns 
+  } = useCampaignStore();
+  
+  // Select the correct campaigns array based on filterStatus
+  const campaignsRaw = filterStatus === 'draft' 
+    ? draftCampaignsRaw 
+    : filterStatus === 'completed'
+    ? completedCampaignsRaw
+    : allCampaignsRaw;
   const campaigns = Array.isArray(campaignsRaw) ? campaignsRaw : [];
-  const totalPages = pagination?.totalPages || 1;
-  const totalItems = pagination?.total || 0;
+  
+  // Select correct pagination based on filter
+  const activePagination = filterStatus === 'draft' 
+    ? draftPagination 
+    : filterStatus === 'completed'
+    ? completedPagination
+    : pagination;
+  const totalPages = activePagination?.totalPages || 1;
+  const totalItems = activePagination?.total || 0;
 
   useEffect(() => {
+    console.log('AllCampaigns - fetching with:', { page, limit: LIMIT, filterStatus, lifecycleStage: filterStatus !== 'all' ? filterStatus : undefined });
     fetchCampaigns({
       page,
       limit: LIMIT,
       lifecycleStage: filterStatus !== 'all' ? filterStatus : undefined,
     });
   }, [page, filterStatus, fetchCampaigns]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('AllCampaigns - campaignsRaw:', campaignsRaw);
+    console.log('AllCampaigns - campaigns.length:', campaigns.length);
+    console.log('AllCampaigns - filterStatus:', filterStatus);
+    console.log('AllCampaigns - totalItems:', totalItems);
+  }, [campaignsRaw, campaigns, filterStatus, totalItems]);
 
   // Reset to page 1 when status filter changes
   const handleStatusChange = (val) => {
@@ -226,7 +263,14 @@ function AllCampaigns() {
                   <tr 
                     key={campaign.id}
                     className="hover:bg-[#C1B6FD]/5 transition-colors group/row cursor-pointer"
-                    onClick={() => navigate(`/dashboard/owner/campaigns/${campaign.id}`)}
+                    onClick={() => {
+                      // For drafts, navigate to edit page
+                      if (String(campaign.lifecycleStage).toLowerCase() === 'draft') {
+                        navigate(`/dashboard/owner/campaigns/draft/${campaign.id}/edit`);
+                      } else {
+                        navigate(`/dashboard/owner/campaigns/${campaign.id}`);
+                      }
+                    }}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();

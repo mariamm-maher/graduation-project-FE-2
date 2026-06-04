@@ -22,6 +22,18 @@ const normalizeContentCalendarPlatforms = (payload) => {
   };
 };
 
+// Convert camelCase keys to snake_case for API compatibility
+const camelToSnakeCase = (obj) => {
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(camelToSnakeCase);
+  
+  return Object.keys(obj).reduce((acc, key) => {
+    const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+    acc[snakeKey] = camelToSnakeCase(obj[key]);
+    return acc;
+  }, {});
+};
+
 const campaignService = {
   // saveAndPublishCampaign: async (builtPayload) => {
   //   try {
@@ -172,25 +184,63 @@ const campaignService = {
     },
     
     saveDraftCampaign: async (draftData) => {
-    try {
-    const response = await api.post(
-    '/campaigns/draft',
-    draftData
-    );
-    
-      return response.data;
-    } catch (error) {
-      console.error(
-        'Save draft campaign error:',
-        error
-      );
-    
-      throwApiError(
-        error,
-        'Failed to save campaign as draft'
-      );
-    }
-    
+      try {
+        // Backend expects { inputs, current_output, version_history }
+        const payload = {
+          inputs: {
+            campaign_name: draftData.campaignName || draftData.campaign_name || 'Untitled Draft',
+            goal: draftData.campaign_goal || 'Awareness',
+            budget: Number(draftData.budget_amount || draftData.budget || 0),
+            duration_weeks: Number(draftData.campaign_duration_weeks || draftData.durationWeeks || 4),
+            start_date: draftData.startDate || null,
+            end_date: draftData.endDate || null,
+          },
+          current_output: draftData.aiVersion || draftData.current_output || null,
+          version_history: draftData.version_history || null,
+        };
+        
+        console.log('Saving draft with payload:', JSON.stringify(payload, null, 2));
+        const response = await api.post('/campaigns/draft', payload);
+        return response.data;
+      } catch (error) {
+        console.error('Save draft campaign error:', error);
+        console.error('Full error response:', error.response?.data);
+        throwApiError(error, 'Failed to save campaign as draft');
+      }
+    },
+
+    updateCampaignDraft: async (id, draftData) => {
+      try {
+        // Backend expects { inputs, current_output, version_history }
+        const payload = {
+          inputs: draftData.inputs || {
+            campaign_name: 'Untitled Draft',
+            goal: 'Awareness',
+            budget: 0,
+            duration_weeks: 4,
+          },
+          current_output: draftData.current_output || draftData.aiVersion || null,
+          version_history: draftData.version_history || draftData.versions || null,
+        };
+        
+        console.log('Updating draft with payload:', JSON.stringify(payload, null, 2));
+        const response = await api.put(`/campaigns/draft/${id}`, payload);
+        return response.data;
+      } catch (error) {
+        console.error('Update draft campaign error:', error);
+        console.error('Full error response:', error.response?.data);
+        throwApiError(error, 'Failed to update campaign draft');
+      }
+    },
+
+    loadCampaignDraft: async (id) => {
+      try {
+        const response = await api.get(`/campaigns/draft/${id}`);
+        return response.data;
+      } catch (error) {
+        console.error('Load campaign draft error:', error);
+        throwApiError(error, 'Failed to load campaign draft');
+      }
     },
 
   createCampaign: async (campaignData) => {
@@ -365,6 +415,7 @@ const campaignService = {
       throwApiError(error, 'Failed to generate bulk report');
     }
   },
+
 };
 
 export default campaignService;

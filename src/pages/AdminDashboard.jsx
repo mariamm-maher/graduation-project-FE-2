@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import {
   Header,
@@ -16,11 +17,21 @@ import CampaignDetail from '../features/dashboard/adminDashboard/components/camp
 import AdminSettingsPage from '../features/dashboard/adminDashboard/components/settings/AdminSettingsPage';
 
 function AdminDashboard() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
-    <div className="bg-gradient-to-br from-[#000000] via-[#1a0933] to-[#372557] min-h-screen text-white p-3 sm:p-4 md:p-6 overflow-x-hidden">
-      <Header />
-      <Sidebar />
-      <div className="ml-0 md:ml-20 lg:ml-32 transition-all duration-300 max-w-full">
+    <div className="bg-linear-to-br from-[#000000] via-[#1a0933] to-[#372557] min-h-screen text-white overflow-x-hidden">
+      <Sidebar
+        isMobileOpen={isMobileMenuOpen}
+        onMobileClose={() => setIsMobileMenuOpen(false)}
+      />
+
+      <div className="relative z-0 p-3 sm:p-4 md:p-6 md:ml-20 lg:ml-32 transition-all duration-300">
+        <Header
+          isMobileMenuOpen={isMobileMenuOpen}
+          onOpenMenu={() => setIsMobileMenuOpen(true)}
+        />
+        <div className="max-w-full">
         <Routes>
           <Route path="/" element={<OverviewDashboard />} />
           <Route path="users" element={<AccountsOverview />} />
@@ -33,6 +44,7 @@ function AdminDashboard() {
           <Route path="announcements" element={<AnnouncementsOverview />} />
           <Route path="settings" element={<AdminSettingsPage />} />
         </Routes>
+        </div>
       </div>
     </div>
   );

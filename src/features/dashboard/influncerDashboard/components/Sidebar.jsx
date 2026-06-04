@@ -1,74 +1,66 @@
-import { LayoutDashboard, Search, Users, Share2, BarChart3, MessageCircle, Settings, LogOut, User, Briefcase, Menu, X, SquareCheckBig } from 'lucide-react';
-import { useState } from 'react';
+import {
+  LayoutDashboard,
+  Search,
+  Users,
+  Settings,
+  LogOut,
+  User,
+  SquareCheckBig,
+  X,
+} from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import useAuthStore from '../../../../stores/authStore';
 
-function Sidebar() {
+function Sidebar({ isMobileOpen = false, onMobileClose }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isHovered, setIsHovered] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const logout = useAuthStore((s) => s.logout);
   const user = useAuthStore((s) => s.user);
   const showLabels = isMobileOpen || isHovered;
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      toast.success('Logged out successfully', {
-        position: 'top-right',
-        autoClose: 2000,
-      });
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-      toast.error('Logout failed', {
-        position: 'top-right',
-        autoClose: 3000,
-      });
-    }
-  };
+  useEffect(() => {
+    if (!isMobileOpen) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isMobileOpen]);
 
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Overview', path: '/dashboard/influencer' },
     { id: 'explore', icon: Search, label: 'Explore Campaigns', path: '/dashboard/influencer/campaigns' },
     { id: 'collaborations', icon: Users, label: 'My Collaborations', path: '/dashboard/influencer/collaborations' },
-    // { id: 'content', icon: Share2, label: 'My Content', path: '/dashboard/influencer/social-media' },
-    // { id: 'analytics', icon: BarChart3, label: 'Performance', path: '/dashboard/influencer/analytics' },
-    // { id: 'messages', icon: MessageCircle, label: 'Messages', path: '/dashboard/influencer/messages' },
     { id: 'tasks', icon: SquareCheckBig, label: 'Collaboration Tasks', path: '/dashboard/influencer/collaborations/tasks' },
-    // { id: 'profile', icon: User, label: 'My Profile', path: '/dashboard/influencer/profile' },
   ];
 
-  return (
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Logged out successfully', { position: 'top-right', autoClose: 2000 });
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Logout failed', { position: 'top-right', autoClose: 3000 });
+    }
+  };
+
+  const closeMobile = () => onMobileClose?.();
+
+  const sidebarPanel = (
     <>
-      {/* Mobile Menu Button */}
       <button
-        onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="fixed top-6 left-4 z-60 md:hidden p-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/10 text-white hover:bg-white/20 transition-all"
+        type="button"
+        onClick={closeMobile}
+        className="md:hidden absolute top-6 left-4 z-10 p-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/10 text-white hover:bg-white/20 transition-all"
+        aria-label="Close menu"
       >
-        {isMobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        <X className="w-5 h-5" />
       </button>
 
-      {/* Mobile Overlay */}
-      {isMobileOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
-          onClick={() => setIsMobileOpen(false)}
-        />
-      )}
-
-      <div 
-        className={`fixed left-0 top-0 bottom-0 pt-16 md:left-6 md:top-32 md:bottom-auto md:pt-4 flex flex-col gap-2 backdrop-blur-md md:rounded-2xl p-4 border-r md:border border-white/10 transition-all duration-300 ease-in-out z-50 w-64 bg-[#1a1a1a]/95 ${
-          isHovered ? '' : 'md:w-20 md:bg-white/5'
-        } ${
-          isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-      {/* Profile Section */}
       <div className="flex items-center gap-3 pb-4 border-b border-white/10">
         <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#C1B6FD] to-[#745CB4] flex items-center justify-center shrink-0">
           <User className="w-5 h-5 text-white" />
@@ -76,11 +68,13 @@ function Sidebar() {
         {showLabels && (
           <Link
             to="/dashboard/influencer/profile"
-            onClick={() => setIsMobileOpen(false)}
+            onClick={closeMobile}
             className="flex-1 overflow-hidden"
             title={user?.email || 'No email'}
           >
-            <p className="text-sm font-semibold text-white whitespace-nowrap">{user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Guest User'}</p>
+            <p className="text-sm font-semibold text-white whitespace-nowrap">
+              {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email : 'Guest User'}
+            </p>
             <span className="text-xs text-gray-400 whitespace-nowrap truncate underline-offset-2 hover:underline">
               {user?.email || 'No email'}
             </span>
@@ -88,33 +82,32 @@ function Sidebar() {
         )}
       </div>
 
-      {/* Navigation Items */}
-      <nav className="flex-1 space-y-1 py-4">
+      <nav className="flex-1 space-y-1 py-2 overflow-y-auto">
         {menuItems.map((item) => {
           const Icon = item.icon;
-          // For dashboard, use exact match. For collaborations, exclude tasks sub-route
           let isActive;
           if (item.id === 'dashboard') {
             isActive = location.pathname === item.path || location.pathname === `${item.path}/`;
           } else if (item.id === 'collaborations') {
-            // Only highlight if on collaborations page itself, not on tasks, requests, contracts, or workspace
             const basePath = item.path;
             const currentPath = location.pathname;
-            isActive = currentPath === basePath || 
-                      currentPath === `${basePath}/` ||
-                      (currentPath.startsWith(basePath) && 
-                       !currentPath.includes('/tasks') && 
-                       !currentPath.includes('/requests') && 
-                       !currentPath.includes('/contracts') &&
-                       currentPath.split('/').length === 5); // Only base collaborations path
+            isActive =
+              currentPath === basePath ||
+              currentPath === `${basePath}/` ||
+              (currentPath.startsWith(basePath) &&
+                !currentPath.includes('/tasks') &&
+                !currentPath.includes('/requests') &&
+                !currentPath.includes('/contracts') &&
+                currentPath.split('/').length === 5);
           } else {
             isActive = location.pathname.startsWith(item.path);
           }
+
           return (
             <Link
               key={item.id}
               to={item.path}
-              onClick={() => setIsMobileOpen(false)}
+              onClick={closeMobile}
               className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
                 isActive
                   ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg shadow-[#745CB4]/30'
@@ -131,11 +124,10 @@ function Sidebar() {
         })}
       </nav>
 
-      {/* Bottom Actions */}
       <div className="pt-4 border-t border-white/10 space-y-1">
         <Link
           to="/dashboard/influencer/settings"
-          onClick={() => setIsMobileOpen(false)}
+          onClick={closeMobile}
           className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
             location.pathname === '/dashboard/influencer/settings'
               ? 'bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white shadow-lg shadow-[#745CB4]/30'
@@ -148,7 +140,8 @@ function Sidebar() {
             <span className="text-sm font-medium whitespace-nowrap">Settings</span>
           )}
         </Link>
-        <button 
+        <button
+          type="button"
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200"
           title={!showLabels ? 'Logout' : ''}
@@ -159,7 +152,33 @@ function Sidebar() {
           )}
         </button>
       </div>
-    </div>
+    </>
+  );
+
+  return (
+    <>
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-[100] md:hidden" role="dialog" aria-modal="true">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            onClick={closeMobile}
+            aria-hidden="true"
+          />
+          <aside className="relative z-10 flex h-full w-64 max-w-[85vw] flex-col gap-2 border-r border-white/10 bg-[#1a1a1a]/95 p-4 pt-16 backdrop-blur-md">
+            {sidebarPanel}
+          </aside>
+        </div>
+      )}
+
+      <div
+        className={`fixed left-0 top-0 bottom-0 hidden md:flex flex-col gap-2 backdrop-blur-md md:left-6 md:top-32 md:bottom-auto md:pt-4 p-4 border md:border border-white/10 transition-all duration-300 ease-in-out z-30 md:rounded-2xl ${
+          isHovered ? 'md:w-64 md:bg-[#1a1a1a]/95' : 'md:w-20 md:bg-white/5'
+        }`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {sidebarPanel}
+      </div>
     </>
   );
 }

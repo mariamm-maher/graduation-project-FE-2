@@ -1,6 +1,7 @@
-import { Search, Bell, MessageSquare, ChevronDown, X, Trash2, Check } from 'lucide-react';
+import { Bell, MessageSquare, ChevronDown, Menu, Trash2, Check } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import useAuthStore from '../../../../stores/authStore';
@@ -9,19 +10,17 @@ import useNotificationsStore from '../../../../stores/NotificationsStore';
 import useCampaignStore from '../../../../stores/campaignStore';
 import CreateInfluencerProfile from './createInfluncerProfile';
 
-function Header() {
+const OVERLAY_Z = 110;
+
+function Header({ isMobileMenuOpen, onOpenMenu }) {
   const navigate = useNavigate();
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showSearchResults, setShowSearchResults] = useState(false);
   const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
-  const [campaignStats, setCampaignStats] = useState({ total: 0, active: 0 });
-  const searchRef = useRef(null);
   const [showInfluencerModal, setShowInfluencerModal] = useState(false);
+  const roleRef = useRef(null);
 
   const user = useAuthStore((s) => s.user);
   const switchRole = useAuthStore((s) => s.switchRole);
-  const addRole = useAuthStore((s) => s.addRole);
   const totalUnreadCount = useChatStore((s) => s.totalUnreadCount);
   const fetchChatUnreadCount = useChatStore((s) => s.fetchUnreadCount);
   const {
@@ -33,12 +32,11 @@ function Header() {
     reconnectNotifications,
     markAsRead,
     markAllAsRead,
-    deleteNotification
+    deleteNotification,
   } = useNotificationsStore();
   const fetchCampaigns = useCampaignStore((s) => s.fetchCampaigns);
   const fetchActiveCampaigns = useCampaignStore((s) => s.fetchActiveCampaigns);
 
-  // Fetch notifications + chat unread on mount (replace list — do not merge other users' items)
   useEffect(() => {
     resetNotifications();
     fetchNotifications(1, 10);
@@ -48,102 +46,57 @@ function Header() {
 
   useEffect(() => {
     const loadCampaignStats = async () => {
-      const [allCampaignsRes, activeCampaignsRes] = await Promise.all([
+      await Promise.all([
         fetchCampaigns({ page: 1, limit: 1 }),
-        fetchActiveCampaigns({ page: 1, limit: 1 })
+        fetchActiveCampaigns({ page: 1, limit: 1 }),
       ]);
-
-      const totalCampaigns = allCampaignsRes?.pagination?.total ?? allCampaignsRes?.data?.length ?? 0;
-      const activeCampaigns =
-        activeCampaignsRes?.pagination?.total ??
-        activeCampaignsRes?.trackingTools?.totalActiveCampaigns ??
-        activeCampaignsRes?.data?.length ??
-        0;
-
-      setCampaignStats({ total: totalCampaigns, active: activeCampaigns });
     };
-
     loadCampaignStats();
   }, [fetchCampaigns, fetchActiveCampaigns]);
 
+  useEffect(() => {
+    if (!showNotificationsPanel) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [showNotificationsPanel]);
+
+  useEffect(() => {
+    if (!showRoleDropdown) return undefined;
+    const handler = (e) => {
+      if (roleRef.current && !roleRef.current.contains(e.target)) {
+        setShowRoleDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showRoleDropdown]);
+
+  const closeRoleDropdown = () => setShowRoleDropdown(false);
+  const closeNotifications = () => setShowNotificationsPanel(false);
+
   const handleMarkAsRead = async (notificationId) => {
     const res = await markAsRead(notificationId);
-    if (res?.success) {
-      toast.success('Marked as read');
-    }
+    if (res?.success) toast.success('Marked as read');
   };
 
   const handleMarkAllAsRead = async () => {
     const res = await markAllAsRead();
-    if (res?.success) {
-      toast.success('All notifications marked as read');
-    }
+    if (res?.success) toast.success('All notifications marked as read');
   };
 
   const handleDeleteNotification = async (notificationId) => {
     const res = await deleteNotification(notificationId);
-    if (res?.success) {
-      toast.success('Notification deleted');
-    }
-  };
-
-  // Mock search suggestions - replace with actual data
-  const searchSuggestions = [
-    // { type: 'campaign', name: 'Summer Fashion Campaign', status: 'Active' },
-    // { type: 'campaign', name: 'Tech Product Launch', status: 'Pending' },
-    // { type: 'influencer', name: 'Sarah Johnson', followers: '125K' },
-    // { type: 'influencer', name: 'Mike Chen', followers: '89K' },
-    // { type: 'campaign', name: 'Holiday Sale Campaign', status: 'Completed' },
-  ];
-
-  const filteredSuggestions = searchQuery.trim()
-    ? searchSuggestions.filter(item =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : [];
-
-  // Close search results when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setShowSearchResults(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-    setShowSearchResults(true);
-  };
-
-  const handleSearchClear = () => {
-    setSearchQuery('');
-    setShowSearchResults(false);
-  };
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      console.log('Searching for:', searchQuery);
-      // Implement actual search navigation here
-      setShowSearchResults(false);
-    }
-  };
-
-  const handleSuggestionClick = (suggestion) => {
-    setSearchQuery(suggestion.name);
-    setShowSearchResults(false);
-    console.log('Selected:', suggestion);
+    if (res?.success) toast.success('Notification deleted');
   };
 
   const handleSwitchRole = async (role) => {
-    setShowRoleDropdown(false);
+    closeRoleDropdown();
     if (role === 'INFLUENCER') {
-      const userRoles = (user?.roles || []).map(r => typeof r === 'string' ? r : r?.name).filter(Boolean);
-      const hasInfluencerRole = userRoles.some(r => r.toUpperCase() === 'INFLUENCER');
+      const userRoles = (user?.roles || []).map((r) => (typeof r === 'string' ? r : r?.name)).filter(Boolean);
+      const hasInfluencerRole = userRoles.some((r) => r.toUpperCase() === 'INFLUENCER');
       if (hasInfluencerRole) {
         const result = await switchRole('INFLUENCER');
         if (result.success) {
@@ -159,126 +112,155 @@ function Header() {
     }
   };
 
-  const activeVisualCount = Math.min(campaignStats.active, 3);
-  const activeOverflowCount = Math.max(campaignStats.active - activeVisualCount, 0);
-  const activeDotColors = ['bg-[#745CB4]', 'bg-[#5D459D]', 'bg-[#C1B6FD]'];
+  const openNotifications = () => {
+    closeRoleDropdown();
+    setShowNotificationsPanel((v) => !v);
+  };
+
+  const openRoleDropdown = () => {
+    closeNotifications();
+    setShowRoleDropdown((v) => !v);
+  };
+
+  const notificationOverlay =
+    typeof document !== 'undefined' &&
+    createPortal(
+      <AnimatePresence>
+        {showNotificationsPanel && (
+          <Motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 flex items-center justify-center p-4 sm:p-6"
+            style={{ zIndex: OVERLAY_Z }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Notifications"
+          >
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={closeNotifications}
+              aria-label="Close notifications"
+            />
+            <Motion.div
+              initial={{ opacity: 0, y: 12, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.96 }}
+              transition={{ duration: 0.2 }}
+              className="relative z-10 flex w-full max-w-sm flex-col overflow-hidden rounded-xl border border-white/20 bg-linear-to-br from-[#1a0933]/98 to-[#2d1b4e]/98 shadow-2xl backdrop-blur-md max-h-[min(85vh,32rem)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-white/10 p-4 shrink-0">
+                <h3 className="text-white font-bold text-sm">Notifications</h3>
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleMarkAllAsRead}
+                    className="text-xs text-[#C1B6FD] hover:text-white transition"
+                  >
+                    Mark all as read
+                  </button>
+                )}
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                {notifications?.length === 0 ? (
+                  <div className="p-6 text-center text-gray-400 text-sm">No notifications</div>
+                ) : (
+                  notifications.map((notif) => (
+                    <div
+                      key={notif._id || notif.id}
+                      className={`p-4 border-b border-white/5 hover:bg-white/5 transition ${
+                        !notif.isRead ? 'bg-white/10' : ''
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-white font-medium break-words">
+                            {notif.title || notif.message}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1 break-words">
+                            {notif.description || notif.message}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-2">
+                            {new Date(notif.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="flex gap-2 shrink-0">
+                          {!notif.isRead && (
+                            <button
+                              type="button"
+                              onClick={() => handleMarkAsRead(notif._id || notif.id)}
+                              title="Mark as read"
+                              className="p-1 rounded hover:bg-white/10 text-[#C1B6FD]"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteNotification(notif._id || notif.id)}
+                            title="Delete"
+                            className="p-1 rounded hover:bg-red-500/20 text-red-400"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Motion.div>
+          </Motion.div>
+        )}
+      </AnimatePresence>,
+      document.body
+    );
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-        <div className="flex items-center gap-4 sm:gap-8 w-full sm:w-auto">
-          <Motion.h1 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-2xl sm:text-3xl font-bold"
-          >
-            <span className="text-[#C1B6FD]">Campaign</span>
-            <span className="text-white">Craft</span>
-          </Motion.h1>
-          
-          {/* Enhanced Search Bar */}
-          <Motion.div 
-            ref={searchRef}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="relative flex-1 sm:flex-initial"
-          >
-            <form onSubmit={handleSearchSubmit}>
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4 sm:w-5 sm:h-5 pointer-events-none z-10" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                onFocus={() => searchQuery && setShowSearchResults(true)}
-                placeholder="Search campaigns, influencers..."
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-full pl-9 sm:pl-10 pr-10 py-2 w-full sm:w-80 text-sm focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-[#C1B6FD] text-white placeholder:text-gray-500 transition-all duration-200"
-              />
-              {searchQuery && (
-                <Motion.button
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                  type="button"
-                  onClick={handleSearchClear}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white transition-colors duration-200 z-10"
-                >
-                  <X className="w-4 h-4" />
-                </Motion.button>
-              )}
-            </form>
+      {notificationOverlay}
 
-            {/* Search Results Dropdown */}
-            <AnimatePresence>
-              {showSearchResults && filteredSuggestions.length > 0 && (
-                <Motion.div
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute top-full mt-2 w-full sm:w-80 bg-[#10121f] border border-white/10 rounded-lg shadow-xl max-h-56 overflow-y-auto z-50"
-                >
-                  <div className="p-2">
-                    <div className="px-3 py-2 text-xs text-gray-400 font-medium uppercase tracking-wide border-b border-white/10 mb-1">
-                      Search Results
-                    </div>
-                    {filteredSuggestions.map((suggestion, index) => (
-                      <Motion.button
-                        key={index}
-                        whileHover={{ x: 4 }}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-white/10 transition-colors duration-150 flex items-center justify-between group"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-2 h-2 rounded-full ${
-                            suggestion.type === 'campaign' ? 'bg-[#C1B6FD]' : 'bg-green-400'
-                          }`}></div>
-                          <div>
-                            <div className="font-medium text-white text-sm">{suggestion.name}</div>
-                            <div className="text-xs text-gray-500 mt-0.5">
-                              {suggestion.type === 'campaign' 
-                                ? `Campaign • ${suggestion.status}`
-                                : `Influencer • ${suggestion.followers} followers`
-                              }
-                            </div>
-                          </div>
-                        </div>
-                        <Search className="w-4 h-4 text-gray-600 group-hover:text-[#C1B6FD] transition-colors duration-200" />
-                      </Motion.button>
-                    ))}
-                  </div>
-                </Motion.div>
-              )}
-              {showSearchResults && searchQuery && filteredSuggestions.length === 0 && (
-                <Motion.div
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute top-full mt-2 w-full sm:w-80 bg-[#10121f] border border-white/10 rounded-lg shadow-xl max-h-56 overflow-y-auto z-50"
-                >
-                  <div className="p-6 text-center">
-                    <Search className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-                    <p className="text-gray-400 text-sm">No results found</p>
-                  </div>
-                </Motion.div>
-              )}
-            </AnimatePresence>
-          </Motion.div>
-        </div>
-        
-        <div className="flex items-center gap-2 sm:gap-4 flex-wrap w-full sm:w-auto">
-
-          {/* Notifications */}
+      <div className={`relative flex items-center gap-2 sm:gap-3 flex-nowrap min-h-[44px] mb-6 sm:mb-8 ${showRoleDropdown ? 'z-[110]' : 'z-0'}`}>
+        {!isMobileMenuOpen ? (
           <Motion.button
-            onClick={() => setShowNotificationsPanel(!showNotificationsPanel)}
+            type="button"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            onClick={onOpenMenu}
+            className="md:hidden shrink-0 p-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/10 text-white hover:bg-white/20 transition-all"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </Motion.button>
+        ) : (
+          <div className="md:hidden shrink-0 w-9 h-9" aria-hidden="true" />
+        )}
+
+        <Motion.h1
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-xl sm:text-2xl lg:text-3xl font-bold truncate min-w-0 shrink"
+        >
+          <span className="text-[#C1B6FD]">Campaign</span>
+          <span className="text-white">Craft</span>
+        </Motion.h1>
+
+        <div className="flex items-center gap-1 sm:gap-2 ml-auto shrink-0 flex-nowrap">
+          <Motion.button
+            type="button"
+            onClick={openNotifications}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.25 }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            className="relative p-2 hover:bg-white/5 rounded-lg transition-all duration-200"
+            className="relative p-2 hover:bg-white/5 rounded-lg transition-all duration-200 shrink-0"
+            aria-expanded={showNotificationsPanel}
           >
             <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-white" />
             {unreadCount > 0 && (
@@ -288,81 +270,15 @@ function Header() {
             )}
           </Motion.button>
 
-          {/* Notifications Panel */}
-          <AnimatePresence>
-            {showNotificationsPanel && (
-              <Motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-16 right-0 w-[calc(100vw-2rem)] sm:w-80 md:w-96 max-w-sm bg-linear-to-br from-[#1a0933] to-[#2d1b4e] border border-white/20 rounded-xl shadow-2xl z-50"
-              >
-                <div className="p-4 border-b border-white/10 flex items-center justify-between">
-                  <h3 className="text-white font-bold">Notifications</h3>
-                  <div className="flex gap-2">
-                    {unreadCount > 0 && (
-                      <button
-                        onClick={handleMarkAllAsRead}
-                        className="text-xs text-[#C1B6FD] hover:text-white transition"
-                      >
-                        Mark all as read
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div className="max-h-96 overflow-y-auto">
-                  {notifications?.length === 0 ? (
-                    <div className="p-4 text-center text-gray-400 text-sm">No notifications</div>
-                  ) : (
-                    notifications.map((notif) => (
-                      <div
-                        key={notif._id || notif.id}
-                        className={`p-4 border-b border-white/5 hover:bg-white/5 transition ${
-                          !notif.isRead ? 'bg-white/10' : ''
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1">
-                            <p className="text-sm text-white font-medium">{notif.title || notif.message}</p>
-                            <p className="text-xs text-gray-400 mt-1">{notif.description || notif.message}</p>
-                            <p className="text-xs text-gray-500 mt-2">{new Date(notif.createdAt).toLocaleString()}</p>
-                          </div>
-                          <div className="flex gap-2">
-                            {!notif.isRead && (
-                              <button
-                                onClick={() => handleMarkAsRead(notif._id || notif.id)}
-                                title="Mark as read"
-                                className="p-1 rounded hover:bg-white/10 text-[#C1B6FD]"
-                              >
-                                <Check className="w-4 h-4" />
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleDeleteNotification(notif._id || notif.id)}
-                              title="Delete"
-                              className="p-1 rounded hover:bg-red-500/20 text-red-400"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </Motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Messages/Chat */}
-          <Motion.button 
+          <Motion.button
+            type="button"
             onClick={() => navigate('/dashboard/owner/collaborations/overview?tab=chats')}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            className="relative p-2 hover:bg-white/5 rounded-lg transition-all duration-200"
+            className="relative p-2 hover:bg-white/5 rounded-lg transition-all duration-200 shrink-0"
           >
             <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hover:text-white" />
             {totalUnreadCount > 0 && (
@@ -372,49 +288,57 @@ function Header() {
             )}
           </Motion.button>
 
-          <div className="hidden sm:block w-px h-8 bg-white/10"></div>
+          <div className="hidden sm:block w-px h-8 bg-white/10 shrink-0" />
 
-          {/* Role Switcher */}
-          <Motion.div 
+          <Motion.div
+            ref={roleRef}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.35 }}
-            className="relative w-full sm:w-auto"
+            className={`relative shrink-0 ${showRoleDropdown ? 'z-[110]' : ''}`}
           >
             <Motion.button
-              onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+              type="button"
+              onClick={openRoleDropdown}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex items-center justify-center sm:justify-start gap-2 px-3 sm:px-4 py-2 bg-white/5 backdrop-blur-sm border border-[#745CB4]/30 rounded-full hover:bg-white/10 transition-all duration-200 w-full sm:w-auto"
+              className="flex items-center gap-2 px-3 py-2 bg-white/5 backdrop-blur-sm border border-[#745CB4]/30 rounded-full hover:bg-white/10 transition-all duration-200"
+              aria-expanded={showRoleDropdown}
             >
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-xs sm:text-sm font-medium">Active: <span className="text-[#C1B6FD]">Owner</span></span>
-              </div>
-              <ChevronDown className={`w-3 h-3 sm:w-4 sm:h-4 text-gray-400 transition-transform duration-200 ${showRoleDropdown ? 'rotate-180' : ''}`} />
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shrink-0" />
+              <span className="text-xs sm:text-sm font-medium whitespace-nowrap">
+                Active: <span className="text-[#C1B6FD]">Owner</span>
+              </span>
+              <ChevronDown
+                className={`w-3 h-3 sm:w-4 sm:h-4 text-gray-400 transition-transform duration-200 shrink-0 ${
+                  showRoleDropdown ? 'rotate-180' : ''
+                }`}
+              />
             </Motion.button>
 
             <AnimatePresence>
               {showRoleDropdown && (
-                <Motion.div 
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                <Motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-56 max-w-xs bg-[#10121f] border border-white/10 rounded-lg shadow-xl max-h-56 overflow-y-auto z-50"
+                  className="absolute right-0 top-full mt-2 w-56 bg-[#10121f] border border-white/10 rounded-lg shadow-xl z-[110] overflow-hidden"
                 >
                   <div className="p-2">
                     <Motion.button
+                      type="button"
                       whileHover={{ x: 4 }}
-                      className="w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg"
+                      className="w-full text-left px-4 py-2.5 text-sm bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-lg"
                     >
                       <div className="font-medium">Owner</div>
                       <div className="text-xs text-gray-300 mt-1">Manage campaigns & team</div>
                     </Motion.button>
                     <Motion.button
+                      type="button"
                       whileHover={{ x: 4 }}
                       onClick={() => handleSwitchRole('INFLUENCER')}
-                      className="w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 mt-1 text-gray-200 hover:bg-white/10 rounded-lg"
+                      className="w-full text-left px-4 py-2.5 text-sm mt-1 text-gray-200 hover:bg-white/10 rounded-lg"
                     >
                       <div className="font-medium">Switch to Influencer</div>
                       <div className="text-xs text-gray-500 mt-1">View offers & collaborations</div>
@@ -426,6 +350,7 @@ function Header() {
           </Motion.div>
         </div>
       </div>
+
       <AnimatePresence>
         {showInfluencerModal && (
           <CreateInfluencerProfile

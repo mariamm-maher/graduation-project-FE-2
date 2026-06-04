@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { Header, Sidebar, MainContent } from '../features/dashboard/influncerDashboard/components';
 import CampaignsLayout from '../features/dashboard/influncerDashboard/components/campaigns/CampaignsLayout';
 import CollaborationsLayout from '../features/dashboard/influncerDashboard/components/collaborations/CollaborationsLayout';
@@ -8,28 +9,40 @@ import InfluencerMessages from '../features/dashboard/influncerDashboard/compone
 import { SettingsPanel } from '../features/settings';
 
 function InfluencerDashboard() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
-    <div className="bg-linear-to-br from-[#000000] via-[#1a0933] to-[#372557] min-h-screen text-white p-3 sm:p-4 md:p-6 overflow-x-hidden">
-      <Header />
-      <Sidebar />
-      <div className="ml-0 md:ml-20 lg:ml-32 transition-all duration-300 max-w-full">
-        <Routes>
-          <Route path="/" element={<MainContent />} />
-          <Route path="campaigns/*" element={<CampaignsLayout />} />
-          <Route path="collaborations/*" element={<CollaborationsLayout />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="complete-profile" element={<CompleteProfileWizard />} />
-          <Route path="social-media/*" element={<div>Social Media Content</div>} />
-          <Route path="analytics/*" element={<div>Performance Analytics</div>} />
-          <Route path="messages" element={<InfluencerMessages />} />
-          <Route path="settings" element={
-            <div className="p-6">
-              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Settings</h1>
-              <p className="text-sm sm:text-base text-gray-400 mb-6">Manage your account settings, privacy, and preferences</p>
-              <SettingsPanel />
-            </div>
-          } />
-        </Routes>
+    <div className="bg-linear-to-br from-[#000000] via-[#1a0933] to-[#372557] min-h-screen text-white overflow-x-hidden">
+      <Sidebar
+        isMobileOpen={isMobileMenuOpen}
+        onMobileClose={() => setIsMobileMenuOpen(false)}
+      />
+
+      <div className="relative z-0 p-3 sm:p-4 md:p-6 md:ml-20 lg:ml-32 transition-all duration-300">
+        <Header
+          isMobileMenuOpen={isMobileMenuOpen}
+          onOpenMenu={() => setIsMobileMenuOpen(true)}
+        />
+
+        <div className="max-w-full">
+          <Routes>
+            <Route path="/" element={<MainContent />} />
+            <Route path="campaigns/*" element={<CampaignsLayout />} />
+            <Route path="collaborations/*" element={<CollaborationsLayout />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="complete-profile" element={<CompleteProfileWizard />} />
+            <Route path="social-media/*" element={<div>Social Media Content</div>} />
+            <Route path="analytics/*" element={<div>Performance Analytics</div>} />
+            <Route path="messages" element={<InfluencerMessages />} />
+            <Route path="settings" element={
+              <div className="p-6">
+                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Settings</h1>
+                <p className="text-sm sm:text-base text-gray-400 mb-6">Manage your account settings, privacy, and preferences</p>
+                <SettingsPanel />
+              </div>
+            } />
+          </Routes>
+        </div>
       </div>
     </div>
   );

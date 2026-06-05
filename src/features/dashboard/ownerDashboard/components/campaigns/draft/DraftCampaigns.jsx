@@ -22,17 +22,29 @@ function DraftCampaigns() {
     fetchCampaigns({ page, limit: LIMIT, lifecycleStage: 'draft' });
   }, [page, fetchCampaigns]);
 
-  // Client-side search filter only
-  const draftCampaigns = campaigns.filter(campaign =>
-    searchQuery === '' ||
-    campaign.campaignName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Normalize lifecycle stage (ai_generated -> draft)
+  const normalizeLifecycleStage = (value) => {
+    const stage = String(value || '').toLowerCase();
+    return stage === 'ai_generated' ? 'draft' : stage;
+  };
+
+  // Client-side filter for search and lifecycle stage
+  const draftCampaigns = campaigns.filter(campaign => {
+    const lifecycleStage = normalizeLifecycleStage(campaign.lifecycleStage || campaign.status);
+    const matchesLifecycle = lifecycleStage === 'draft';
+    const matchesSearch = searchQuery === '' ||
+      campaign.campaignName?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesLifecycle && matchesSearch;
+  });
 
   const handleDelete = async (draft) => {
     if (!window.confirm(`Delete "${draft.campaignName || 'Untitled Campaign'}"?`)) return;
     const result = await deleteCampaign(draft.id);
     if (result.success) {
-      fetchCampaigns({ page, limit: LIMIT, lifecycleStage: 'draft' });
+      // If current page becomes empty after delete, go back to page 1
+      const newPage = draftCampaigns.length === 1 && page > 1 ? page - 1 : page;
+      setPage(newPage);
+      fetchCampaigns({ page: newPage, limit: LIMIT, lifecycleStage: 'draft' });
     }
   };
 
@@ -79,38 +91,20 @@ function DraftCampaigns() {
             Draft Campaigns
           </h1>
           <p className="text-gray-400 text-sm sm:text-base mt-1">
-            Unfinished campaigns — not yet operational ({totalItems})
+            Unfinished campaigns — not yet operational
           </p>
         </div>
-        <button 
-          onClick={() => navigate('/dashboard/owner/campaigns/create')}
-          className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all"
-        >
-          + New Campaign
-        </button>
+       
       </div>
 
       {/* Stats Overview - Simplified */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 backdrop-blur-md border border-amber-500/20 rounded-xl p-4">
           <p className="text-gray-400 text-sm mb-1">Total Drafts</p>
-          <p className="text-2xl font-bold text-amber-400">{totalItems}</p>
+          <p className="text-2xl font-bold text-amber-400">{draftCampaigns.length}</p>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search drafts..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all"
-          />
-        </div>
-      </div>
 
       {/* Drafts List - Lightweight */}
       {isLoading && (

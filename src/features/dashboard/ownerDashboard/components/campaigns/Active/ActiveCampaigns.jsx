@@ -69,10 +69,6 @@ function ActiveCampaigns() {
             className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C1B6FD] focus:border-transparent transition-all"
           />
         </div>
-        <button className="px-5 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all flex items-center justify-center gap-2">
-          <Filter className="w-5 h-5 text-gray-400" />
-          <span className="text-sm font-medium text-gray-400 hidden sm:inline">Filters</span>
-        </button>
       </div>
 
       {/* Campaigns List – Card-based execution view */}
@@ -115,11 +111,7 @@ function ActiveCampaigns() {
             </div>
             <h3 className="text-xl font-bold text-white mb-2">No Active Campaigns</h3>
             <p className="text-gray-400 mb-6">You don't have any running campaigns at the moment</p>
-            <button 
-              onClick={() => navigate('/dashboard/owner/campaigns/create')}
-              className="px-6 py-3 bg-linear-to-r from-[#745CB4] to-[#C1B6FD] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all">
-              Create Your First Campaign
-            </button>
+            
           </div>
         )}
 

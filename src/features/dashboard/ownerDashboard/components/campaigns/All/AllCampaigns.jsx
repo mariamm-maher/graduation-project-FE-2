@@ -68,13 +68,17 @@ function AllCampaigns() {
     setPage(1);
   };
 
+  const normalizeLifecycleStage = (value) => {
+    const stage = String(value || '').toLowerCase();
+    return stage === 'ai_generated' ? 'draft' : stage;
+  };
+
   const getStatusBadge = (lifecycleStage) => {
     // Standardize to lowercase to protect against backend payload mismatches
-    const stageKey = String(lifecycleStage || '').toLowerCase();
+    const stageKey = normalizeLifecycleStage(lifecycleStage);
 
     const statusStyles = {
       saved: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
-      ai_generated: 'bg-purple-500/20 text-purple-300 border border-purple-500/30',
       draft: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
       active: 'bg-green-500/20 text-green-400 border border-green-500/30',
       in_progress: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
@@ -95,14 +99,14 @@ function AllCampaigns() {
 
   const formatLabel = (value) => {
     if (!value) return 'Draft';
-    return String(value)
+    return normalizeLifecycleStage(value)
       .replace(/_/g, ' ')
       .replace(/\b\w/g, (letter) => letter.toUpperCase());
   };
 
   const handleOpenCampaign = (campaign) => {
     const campaignId = campaign.id || campaign.campaign_id || campaign.draft_id;
-    const campaignStatus = String(campaign.lifecycleStage || campaign.status || '').toLowerCase();
+    const campaignStatus = normalizeLifecycleStage(campaign.lifecycleStage || campaign.status);
 
     if (!campaignId) return;
 
@@ -116,8 +120,8 @@ function AllCampaigns() {
 
   // Client-side filter for search, goal, and status as a safety net
   const filteredCampaigns = campaigns.filter(campaign => {
-    const campaignStatus = String(campaign.lifecycleStage || campaign.status || '').toLowerCase();
-    const selectedStatus = String(filterStatus || 'all').toLowerCase();
+    const campaignStatus = normalizeLifecycleStage(campaign.lifecycleStage || campaign.status);
+    const selectedStatus = normalizeLifecycleStage(filterStatus || 'all');
     const matchesSearch = !searchQuery || 
       (campaign.campaignName || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = selectedStatus === 'all' || campaignStatus === selectedStatus;
@@ -164,11 +168,11 @@ function AllCampaigns() {
         </div>
         <div className="bg-[#1e1632]/60 backdrop-blur-md border border-white/5 rounded-lg py-2.5 px-4 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-purple-400"></span>
-            <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">AI Generated</p>
+            <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+            <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Draft</p>
           </div>
-          <p className="text-lg font-bold text-purple-400">
-            {campaigns.filter(c => String(c.lifecycleStage).toLowerCase() === 'ai_generated').length}
+          <p className="text-lg font-bold text-gray-400">
+            {campaigns.filter(c => normalizeLifecycleStage(c.lifecycleStage || c.status) === 'draft').length}
           </p>
         </div>
         <div className="bg-[#1e1632]/60 backdrop-blur-md border border-white/5 rounded-lg py-2.5 px-4 flex items-center justify-between shadow-sm">
@@ -203,7 +207,6 @@ function AllCampaigns() {
           >
             <option value="all">All Status</option>
             <option value="saved">Saved</option>
-            <option value="ai_generated">AI Generated</option>
             <option value="draft">Draft</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>

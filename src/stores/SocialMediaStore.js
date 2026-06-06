@@ -196,10 +196,13 @@ const useSocialMediaStore = create((set, get) => ({
     set({ postsLoading: true });
     try {
       const data = await socialMediaService.getPosts();
+      console.log('[STORE] getPosts received data:', data);
       const posts = data?.data?.posts || data?.posts || [];
+      console.log('[STORE] extracted posts:', posts);
       set({ posts, postsLoading: false });
       return { success: true };
     } catch (error) {
+      console.error('[STORE] getPosts error:', error);
       set({ postsLoading: false });
       return { success: false, error };
     }

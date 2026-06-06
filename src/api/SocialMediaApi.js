@@ -146,6 +146,7 @@ const socialMediaService = {
   getPosts: async () => {
     try {
       const response = await api.get('/posts');
+      console.log('[API] getPosts raw response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Get posts error:', error);

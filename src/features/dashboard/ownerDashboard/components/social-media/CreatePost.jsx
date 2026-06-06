@@ -14,7 +14,8 @@ function CreatePost() {
     getPosts,
     createPost,
     deletePost,
-    getPostAnalytics
+    getPostAnalytics,
+    error
   } = useSocialMediaStore();
 
   const [content, setContent] = useState('');
@@ -23,11 +24,13 @@ function CreatePost() {
   const [scheduleType, setScheduleType] = useState('now');
   const [scheduledAt, setScheduledAt] = useState('');
   const [analyticsLoadingByPost, setAnalyticsLoadingByPost] = useState({});
+  const [postsError, setPostsError] = useState(null);
 
   useEffect(() => {
     getAccounts();
-    getPosts();
-  }, [getAccounts, getPosts]);
+    // Don't call getPosts on mount to avoid backend 500 error
+    // User can manually refresh posts
+  }, [getAccounts]);
 
   const channelOptions = useMemo(
     () =>
@@ -112,6 +115,14 @@ function CreatePost() {
       toast.success('Post analytics loaded');
     } else {
       toast.error(result?.error || 'Failed to load analytics');
+    }
+  };
+
+  const handleRefreshPosts = async () => {
+    setPostsError(null);
+    const result = await getPosts();
+    if (!result?.success) {
+      setPostsError(result?.error || 'Failed to load posts. Backend may have an issue.');
     }
   };
 
@@ -216,14 +227,21 @@ function CreatePost() {
           <h2 className="text-xl font-bold text-white">Your Posts</h2>
           <button
             type="button"
-            onClick={getPosts}
-            className="text-sm text-[#C1B6FD] hover:text-white transition-colors"
+            onClick={handleRefreshPosts}
+            disabled={postsLoading}
+            className="text-sm text-[#C1B6FD] hover:text-white transition-colors disabled:opacity-50"
           >
             Refresh
           </button>
         </div>
 
-        {postsLoading ? (
+        {postsError ? (
+          <div className="bg-red-500/10 border border-red-500/30 text-red-300 rounded-lg p-4 text-sm">
+            <p className="font-medium mb-1">Unable to load posts</p>
+            <p className="text-red-400 text-xs">{postsError}</p>
+            <p className="text-red-400/60 text-xs mt-2">Backend error: "Channel is not defined" - please check the backend server logs.</p>
+          </div>
+        ) : postsLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader className="w-6 h-6 text-[#C1B6FD] animate-spin" />
           </div>

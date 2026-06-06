@@ -14,7 +14,6 @@ import {
   resolveAiCalendarFromState,
   buildAiPreviewFromResponse,
 } from '../../../../../../utils/normalizeAiCampaignView';
-import { VersionSelector, NavigationGuardDialog } from '../draft/components';
 import { useCampaignNavigationGuard } from '../draft/hooks';
 import GeneratedCampaignHeader from './GeneratedCampaignHeader';
 import GeneratedCampaignStrategy from './GeneratedCampaignStrategy';
@@ -387,24 +386,6 @@ function GeneratedCampaign() {
       transition={{ duration: 0.4 }}
       className="w-full space-y-6"
     >
-      {/* Navigation Guard Dialog */}
-      <NavigationGuardDialog
-        isOpen={showDialog}
-        isSaving={isSavingGuard}
-        onSaveAsDraft={handleSaveDraftAndProceed}
-        onLeaveWithoutSaving={handleLeaveWithoutSaving}
-        onStay={handleStay}
-      />
-
-      {/* Version Selector - shown when multiple versions exist */}
-      {draftVersions.length > 1 && (
-        <VersionSelector
-          versions={draftVersions}
-          currentVersionIndex={draftCurrentIndex}
-          onVersionChange={handleVersionChange}
-        />
-      )}
-
       <GeneratedCampaignHeader
         generatedAt={generatedAt}
         formatDate={formatDate}

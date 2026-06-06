@@ -1,0 +1,530 @@
+React (Vite) Project Audit Report
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ FRONTEND (React/Vite) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Full Folder/File Structure (src/ Directory Tree)
+src/
+├── App.css (0 bytes)
+├── App.jsx (3,942 bytes)
+├── index.css (3,496 bytes)
+├── main.jsx (450 bytes)
+├── api/ (16 files)
+│   ├── CollaborationContractsApi.js
+│   ├── CollaborationRequestsApi.js
+│   ├── CollaborationTasksApi.js
+│   ├── SocialMediaApi.js
+│   ├── adminApi.js
+│   ├── aiCampaignApi.js
+│   ├── authApi.js
+│   ├── campaign.js
+│   ├── chatApi.js
+│   ├── collaborationApi.js
+│   ├── influncerApi.js
+│   ├── notificationsApi.js
+│   ├── ownerApi.js
+│   ├── profileApi.js
+│   ├── settingsApi.js
+│   └── uploadApi.js
+├── assets/ (2 items)
+├── components/ (3 items)
+│   ├── BrandVoiceFields.jsx
+│   ├── channels/ (empty)
+│   └── ui/
+│       ├── ScrollProgress.jsx
+│       └── ScrollToTop.jsx
+├── config/ (2 files)
+│   ├── axios.js
+│   └── toast.css
+├── constants/ (1 item)
+├── features/ (201 items)
+│   ├── auth/ (5 files)
+│   │   ├── AuthForm.jsx
+│   │   ├── Login.jsx
+│   │   ├── Register.jsx
+│   │   ├── ResetPassword.jsx
+│   │   └── RoleSelection.jsx
+│   ├── chat/ (8 files)
+│   │   ├── ChatContainer.jsx
+│   │   ├── ChatPage.jsx
+│   │   ├── ChatSidebar.jsx
+│   │   ├── ChatWindow.jsx
+│   │   ├── MessageBubble.jsx
+│   │   ├── MessageInput.jsx
+│   │   ├── README.md
+│   │   └── index.js
+│   ├── dashboard/ (178 items)
+│   │   ├── adminDashboard/ (30 items)
+│   │   │   └── components/
+│   │   │       ├── accounts/ (3 items)
+│   │   │       ├── adminData.js
+│   │   │       ├── announcements/ (2 items)
+│   │   │       ├── campaigns/ (3 items)
+│   │   │       ├── collaborations/ (9 items)
+│   │   │       ├── logs/ (2 items)
+│   │   │       ├── overview/ (2 items)
+│   │   │       ├── sessions/ (2 items)
+│   │   │       ├── settings/ (1 item)
+│   │   │       ├── Breadcrumb.jsx
+│   │   │       ├── Header.jsx
+│   │   │       ├── MainContent.jsx
+│   │   │       ├── Sidebar.jsx
+│   │   │       └── index.js
+│   │   ├── influncerDashboard/ (44 items)
+│   │   │   └── components/
+│   │   │       ├── campaigns/ (5 items)
+│   │   │       ├── collaborations/ (10 items)
+│   │   │       ├── createOwnerProfile.jsx
+│   │   │       ├── index.js
+│   │   │       ├── messages/ (8 items)
+│   │   │       ├── overview/ (6 items)
+│   │   │       ├── profile/ (8 items)
+│   │   │       ├── Breadcrumb.jsx
+│   │   │       ├── Header.jsx
+│   │   │       ├── MainContent.jsx
+│   │   │       └── Sidebar.jsx
+│   │   ├── ownerDashboard/ (103 items)
+│   │   │   └── components/
+│   │   │       ├── campaigns/ (24 items)
+│   │   │       │   ├── Active/ (ActiveCampaigns.jsx)
+│   │   │       │   ├── All/ (AllCampaigns.jsx)
+│   │   │       │   ├── Single/ (SingleCampaign.jsx)
+│   │   │       │   ├── analytics/ (CampaignAnalytics.jsx)
+│   │   │       │   ├── completed/ (CompletedCampaigns.jsx)
+│   │   │       │   ├── create/ (9 items)
+│   │   │       │   │   ├── ContentCalendarMonthView.jsx
+│   │   │       │   │   ├── CreateCampaign.jsx
+│   │   │       │   │   ├── GeneratedCampaign.jsx
+│   │   │       │   │   ├── GeneratedCampaignHeader.jsx
+│   │   │       │   │   ├── GeneratedCampaignInputPanel.jsx
+│   │   │       │   │   ├── GeneratedCampaignSidebar.jsx
+│   │   │       │   │   ├── GeneratedCampaignStrategy.jsx
+│   │   │       │   │   ├── PrepareCampaign.jsx
+│   │   │       │   │   └── buildCampaignPayload.js
+│   │   │       │   ├── draft/ (8 items)
+│   │   │       │   │   ├── DraftCampaigns.jsx
+│   │   │       │   │   ├── EditDraftCampaign.jsx
+│   │   │       │   │   ├── components/ (4 items)
+│   │   │       │   │   │   ├── NavigationGuardDialog.jsx
+│   │   │       │   │   │   ├── ResumeDraftBanner.jsx
+│   │   │       │   │   │   ├── VersionSelector.jsx
+│   │   │       │   │   │   └── index.js
+│   │   │       │   │   └── hooks/ (2 items)
+│   │   │       │   │       ├── index.js
+│   │   │       │   │       └── useCampaignNavigationGuard.js
+│   │   │       │   ├── CampaignsLayout.jsx
+│   │   │       │   └── CampaignsOverview.jsx
+│   │   │       ├── collaborations/ (42 items)
+│   │   │       │   ├── AllCollaborations/ (1 item)
+│   │   │       │   ├── Analytics/ (1 item)
+│   │   │       │   ├── CollaborationBoard/ (10 items)
+│   │   │       │   ├── Contracts/ (3 items)
+│   │   │       │   ├── PastCollaborations/ (1 item)
+│   │   │       │   ├── Requests/ (1 item)
+│   │   │       │   ├── singleCollab/ (22 items)
+│   │   │       │   ├── CollaborationsLayout.jsx
+│   │   │       │   ├── CollaborationsOverview.jsx
+│   │   │       │   └── index.js
+│   │   │       ├── influencers/ (16 items)
+│   │   │       │   ├── DiscoverCollborators/ (6 items)
+│   │   │       │   ├── InfluencersLayout.jsx
+│   │   │       │   ├── InfluencersOverview.jsx
+│   │   │       │   ├── activeCollborators/ (3 items)
+│   │   │       │   └── pastCollborators/ (5 items)
+│   │   │       ├── overview/ (5 items)
+│   │   │       │   ├── ActiveCampaignCards.jsx
+│   │   │       │   ├── InfluencerActivity.jsx
+│   │   │       │   ├── PendingCampaigns.jsx
+│   │   │       │   ├── StatisticsChart.jsx
+│   │   │       │   └── index.js
+│   │   │       ├── profile/ (3 items)
+│   │   │       │   ├── CompleteOwnerProfile.jsx
+│   │   │       │   ├── EditOwnerProfile.jsx
+│   │   │       │   └── OwnerProfile.jsx
+│   │   │       ├── social-media/ (7 items)
+│   │   │       ├── Breadcrumb.jsx
+│   │   │       ├── Header.jsx
+│   │   │       ├── MainContent.jsx
+│   │   │       ├── Sidebar.jsx
+│   │   │       ├── createInfluncerProfile.jsx
+│   │   │       └── index.js
+│   │   └── shared/ (1 item)
+│   ├── landing/ (8 items)
+│   │   └── components/
+│   │       ├── AnalyticsDashboard.jsx
+│   │       ├── CampaignPlanner.jsx
+│   │       ├── CollaborationBoard.jsx
+│   │       ├── CommunicationSystem.jsx
+│   │       ├── Features.jsx
+│   │       ├── Footer.jsx
+│   │       ├── Hero.jsx
+│   │       └── Navbar.jsx
+│   └── settings/ (2 items)
+│       ├── SettingsPanel.jsx
+│       └── index.js
+├── hook/ (1 item)
+├── lib/ (empty)
+├── pages/ (15 files)
+│   ├── AdminDashboard.jsx
+│   ├── CompanyPage.jsx
+│   ├── GoogleCallback.jsx
+│   ├── InfluencerDashboard.jsx
+│   ├── Landing.jsx
+│   ├── LegalPage.jsx
+│   ├── NotFound.jsx
+│   ├── OwnerDashboard.jsx
+│   ├── ResourcesPage.jsx
+│   ├── RoleSelectionPage.jsx
+│   ├── Settings.jsx
+│   ├── influncerOnboarding.jsx
+│   ├── ownerOnboarding.jsx
+│   ├── protectRoute.jsx
+│   └── welcome.jsx
+├── services/ (1 item)
+├── stores/ (17 files)
+│   ├── AdminStore.js
+│   ├── ChatStore.js
+│   ├── CollaborationContractsStore.js
+│   ├── CollaborationRequestsStore.js
+│   ├── CollaborationTasksStore.js
+│   ├── NotificationsStore.js
+│   ├── SettingsStore.js
+│   ├── SocialMediaStore.js
+│   ├── UploadStore.js
+│   ├── authStore.js
+│   ├── campaignDraftStore.js
+│   ├── campaignStore.js
+│   ├── collaborationStore.js
+│   ├── influncerStore.js
+│   ├── ownerStore.js
+│   ├── profileStore.js
+│   └── savedCampaignsStore.js
+└── utils/ (7 files)
+    ├── buildSaveCampaignPayload.js
+    ├── chatSocket.js
+    ├── normalizeAiCampaignView.js
+    ├── normalizeAiEstimations.js
+    ├── normalizeOwnerProfile.js
+    ├── notificationSocket.js
+    └── platformUtils.js
+2. All Existing Pages and Their Route Paths
+Main App Routes (App.jsx):
+
+/ → Landing page
+/login → AuthForm (login/signup)
+/signup → AuthForm (login/signup)
+/role-selection → RoleSelectionPage
+/onboarding/campaign-owner → OwnerOnboarding
+/onboarding/influencer → InfluencerOnboarding
+/auth/google/callback → GoogleCallback
+/reset-password → ResetPassword
+/404 → NotFound
+/company → CompanyPage
+/resources → ResourcesPage
+/legal → LegalPage
+/dashboard/owner/* → OwnerDashboard (protected, OWNER role)
+/dashboard/influencer/* → InfluencerDashboard (protected, INFLUENCER role)
+/dashboard/admin/* → AdminDashboard (protected, ADMIN role)
+Owner Dashboard Routes (OwnerDashboard.jsx):
+
+/dashboard/owner/ → MainContent (overview)
+/dashboard/owner/profile → OwnerProfile
+/dashboard/owner/profile/edit → EditOwnerProfile
+/dashboard/owner/profile/complete → CompleteOwnerProfile
+/dashboard/owner/campaigns/* → CampaignsLayout
+/dashboard/owner/influencers/* → InfluencersLayout
+/dashboard/owner/collaborations/* → CollaborationsLayout
+/dashboard/owner/social-media/* → SocialMediaLayout
+/dashboard/owner/settings → SettingsPanel
+Admin Dashboard Routes (AdminDashboard.jsx):
+
+/dashboard/admin/ → OverviewDashboard
+/dashboard/admin/users → AccountsOverview
+/dashboard/admin/users/:id → UserDetail
+/dashboard/admin/sessions → SessionsOverview
+/dashboard/admin/campaigns → CampaignsOverview
+/dashboard/admin/campaigns/:id → CampaignDetail
+/dashboard/admin/collaborations/* → CollaborationsLayout
+/dashboard/admin/logs → LogsOverview
+/dashboard/admin/announcements → AnnouncementsOverview
+/dashboard/admin/settings → AdminSettingsPage
+Influencer Dashboard Routes (InfluencerDashboard.jsx):
+
+/dashboard/influencer/ → MainContent
+/dashboard/influencer/campaigns/* → CampaignsLayout
+/dashboard/influencer/collaborations/* → CollaborationsLayout
+/dashboard/influencer/profile → Profile
+/dashboard/influencer/complete-profile → CompleteProfileWizard
+/dashboard/influencer/social-media/* → Social Media Content (placeholder)
+/dashboard/influencer/analytics/* → Performance Analytics (placeholder)
+/dashboard/influencer/messages → InfluencerMessages
+/dashboard/influencer/settings → SettingsPanel
+3. All Existing Components
+Owner Dashboard Components:
+
+Header.jsx - Dashboard header with notifications, user menu
+Sidebar.jsx - Navigation sidebar
+MainContent.jsx - Owner overview dashboard
+Breadcrumb.jsx - Breadcrumb navigation
+CampaignsLayout.jsx - Campaigns routing layout
+CampaignsOverview.jsx - Campaigns overview cards and stats
+AllCampaigns.jsx - All campaigns list with filters
+ActiveCampaigns.jsx - Active campaigns list
+CompletedCampaigns.jsx - Completed campaigns list
+DraftCampaigns.jsx - Draft campaigns list
+EditDraftCampaign.jsx - Draft editing page
+SingleCampaign.jsx - Single campaign detail view
+CampaignAnalytics.jsx - Campaign analytics page
+CreateCampaign.jsx - Campaign creation form
+PrepareCampaign.jsx - Campaign preparation/review
+GeneratedCampaign.jsx - AI-generated campaign display
+GeneratedCampaignHeader.jsx - Generated campaign header
+GeneratedCampaignInputPanel.jsx - Input panel for generated campaign
+GeneratedCampaignSidebar.jsx - Sidebar for generated campaign
+GeneratedCampaignStrategy.jsx - Campaign strategy display
+ContentCalendarMonthView.jsx - Content calendar month view
+InfluencersLayout.jsx - Influencers routing layout
+InfluencersOverview.jsx - Influencers overview
+CollaborationsLayout.jsx - Collaborations routing layout
+CollaborationsOverview.jsx - Collaborations overview
+SocialMediaLayout.jsx - Social media routing layout
+OwnerProfile.jsx - Owner profile view
+EditOwnerProfile.jsx - Edit owner profile
+CompleteOwnerProfile.jsx - Complete owner profile
+createInfluncerProfile.jsx - Create influencer profile
+Overview Components:
+StatisticsChart.jsx - Statistics chart visualization
+ActiveCampaignCards.jsx - Active campaign cards
+PendingCampaigns.jsx - Pending campaigns widget
+InfluencerActivity.jsx - Influencer activity feed
+Draft Components:
+NavigationGuardDialog.jsx - Navigation guard dialog
+ResumeDraftBanner.jsx - Resume draft banner
+VersionSelector.jsx - Version selector
+useCampaignNavigationGuard.js - Navigation guard hook
+Admin Dashboard Components:
+
+Header.jsx - Admin dashboard header
+Sidebar.jsx - Admin navigation sidebar
+MainContent.jsx - Admin main content
+OverviewDashboard.jsx - Admin overview
+AccountsOverview.jsx - User accounts overview
+UserDetail.jsx - User detail view
+SessionsOverview.jsx - Sessions overview
+CampaignsOverview.jsx - Campaigns overview
+CampaignDetail.jsx - Campaign detail
+CollaborationsLayout.jsx - Collaborations layout
+LogsOverview.jsx - Logs overview
+AnnouncementsOverview.jsx - Announcements overview
+AdminSettingsPage.jsx - Admin settings
+adminData.js - Admin data utilities
+Influencer Dashboard Components:
+
+Header.jsx - Influencer dashboard header
+Sidebar.jsx - Influencer navigation sidebar
+MainContent.jsx - Influencer main content
+CampaignsLayout.jsx - Campaigns routing layout
+CollaborationsLayout.jsx - Collaborations routing layout
+Profile.jsx - Influencer profile
+CompleteProfileWizard.jsx - Complete profile wizard
+InfluencerMessages.jsx - Messages page
+createOwnerProfile.jsx - Create owner profile
+Overview Components:
+Statistics, activity, campaigns components
+Profile Components:
+Profile editing and completion components
+Messages Components:
+Chat and messaging components
+`Campaigns Components:**
+Campaign management components
+Collaborations Components:**
+Collaboration management components
+Auth Components:
+
+AuthForm.jsx - Login/signup form
+Login.jsx - Login page
+Register.jsx - Registration page
+ResetPassword.jsx - Password reset
+RoleSelection.jsx - Role selection page
+Chat Components:
+
+ChatContainer.jsx - Chat container
+ChatPage.jsx - Chat page
+ChatSidebar.jsx - Chat sidebar
+ChatWindow.jsx - Chat window
+MessageBubble.jsx - Message bubble
+MessageInput.jsx - Message input
+Landing Components:
+
+Hero.jsx - Landing hero section
+Features.jsx - Features section
+CampaignPlanner.jsx - Campaign planner section
+CollaborationBoard.jsx - Collaboration board section
+CommunicationSystem.jsx - Communication system section
+AnalyticsDashboard.jsx - Analytics dashboard section
+Navbar.jsx - Landing navbar
+Footer.jsx - Landing footer
+Settings Components:
+
+SettingsPanel.jsx - Settings panel
+UI Components:
+
+ScrollProgress.jsx - Scroll progress indicator
+ScrollToTop.jsx - Scroll to top button
+Other Components:
+
+BrandVoiceFields.jsx - Brand voice input fields
+4. Brand Owner Dashboard Page Details
+File: src/features/dashboard/ownerDashboard/components/MainContent.jsx
+
+Data Fetched:
+
+Uses useOwnerStore to fetch owner overview data
+Calls fetchOverview() on mount
+Fetches: ownerOverview, overviewLoading, overviewError
+UI Elements Rendered:
+
+Grid layout with 3 columns (lg:col-span-2 for left, 1 for right)
+Left Column:
+Error message display (if overviewError exists)
+StatisticsChart component with loading state
+Right Column:
+PendingCampaigns component with ownerOverview?.pendingCampaigns
+InfluencerActivity component with ownerOverview?.communicationsFeed
+Full-Width Row:
+ActiveCampaignCards component with ownerOverview?.activeCampaigns and ownerOverview?.kpis
+Store Used: useOwnerStore from src/stores/ownerStore.js
+
+5. State Management
+Framework: Zustand
+
+Stores (17 total):
+
+authStore.js - Authentication state (user, token, isAuthenticated)
+ownerStore.js - Owner dashboard state (overview, influencers)
+campaignStore.js - Campaigns state (all, active, draft, completed, current)
+campaignDraftStore.js - Campaign draft state
+savedCampaignsStore.js - Saved campaigns state
+influncerStore.js - Influencer state
+collaborationStore.js - Collaboration state
+CollaborationRequestsStore.js - Collaboration requests state
+CollaborationContractsStore.js - Collaboration contracts state
+CollaborationTasksStore.js - Collaboration tasks state
+ChatStore.js - Chat state
+NotificationsStore.js - Notifications state
+SocialMediaStore.js - Social media state
+UploadStore.js - Upload state
+profileStore.js - Profile state
+SettingsStore.js - Settings state
+AdminStore.js - Admin dashboard state
+Persistence: Uses Zustand's persist middleware with sessionStorage for auth store
+
+6. UI/CSS Framework
+Framework: Tailwind CSS v4.1.17
+
+Configuration: Uses @tailwindcss/vite plugin for Vite integration
+
+Custom Styling:
+
+Custom gradient backgrounds: bg-linear-to-br from-[#000000] via-[#1a0933] to-[#372557]
+Custom color palette: #C1B6FD, #745CB4, #2A2240
+Toast notifications with custom CSS (src/config/toast.css)
+7. Charting/Data Visualization Libraries
+Installed:
+
+chart.js v4.5.1
+react-chartjs-2 v5.3.1
+recharts v3.4.1
+Usage:
+
+StatisticsChart.jsx uses charting libraries for dashboard statistics
+8. All Installed Packages (package.json)
+Dependencies:
+
+@dnd-kit/core v6.3.1 - Drag and drop
+@dnd-kit/sortable v10.0.0 - Sortable drag and drop
+@dnd-kit/utilities v3.2.2 - DnD utilities
+@react-oauth/google v0.13.4 - Google OAuth
+@tailwindcss/vite v4.1.17 - Tailwind Vite plugin
+axios v1.13.2 - HTTP client
+chart.js v4.5.1 - Charting library
+framer-motion v12.23.24 - Animation library
+lucide-react v0.553.0 - Icon library
+react v19.2.0 - React core
+react-chartjs-2 v5.3.1 - React Chart.js wrapper
+react-countup v6.5.3 - Number counting animation
+react-dom v19.2.0 - React DOM
+react-icons v5.6.0 - React icons
+react-router-dom v7.9.6 - Routing
+react-toastify v11.0.5 - Toast notifications
+recharts v3.4.1 - React charting library
+socket.io-client v4.8.3 - WebSocket client
+tailwindcss v4.1.17 - CSS framework
+zustand v5.0.10 - State management
+DevDependencies:
+
+@eslint/js v9.39.1 - ESLint
+@types/react v19.2.2 - React TypeScript types
+@types/react-dom v19.2.2 - React DOM TypeScript types
+@vitejs/plugin-react-swc v4.2.1 - Vite React plugin
+eslint v9.39.1 - Linting
+eslint-plugin-react-hooks v7.0.1 - React hooks ESLint
+eslint-plugin-react-refresh v0.4.24 - React refresh ESLint
+globals v16.5.0 - Global variables
+vite v7.2.2 - Build tool
+9. JWT Token Storage and API Request Handling
+Storage Keys:
+
+accessToken - Stored in sessionStorage (primary)
+auth-storage - Stored in sessionStorage (Zustand persist backup)
+accessToken - Stored in localStorage (fallback)
+auth-storage - Stored in localStorage (fallback)
+Axios Configuration (src/config/axios.js):
+
+Base URL: http://localhost:5000/api
+Timeout: 10000ms
+Credentials: withCredentials: true (for refresh token cookies)
+Request Interceptor:
+
+Checks sessionStorage.getItem('accessToken') first
+Falls back to localStorage.getItem('accessToken')
+Parses auth-storage for backward compatibility
+Adds Authorization: Bearer ${token} header
+Response Interceptor:
+
+Handles 401 errors with message "Access token has expired."
+Queues failed requests during refresh
+Calls /auth/refresh-token endpoint with cookies
+Updates sessionStorage with new access token
+Retries original request with new token
+Clears auth storage and redirects to /login on refresh failure
+Auth Store (src/stores/authStore.js):
+
+Uses Zustand with persist middleware
+Storage: sessionStorage (key: auth-storage)
+Stores: user, token, isAuthenticated
+Methods: setToken(), setAuth(), refreshAccessToken(), logout()
+Token validation with isTokenExpired() method
+JWT payload decoding with decodeJwtPayload()
+10. Existing API Service Files and Axios Instances
+Axios Instance: src/config/axios.js
+
+Base URL: http://localhost:5000/api
+Exported as default: api
+API Service Files (16 total):
+
+authApi.js - Authentication (login, signup, logout, profile, refresh, password reset, onboarding, role selection, Google OAuth)
+campaign.js - Campaigns (CRUD, drafts, analytics, AI generation)
+ownerApi.js - Owner operations (overview, influencers)
+influncerApi.js - Influencer operations
+collaborationApi.js - Collaborations
+CollaborationRequestsApi.js - Collaboration requests
+CollaborationContractsApi.js - Collaboration contracts
+CollaborationTasksApi.js - Collaboration tasks
+chatApi.js - Chat/messaging
+adminApi.js - Admin operations
+aiCampaignApi.js - AI campaign generation
+SocialMediaApi.js - Social media operations
+notificationsApi.js - Notifications
+profileApi.js - Profile operations
+settingsApi.js - Settings
+uploadApi.js - File uploads
+All API files import the axios instance from src/config/axios.js and use it for HTTP requests.

@@ -278,7 +278,7 @@ export default function SingleCollabHub() {
       </div>
 
       <div className={activeTab === 'analytics' ? 'block' : 'hidden'}>
-        <AnalyticsPane items={ownerCollaborations} />
+        <AnalyticsPane items={collaborations} />
       </div>
 
       <div className={activeTab === 'chats' ? 'block' : 'hidden'}>

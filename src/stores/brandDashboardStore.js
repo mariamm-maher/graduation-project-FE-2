@@ -5,8 +5,10 @@ const useBrandDashboardStore = create((set) => ({
   // State
   dashboardData: null,
   aiInsights: null,
+  performanceTrend: null,
   isLoading: false,
   isInsightsLoading: false,
+  isTrendLoading: false,
   error: null,
   activeChartPeriod: 'monthly',
   activeChartMetric: 'reach',
@@ -16,6 +18,8 @@ const useBrandDashboardStore = create((set) => ({
 
   // Actions
   setLoading: (isLoading) => set({ isLoading }),
+  setPerformanceTrend: (performanceTrend) => set({ performanceTrend }),
+  setTrendLoading: (isTrendLoading) => set({ isTrendLoading }),
 
   setInsightsLoading: (isInsightsLoading) => set({ isInsightsLoading }),
 
@@ -39,7 +43,8 @@ const useBrandDashboardStore = create((set) => ({
       if (response?.success || response?.status === 'success') {
         const data = response?.data || response;
         set({ 
-          dashboardData: data, 
+          dashboardData: data,
+          performanceTrend: data.performanceTrend ?? null,
           isLoading: false,
           error: null 
         });
@@ -87,17 +92,20 @@ const useBrandDashboardStore = create((set) => ({
 
   // Fetch performance trend
   fetchPerformanceTrend: async (period, metric) => {
+    set({ isTrendLoading: true, error: null });
     try {
       const response = await brandDashboardService.getPerformanceTrend(period, metric);
 
       if (response?.success || response?.status === 'success') {
         const data = response?.data || response;
+        set({ performanceTrend: data, isTrendLoading: false, error: null });
         return { success: true, data };
       }
 
       throw new Error(response?.message || 'Failed to fetch performance trend');
     } catch (error) {
       const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to fetch performance trend';
+      set({ isTrendLoading: false });
       return { success: false, error: errorMessage };
     }
   },

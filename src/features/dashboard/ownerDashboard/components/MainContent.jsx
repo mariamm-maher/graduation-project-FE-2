@@ -19,8 +19,10 @@ function MainContent() {
   const {
     dashboardData,
     aiInsights,
+    performanceTrend,
     isLoading,
     isInsightsLoading,
+    isTrendLoading,
     error,
     activeChartPeriod,
     activeChartMetric,
@@ -30,6 +32,7 @@ function MainContent() {
     fetchDashboard,
     fetchAIInsights,
     fetchPlatformAnalytics,
+    fetchPerformanceTrend,
     setChartPeriod,
     setChartMetric,
     setActivePlatform,
@@ -43,6 +46,10 @@ function MainContent() {
     fetchAIInsights();
     fetchPlatformAnalytics();
   }, [fetchDashboard, fetchAIInsights, fetchPlatformAnalytics]);
+
+  useEffect(() => {
+    fetchPerformanceTrend(activeChartPeriod, activeChartMetric);
+  }, [activeChartMetric, activeChartPeriod, fetchPerformanceTrend]);
 
   const handleDismissError = () => {
     setDismissedError(true);
@@ -95,12 +102,12 @@ function MainContent() {
       {/* Row 2: Performance Chart */}
       <div className="w-full" style={{ minHeight: '256px' }}>
         <PerformanceChart
-          data={dashboardData?.performanceTrend}
+          data={performanceTrend || dashboardData?.performanceTrend}
           period={activeChartPeriod}
           metric={activeChartMetric}
           onPeriodChange={setChartPeriod}
           onMetricChange={setChartMetric}
-          loading={isLoading}
+          loading={isLoading || isTrendLoading}
         />
       </div>
 

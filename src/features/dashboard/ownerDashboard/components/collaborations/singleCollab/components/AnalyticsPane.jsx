@@ -58,6 +58,19 @@ function resolveCampaignName(item) {
   );
 }
 
+function resolveBudget(item) {
+  return item?.budget ??
+    item?.agreedBudget ??
+    item?.proposedBudget ??
+    item?.request?.proposedBudget ??
+    item?.request?.counterPrice ??
+    item?.counterPrice ??
+    item?.campaign?.budget_amount ??
+    item?.campaign?.totalBudget ??
+    item?.budget_amount ??
+    0;
+}
+
 export default function AnalyticsPane({ items = [] }) {
   const [timeRange, setTimeRange] = useState('all');
 
@@ -102,7 +115,7 @@ export default function AnalyticsPane({ items = [] }) {
       const status = normalizeStatus(item?.status);
       byStatus[status] += 1;
 
-      const budget = toNumber(item?.budget);
+      const budget = toNumber(resolveBudget(item));
       totalBudgetSpent += budget;
 
       const duration = daysBetween(item?.startDate, item?.endDate);

@@ -23,7 +23,7 @@ function CompletedCampaigns() {
         <h2 style="margin:0 0 8px;font-size:16px">${c.campaignName || c.name}</h2>
         <table style="width:100%;border-collapse:collapse;font-size:13px">
           <tr><td style="color:#666;width:140px">Goal</td><td>${c.campaign_goal || c.goalType || '—'}</td></tr>
-          <tr><td style="color:#666">Budget</td><td>${c.budget_currency || '$'}${Number(c.budget_amount || c.totalBudget || 0).toLocaleString()}</td></tr>
+          <tr><td style="color:#666">Budget</td><td>${resolveCampaignCurrency(c)}${resolveCampaignBudget(c).toLocaleString()}</td></tr>
           <tr><td style="color:#666">Start Date</td><td>${c.startDate ? new Date(c.startDate).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—'}</td></tr>
           <tr><td style="color:#666">End Date</td><td>${c.endDate ? new Date(c.endDate).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—'}</td></tr>
           <tr><td style="color:#666">Duration</td><td>${c.startDate && c.endDate ? Math.ceil(Math.abs(new Date(c.endDate)-new Date(c.startDate))/(1000*60*60*24)) : '—'} days</td></tr>
@@ -70,18 +70,31 @@ function CompletedCampaigns() {
     return diffDays;
   };
 
-  // Format date
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
   };
 
-  // Calculate total budget spent and collaborations
+  const resolveCampaignBudget = (campaign) => {
+    return Number(
+      campaign?.totalBudget ??
+      campaign?.budget_amount ??
+      campaign?.budget ??
+      campaign?.proposedBudget ??
+      campaign?.agreedBudget ??
+      0
+    );
+  };
+
+  const resolveCampaignCurrency = (campaign) => {
+    return campaign?.currency || campaign?.budget_currency || '$';
+  };
+
   const getTotalBudget = () => {
-    return completedCampaigns.reduce((sum, c) => sum + (c.totalBudget || 0), 0);
+    return completedCampaigns.reduce((sum, c) => sum + resolveCampaignBudget(c), 0);
   };
 
   const getTotalCollaborations = () => {
@@ -237,9 +250,7 @@ function CompletedCampaigns() {
                       <div className="flex items-center gap-2 text-sm">
                         <DollarSign className="w-4 h-4 text-gray-400" />
                         <span className="font-semibold text-white">
-                          {campaign.currency || '$'}{typeof campaign.totalBudget === 'number' 
-                            ? campaign.totalBudget.toLocaleString() 
-                            : campaign.budget}
+                          {resolveCampaignCurrency(campaign)}{resolveCampaignBudget(campaign).toLocaleString()}
                         </span>
                       </div>
                     </td>
@@ -322,9 +333,7 @@ function CompletedCampaigns() {
                   <div>
                     <p className="text-xs text-gray-400 mb-1">Budget</p>
                     <p className="text-sm font-semibold text-white">
-                      {campaign.currency || '$'}{typeof campaign.totalBudget === 'number' 
-                        ? campaign.totalBudget.toLocaleString() 
-                        : campaign.budget}
+                      {resolveCampaignCurrency(campaign)}{resolveCampaignBudget(campaign).toLocaleString()}
                     </p>
                   </div>
                   <div>

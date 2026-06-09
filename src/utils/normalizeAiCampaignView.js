@@ -108,6 +108,7 @@ const buildCalendarFromTacticalPlan = (tactical = {}, calendarMeta = {}) => {
 
 /**
  * Flat { paid_ads: 45, ... } → breakdown array with amounts.
+ * Handles both percentage values (45) and absolute amounts (3000).
  */
 const normalizeBudgetAllocation = (raw, budgetAmount = 0) => {
   if (!raw) return null;
@@ -120,13 +121,31 @@ const normalizeBudgetAllocation = (raw, budgetAmount = 0) => {
   }
 
   if (typeof raw === 'object' && !Array.isArray(raw)) {
-    const breakdown = Object.entries(raw)
-      .filter(([, value]) => typeof value === 'number')
-      .map(([category, percentage]) => ({
-        category,
-        percentage,
-        amount: budgetAmount ? Math.round((budgetAmount * percentage) / 100) : 0,
-      }));
+    const entries = Object.entries(raw).filter(([, value]) => typeof value === 'number');
+
+    // Check if values are absolute amounts (sum close to budgetAmount) or percentages
+    const sumOfValues = entries.reduce((sum, [, value]) => sum + value, 0);
+    const isAbsoluteAmounts = budgetAmount > 0 && Math.abs(sumOfValues - budgetAmount) < budgetAmount * 0.1;
+
+    const breakdown = entries.map(([category, value]) => {
+      if (isAbsoluteAmounts) {
+        // Values are absolute amounts, calculate percentage
+        const percentage = budgetAmount > 0 ? Math.round((value / budgetAmount) * 100) : 0;
+        return {
+          category,
+          amount: value,
+          percentage,
+        };
+      } else {
+        // Values are percentages, calculate amount
+        const amount = budgetAmount ? Math.round((budgetAmount * value) / 100) : 0;
+        return {
+          category,
+          percentage: value,
+          amount,
+        };
+      }
+    });
 
     return {
       totalAllocated: budgetAmount || breakdown.reduce((sum, row) => sum + row.amount, 0),

@@ -34,10 +34,13 @@ function ActiveCampaigns() {
     loadActiveCampaigns();
   }, [page, fetchActiveCampaigns, fetchActiveCampaignsWithTracking]);
 
-  // Client-side search filter only
+  // Client-side filter: only show campaigns with lifecycle: 'active'
   const activeCampaigns = campaigns.filter((campaign) => {
+    const lifecycle = campaign.lifecycleStage || campaign.lifecycle || '';
+    const isActive = lifecycle.toLowerCase() === 'active';
     const name = campaign.campaignName || campaign.name || '';
-    return searchQuery === '' || name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = searchQuery === '' || name.toLowerCase().includes(searchQuery.toLowerCase());
+    return isActive && matchesSearch;
   });
 
   return (

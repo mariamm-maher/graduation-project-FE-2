@@ -265,11 +265,14 @@ const campaignService = {
     }
   },
 
-  getActiveCampaigns: async ({ page = 1, limit = 10 } = {}) => {
+  getActiveCampaigns: async ({ page = 1, limit = 10, lifecycleStage } = {}) => {
     try {
+      const params = { page, limit };
+      if (lifecycleStage) params.lifecycleStage = lifecycleStage;
       const response = await api.get('/campaigns/active', {
-        params: { page, limit },
+        params,
       });
+      console.log('[API] getActiveCampaigns response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Active campaigns error:', error);
@@ -338,11 +341,14 @@ const campaignService = {
     }
   },
 
-  getActiveCampaignsWithTracking: async ({ page = 1, limit = 10 } = {}) => {
+  getActiveCampaignsWithTracking: async ({ page = 1, limit = 10, lifecycleStage } = {}) => {
     try {
+      const params = { page, limit };
+      if (lifecycleStage) params.lifecycleStage = lifecycleStage;
       const response = await api.get('/campaigns/active/enhanced', {
-        params: { page, limit },
+        params,
       });
+      console.log('[API] getActiveCampaignsWithTracking response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Enhanced active campaigns error:', error);

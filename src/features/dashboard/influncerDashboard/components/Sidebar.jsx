@@ -82,7 +82,7 @@ function Sidebar({ isMobileOpen = false, onMobileClose }) {
         )}
       </div>
 
-      <nav className="flex-1 space-y-1 py-2 overflow-y-auto">
+      <nav className="flex-1 space-y-1 py-2 overflow-hidden">
         {menuItems.map((item) => {
           const Icon = item.icon;
           let isActive;

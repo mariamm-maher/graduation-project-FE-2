@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { ChevronDown } from 'lucide-react';
 
 function PerformanceChart({ data, period, metric, onPeriodChange, onMetricChange, loading }) {
   const periods = ['daily', 'weekly', 'monthly', 'yearly'];
   const metrics = ['reach', 'engagement', 'conversions', 'roi', 'clicks'];
   const containerRef = useRef(null);
+  const dropdownRef = useRef(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [metricDropdownOpen, setMetricDropdownOpen] = useState(false);
 
   const metricLabels = {
     reach: 'Reach',
@@ -58,6 +61,17 @@ function PerformanceChart({ data, period, metric, onPeriodChange, onMetricChange
     setIsMounted(true);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setMetricDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   if (loading) {
     return (
       <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
@@ -95,17 +109,37 @@ function PerformanceChart({ data, period, metric, onPeriodChange, onMetricChange
               </button>
             ))}
           </div>
-          <select
-            value={metric}
-            onChange={(e) => onMetricChange?.(e.target.value)}
-            className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#C1B6FD]"
-          >
-            {metrics.map((m) => (
-              <option key={m} value={m}>
-                {metricLabels[m]}
-              </option>
-            ))}
-          </select>
+          <div ref={dropdownRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setMetricDropdownOpen((prev) => !prev)}
+              className="flex items-center gap-2 px-4 py-2 bg-[#1B1930] border border-white/10 rounded-xl text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#C1B6FD]"
+            >
+              {metricLabels[metric]}
+              <ChevronDown className={`w-4 h-4 transition-transform ${metricDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {metricDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-44 bg-[#1B1930] border border-white/10 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] z-20 overflow-hidden">
+                {metrics.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => {
+                      onMetricChange?.(m);
+                      setMetricDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                      metric === m
+                        ? 'bg-white/10 text-white'
+                        : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    {metricLabels[m]}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
